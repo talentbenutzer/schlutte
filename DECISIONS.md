@@ -86,3 +86,12 @@ unverändert.
 
 - Format/Sequenz der Kommissionsnummer (aktuell 6-stellig `260050`; Jahres-Präfix?).
 - Bucket-Namen für Supabase Storage (`documents`, ggf. `templates`).
+
+## Meilenstein: Formulare & Print-Finalisierung (2026-05-26)
+
+- **Printlayouts für Laufzettel und Palettenbeschriftung** sind voll funktionsfähig und als MVP-Kern im A4-Querformat implementiert.
+- **Formulare zur Dokumenterstellung** (neue Kommission, Laufzettel und Paletten) sind als clientseitige Formulare mit Server-Actions (für Kommission) / Client-Zustand (für Dokumente) vorbereitet, um die spätere Supabase-Anbindung minimalinvasiv zu gestalten.
+- **Dauerhafte Speicherung** und Authentifizierung erfolgen im nächsten Schritt über Supabase.
+- **HTML/CSS-Browserdruck** bleibt der primäre MVP-Druckweg, da er sich nahtlos über `@media print` und `break-after` konfigurieren lässt.
+- **PDF-Archivierung** wird nachgelagert über einen separaten Worker mit Supabase Storage angebunden.
+

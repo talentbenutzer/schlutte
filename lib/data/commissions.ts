@@ -28,46 +28,60 @@ export async function searchCommissions(query: string): Promise<Commission[]> {
 }
 
 export type CreateCommissionInput = {
+  no: string;
   client: string;
   project?: string;
+  note?: string;
   owner?: string;
 };
 
 export class CommissionValidationError extends Error {
-  field: "client";
-  constructor(message: string, field: "client") {
+  field: "no" | "client" | "owner";
+  constructor(message: string, field: "no" | "client" | "owner") {
     super(message);
     this.name = "CommissionValidationError";
     this.field = field;
   }
 }
 
-function nextCommissionNumber(): string {
-  const max = COMMISSIONS.reduce(
-    (acc, c) => Math.max(acc, Number(c.no) || 0),
-    0
-  );
-  return String(max + 1).padStart(6, "0");
-}
-
 export async function createCommission(
   input: CreateCommissionInput
 ): Promise<Commission> {
+  const no = input.no.trim();
+  if (!no) {
+    throw new CommissionValidationError("Kommissionsnummer ist erforderlich.", "no");
+  }
+  if (!/^\d{6}$/.test(no)) {
+    throw new CommissionValidationError("Kommissionsnummer muss genau 6 Ziffern enthalten.", "no");
+  }
+  const existing = COMMISSIONS.find((c) => c.no === no);
+  if (existing) {
+    throw new CommissionValidationError("Diese Kommissionsnummer existiert bereits.", "no");
+  }
+
   const client = input.client.trim();
   if (!client) {
     throw new CommissionValidationError("Kunde ist erforderlich.", "client");
   }
+
+  const owner = input.owner?.trim() || "EDL";
+  if (owner.length > 3) {
+    throw new CommissionValidationError("Mitarbeiterkürzel darf maximal 3 Zeichen lang sein.", "owner");
+  }
+
   const commission: Commission = {
-    no: nextCommissionNumber(),
+    no,
     client,
     project: input.project?.trim() ?? "",
     status: "in-progress",
     updated: "jetzt",
-    owner: input.owner?.trim() || "EDL",
+    owner: owner.toUpperCase(),
     docs: 0,
+    note: input.note?.trim() ?? "",
   };
+  
   // Mocks: am Anfang einfügen, damit neue Einträge oben in der Liste landen.
-  // Bei Supabase ersetzt ein INSERT diesen Schritt.
   COMMISSIONS.unshift(commission);
   return commission;
 }
+

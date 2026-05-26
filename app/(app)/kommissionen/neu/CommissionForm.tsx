@@ -17,8 +17,12 @@ export function CommissionForm() {
   );
 
   const v = state.values;
+  const noError =
+    state.fieldError?.field === "no" ? state.fieldError.message : undefined;
   const clientError =
     state.fieldError?.field === "client" ? state.fieldError.message : undefined;
+  const ownerError =
+    state.fieldError?.field === "owner" ? state.fieldError.message : undefined;
 
   return (
     <form action={formAction} style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 640 }}>
@@ -38,6 +42,24 @@ export function CommissionForm() {
       )}
 
       <Field
+        label="Kommissionsnummer"
+        hint="Pflichtfeld. Genau 6 Ziffern (z. B. 260051)."
+        error={noError}
+      >
+        <input
+          name="no"
+          required
+          autoFocus
+          defaultValue={v?.no ?? ""}
+          placeholder="260051"
+          pattern="[0-9]{6}"
+          title="Muss genau 6 Ziffern enthalten"
+          className="grb-input"
+          style={{ maxWidth: 180 }}
+        />
+      </Field>
+
+      <Field
         label="Kunde"
         hint="Pflichtfeld. Wird im Hero groß angezeigt."
         error={clientError}
@@ -45,7 +67,6 @@ export function CommissionForm() {
         <input
           name="client"
           required
-          autoFocus
           defaultValue={v?.client ?? ""}
           placeholder="Familie Raitl"
           className="grb-input"
@@ -65,14 +86,28 @@ export function CommissionForm() {
       </Field>
 
       <Field
-        label="Owner"
-        hint="Kürzel, drei Buchstaben. Default: EDL."
+        label="Notiz / Interne Hinweise"
+        hint="Optional. Besondere Hinweise für die Werkstatt."
+      >
+        <textarea
+          name="note"
+          defaultValue={v?.note ?? ""}
+          placeholder="Hinweise zur Fertigung..."
+          className="grb-input"
+          style={{ minHeight: 100, resize: "vertical", fontFamily: "var(--font-sans)" }}
+        />
+      </Field>
+
+      <Field
+        label="Owner / Kürzel"
+        hint="Mitarbeiterkürzel, maximal drei Buchstaben. Default: EDL."
+        error={ownerError}
       >
         <input
           name="owner"
           defaultValue={v?.owner ?? ""}
           placeholder="EDL"
-          maxLength={4}
+          maxLength={3}
           className="grb-input"
           style={{ maxWidth: 120, textTransform: "uppercase" }}
         />

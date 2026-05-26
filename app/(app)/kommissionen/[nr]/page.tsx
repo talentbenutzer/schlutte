@@ -179,9 +179,12 @@ export default async function CommissionDetailPage({
             justifyContent: "flex-end",
           }}
         >
-          <button className="grb-btn grb-btn-primary" disabled title="Folgt">
+          <Link
+            className="grb-btn grb-btn-primary"
+            href={`/kommissionen/${commission.no}/dokumente/neu`}
+          >
             <Icon name="plus" size={14} /> Neues Dokument
-          </button>
+          </Link>
           <Link
             className="grb-btn grb-btn-ghost"
             href={`/print/laufzettel/${commission.no}`}

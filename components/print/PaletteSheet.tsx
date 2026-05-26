@@ -151,6 +151,15 @@ export function PaletteSheet({
             )}
           </section>
 
+          {palette.shippingNote && (
+            <section style={{ borderTop: `1px solid ${HAIRLINE}`, paddingTop: 10 }}>
+              <div className="print-label" style={{ marginBottom: 4 }}>Versandhinweis</div>
+              <div style={{ fontFamily: "var(--font-sans)", fontSize: 16, color: INK, fontWeight: 500, lineHeight: 1.3 }}>
+                {palette.shippingNote}
+              </div>
+            </section>
+          )}
+
           <section
             style={{
               display: "grid",

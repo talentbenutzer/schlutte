@@ -8,6 +8,7 @@ export type Commission = {
   updated: string;
   owner: string;
   docs: number;
+  note?: string;
 };
 
 export type Employee = {
@@ -31,7 +32,34 @@ export type Palette = {
   weight: string;
   dim: string;
   positions: string[];
+  shippingNote?: string;
 };
+
+export type LaufzettelFormData = {
+  commissionNo: string;
+  client: string;
+  project?: string;
+  room?: string;
+  partName?: string;
+  material?: string;
+  surface?: string;
+  note?: string;
+  owner?: string;
+  components: string[];
+};
+
+export type PaletteFormData = {
+  commissionNo: string;
+  client: string;
+  project?: string;
+  partName?: string;
+  dim?: string;
+  positions?: string;
+  count: number;
+  shippingNote?: string;
+  owner?: string;
+};
+
 
 export type Material = {
   pos: string;

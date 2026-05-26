@@ -1,0 +1,554 @@
+/* =========================================================================
+   GROBEL — App-spezifische Styles (auf Grabner Design tokens aufgesetzt)
+   ========================================================================= */
+
+/* Lokaler Reset innerhalb der Artboards */
+.grb,
+.grb * {
+  box-sizing: border-box;
+}
+
+/* Artboard-Hülle (jedes Screen-Frame) */
+.grb {
+  font-family: var(--font-sans);
+  color: var(--fg);
+  background: var(--bg);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* ---------- App-Shell ---------- */
+.grb-topbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-7);
+  padding: 0 var(--sp-7);
+  height: 72px;
+  background: var(--bg-alt);
+  border-bottom: 1px solid var(--border);
+}
+
+.grb-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  user-select: none;
+}
+.grb-brand-mark {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.grb-brand-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.grb-nav {
+  display: flex;
+  gap: var(--sp-6);
+  align-items: center;
+  flex: 0 0 auto;
+}
+.grb-nav a {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg);
+  text-decoration: none;
+  position: relative;
+  padding: 4px 0;
+}
+.grb-nav a.is-active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -22px;
+  height: 1px;
+  background: var(--accent);
+}
+.grb-nav a.is-muted {
+  color: var(--fg-muted);
+}
+
+.grb-search {
+  flex: 1 1 auto;
+  max-width: 560px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border-strong);
+  padding: 8px 0;
+}
+.grb-search svg {
+  flex: 0 0 auto;
+  color: var(--fg-muted);
+}
+.grb-search input,
+.grb-search-placeholder {
+  flex: 1 1 auto;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--fg);
+  letter-spacing: 0;
+}
+.grb-search-placeholder { color: var(--fg-subtle); }
+.grb-search kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--fg-subtle);
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  border-radius: 2px;
+  background: var(--bg-raised);
+}
+
+.grb-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: var(--sp-5);
+  border-left: 1px solid var(--border);
+}
+.grb-user-initials {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  background: var(--fg);
+  color: var(--fg-inverse);
+}
+.grb-user-name {
+  font-size: 13px;
+  color: var(--fg);
+  font-weight: 500;
+}
+.grb-user-role {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+}
+
+/* ---------- Main canvas frame ---------- */
+.grb-main {
+  flex: 1 1 auto;
+  padding: var(--sp-7);
+  overflow: hidden;
+  position: relative;
+}
+
+/* ---------- Eyebrows / Indices ---------- */
+.grb-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+}
+.grb-index {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--fg-subtle);
+}
+
+/* ---------- Form input ---------- */
+.grb-input {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  color: var(--fg);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: 0;
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 180ms var(--ease-out);
+  width: 100%;
+}
+.grb-input:focus {
+  border-color: var(--fg);
+}
+.grb-input::placeholder {
+  color: var(--fg-subtle);
+}
+
+/* ---------- Buttons ---------- */
+.grb-btn {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 12px 22px;
+  border-radius: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 180ms var(--ease-out), color 180ms var(--ease-out);
+  border: 1px solid transparent;
+}
+.grb-btn-primary {
+  background: var(--fg);
+  color: var(--fg-inverse);
+  border-color: var(--fg);
+}
+.grb-btn-primary:hover { background: var(--gd-graphite); }
+.grb-btn-ghost {
+  background: transparent;
+  color: var(--fg);
+  border-color: var(--fg);
+}
+.grb-btn-quiet {
+  background: transparent;
+  color: var(--fg);
+  border-color: var(--border-strong);
+}
+.grb-btn-link {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg);
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent);
+  padding-bottom: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border-left: 0;
+  border-right: 0;
+  border-top: 0;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+/* ---------- Cards (Kommission, Dokument, etc) ---------- */
+.grb-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  padding: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  position: relative;
+  transition: box-shadow 180ms var(--ease-out);
+}
+.grb-card:hover { box-shadow: var(--shadow-2); }
+.grb-card-no { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; color: var(--fg-subtle); }
+.grb-card-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+/* ---------- Status Badge ---------- */
+.grb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+  border-radius: 0;
+}
+.grb-badge .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--fg-subtle);
+}
+.grb-badge.is-progress .dot { background: var(--gd-warning); }
+.grb-badge.is-done .dot { background: var(--gd-success); }
+.grb-badge.is-shipped .dot { background: var(--accent); }
+.grb-badge.is-archive .dot { background: var(--fg-subtle); }
+
+/* ---------- Tables / listings ---------- */
+.grb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.grb-table th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+  font-weight: 500;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+}
+.grb-table td {
+  padding: 14px 14px;
+  border-bottom: 1px solid var(--hairline);
+  color: var(--fg);
+  vertical-align: middle;
+}
+.grb-table tr:hover td { background: var(--bg-alt); }
+.grb-table .mono { font-family: var(--font-mono); font-size: 13px; }
+
+/* ---------- Field / input ---------- */
+.grb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.grb-field-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+.grb-field-input {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--fg);
+  outline: none;
+  padding: 10px 0;
+}
+.grb-field-input.is-focus {
+  border-bottom: 1.5px solid var(--accent);
+  box-shadow: 0 3px 0 -2px var(--gd-brass-soft);
+}
+.grb-field-helper {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--fg-subtle);
+}
+
+/* ---------- Sections / hairline separators ---------- */
+.grb-hairline { border-top: 1px solid var(--border); }
+.grb-divider-strong { border-top: 1px solid var(--fg); }
+
+/* ---------- Quick action tile ---------- */
+.grb-action-tile {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  padding: var(--sp-6);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  position: relative;
+  min-height: 180px;
+  transition: background 220ms var(--ease-architect), border-color 220ms var(--ease-architect);
+}
+.grb-action-tile:hover {
+  background: var(--gd-bone);
+  border-color: var(--border-strong);
+}
+.grb-action-tile .corner {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+}
+.grb-action-tile .title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 1.1;
+  font-weight: 400;
+  color: var(--fg);
+  letter-spacing: -0.01em;
+  margin-top: auto;
+}
+.grb-action-tile .hint {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--fg-muted);
+  line-height: 1.45;
+}
+
+/* ---------- A4 Querformat (Print page) ---------- */
+.grb-a4 {
+  width: 100%;
+  height: 100%;
+  background: #FBF9F4;
+  color: #0E0E0D;
+  position: relative;
+  padding: 36px 44px;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-sans);
+  /* shadow handled by artboard frame */
+}
+.grb-a4-print-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #0E0E0D;
+}
+.grb-a4-brand {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 18px;
+  letter-spacing: -0.005em;
+  color: #0E0E0D;
+}
+.grb-a4-brand-sub {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #A6824A;
+  margin-top: 2px;
+}
+.grb-a4-meta {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #5C5852;
+  text-align: right;
+  line-height: 1.7;
+}
+
+.grb-a4-foot {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid rgba(14,14,13,.18);
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #8A8278;
+}
+
+/* ---------- Inputs in dashboard search ---------- */
+.grb-search-big {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-raised);
+}
+.grb-search-big input {
+  flex: 1 1 auto;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-sans);
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--fg);
+}
+
+/* ---------- Corner brackets (architectural mark) ---------- */
+.grb-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--accent);
+}
+.grb-corner.tl { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+.grb-corner.tr { top: 0; right: 0; border-left: 0; border-bottom: 0; }
+.grb-corner.bl { bottom: 0; left: 0; border-right: 0; border-top: 0; }
+.grb-corner.br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+
+/* ---------- Sitemap ---------- */
+.sitemap-node {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--fg);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.sitemap-node .idx {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--fg-subtle);
+}
+.sitemap-node.is-admin {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.sitemap-node.is-print {
+  background: var(--gd-bone);
+}
+
+/* Section title within artboard */
+.grb-h-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+}
+.grb-h-display {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 56px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+.grb-h-h2 {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 32px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+/* Reusable kbd-like chip */
+.grb-chip {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--fg-muted);
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+}

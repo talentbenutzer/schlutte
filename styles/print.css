@@ -1,0 +1,101 @@
+/* =========================================================================
+   Print — A4 Querformat (Landscape)
+   Bewusst minimal: HTML/CSS + Browser-Druck als MVP. Keine PDF-Erzeugung.
+   ========================================================================= */
+
+@page {
+  size: A4 landscape;
+  margin: 0;
+}
+
+.print-root {
+  --print-w: 297mm;
+  --print-h: 210mm;
+
+  /* Bildschirm-Vorschau: zeige das Blatt zentriert auf grauem Hintergrund.
+     Mehrere Sheets stapeln sich vertikal mit Abstand. */
+  min-height: 100vh;
+  background: #e8e6e1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 24px;
+  padding: 24px;
+}
+
+.print-sheet {
+  width: var(--print-w);
+  min-height: var(--print-h);
+  background: #ffffff;
+  color: #0E0E0D;
+  padding: 14mm 16mm;
+  box-shadow: 0 30px 80px -30px rgba(14, 14, 13, 0.45);
+  display: flex;
+  flex-direction: column;
+  /* Drucklayouts sind immer hell — kein data-theme dark hier */
+  color-scheme: light;
+}
+
+.print-toolbar {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+@media print {
+  html, body {
+    background: #ffffff !important;
+  }
+  .print-root {
+    background: #ffffff !important;
+    padding: 0 !important;
+    display: block !important;
+    min-height: auto !important;
+  }
+  .print-sheet {
+    width: 297mm;
+    min-height: 210mm;
+    box-shadow: none !important;
+    padding: 14mm 16mm !important;
+    page-break-after: always;
+  }
+  .print-sheet:last-child {
+    page-break-after: auto;
+  }
+  .print-toolbar,
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Re-usable typography helpers shared by all print layouts.
+   Bewusst schwarz-weiß: Brass-Akzent ist in der App-UI erlaubt, im Druck nicht.
+   Tonus rein über Grau-Abstufungen → druckt auf jedem S/W-Drucker zuverlässig. */
+.print-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: #0E0E0D;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.print-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: #5C5852;
+  text-transform: uppercase;
+}
+
+/* Force black-friendly rendering even when the browser tries to save toner. */
+@media print {
+  .print-sheet,
+  .print-sheet * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

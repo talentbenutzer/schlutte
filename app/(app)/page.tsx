@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { Status } from "@/components/ui/Status";
-import { getCommissions } from "@/lib/data/commissions";
+import { getCommissions, searchCommissions } from "@/lib/data/commissions";
 import { getRecentDocuments } from "@/lib/data/documents";
+import { createClient } from "@/lib/supabase/server";
+import type { Commission, CommissionDocument } from "@/lib/types";
 
 function DashTile({
   idx,
@@ -40,11 +42,55 @@ function DashTile({
   return <div className="grb-action-tile">{body}</div>;
 }
 
-export default async function DashboardPage() {
-  const [commissions, recentDocs] = await Promise.all([
-    getCommissions(),
-    getRecentDocuments(6),
-  ]);
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
+  const searchQuery = q?.trim() || "";
+
+  // Load welcome user details
+  let welcomeName = " in Schlutte";
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from("employees")
+        .select("name, initials")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (data?.name) {
+        welcomeName = `, ${data.name}`;
+      } else if (data?.initials) {
+        welcomeName = `, ${data.initials}`;
+      } else if (user.email) {
+        const localPart = user.email.split("@")[0];
+        welcomeName = `, ${localPart.charAt(0).toUpperCase() + localPart.slice(1)}`;
+      }
+    }
+  } catch (e) {
+    console.error("Error loading user for welcome message:", e);
+  }
+
+  // Load data based on search query
+  let commissions: Commission[] = [];
+  let recentDocs: CommissionDocument[] = [];
+  let isSearching = false;
+
+  if (searchQuery) {
+    isSearching = true;
+    commissions = await searchCommissions(searchQuery);
+  } else {
+    const [allComms, docs] = await Promise.all([
+      getCommissions(),
+      getRecentDocuments(6),
+    ]);
+    commissions = allComms;
+    recentDocs = docs;
+  }
+
   return (
     <>
       <div
@@ -57,133 +103,204 @@ export default async function DashboardPage() {
         }}
       >
         {/* Hero / search */}
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 32 }}>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 32, flexWrap: "wrap" }}>
           <div>
             <span className="grb-eyebrow">Dashboard · Schlutte</span>
             <h1 className="grb-h-display" style={{ fontSize: 56, marginTop: 12 }}>
-              Guten Morgen, Eddy.
+              Willkommen{welcomeName}.
             </h1>
             <p style={{ fontFamily: "var(--font-sans)", fontSize: 16, color: "var(--fg-muted)", marginTop: 12, maxWidth: 560 }}>
-              6 aktive Kommissionen. 12 Dokumente diese Woche gedruckt.
+              {isSearching 
+                ? `Suchergebnisse für „${searchQuery}“: ${commissions.length} Kommissionen gefunden.`
+                : `${commissions.length} aktive Kommissionen in der Datenbank erfasst.`}
             </p>
           </div>
-          <div style={{ minWidth: 460, flex: "0 0 460px" }}>
-            <div className="grb-search-big">
-              <Icon name="search" size={20} />
-              <input placeholder="260050 oder Raitl …" />
-              <kbd style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--fg-subtle)", border: "1px solid var(--border)", padding: "2px 6px" }}>
-                ⌘ K
-              </kbd>
-            </div>
+          <div style={{ minWidth: 400, flex: "0 0 400px" }}>
+            <form action="/" method="GET" style={{ width: "100%" }}>
+              <div className="grb-search-big" style={{ padding: "14px 18px" }}>
+                <Icon name="search" size={20} />
+                <input
+                  name="q"
+                  defaultValue={searchQuery}
+                  placeholder="260050 oder Raitl …"
+                  style={{ width: "100%", background: "transparent", border: "none", outline: "none", fontSize: 18, color: "var(--fg)" }}
+                />
+                {searchQuery && (
+                  <Link
+                    href="/"
+                    style={{ color: "var(--fg-muted)", display: "flex", alignItems: "center" }}
+                    title="Suche zurücksetzen"
+                  >
+                    <Icon name="x" size={16} />
+                  </Link>
+                )}
+              </div>
+            </form>
           </div>
         </div>
 
         {/* Schnellaktionen */}
         <section>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 16 }}>
-            <span className="grb-eyebrow">Schnellaktion · ohne Umweg über Kommission</span>
-            <span className="grb-index">01 / 03</span>
+            <span className="grb-eyebrow">Dokument für bestehende Kommission erstellen</span>
+            <span className="grb-index">01 / 02</span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
-            <DashTile idx="01" title="Neuer Laufzettel" hint="Gewerke-Stationen, Stückliste, Maße." icon="doc-stripe" />
-            <DashTile idx="02" title="Neue Palette" hint="Versand · Beschriftung 1 von n. Mehrfachdruck." icon="pkg" />
+            <DashTile idx="01" title="Neuer Laufzettel" hint="Gewerke-Stationen, Stückliste, Maße." icon="doc-stripe" href="/dokument-erstellen/laufzettel" />
+            <DashTile idx="02" title="Neue Palette" hint="Versand · Beschriftung 1 von n. Mehrfachdruck." icon="pkg" href="/dokument-erstellen/palette" />
             <DashTile idx="03" title="Neue Kommission" hint="Nummer, Kunde, Projekt anlegen." icon="plus" href="/kommissionen/neu" />
             <DashTile idx="04" title="Archiv öffnen" hint="Druckstände, PDFs, Versionen." icon="archive" href="/archiv" />
           </div>
         </section>
 
-        {/* Two columns */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 48 }}>
+        {/* Results layout */}
+        {isSearching ? (
           <section>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8 }}>
-              <span className="grb-eyebrow">Letzte Kommissionen</span>
-              <Link href="/kommissionen" className="grb-btn-link" style={{ fontSize: 11 }}>
-                Alle ansehen <Icon name="arrow" size={12} />
+              <span className="grb-eyebrow">Suchergebnisse Kommissionen</span>
+              <Link href="/" className="grb-btn-link" style={{ fontSize: 11 }}>
+                Suche schließen <Icon name="x" size={12} />
               </Link>
             </div>
             <div style={{ borderTop: "1px solid var(--fg)" }}>
-              {commissions.slice(0, 5).map((k) => (
-                <Link
-                  key={k.no}
-                  href={`/kommissionen/${k.no}`}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "80px 1fr auto auto auto",
-                    alignItems: "center",
-                    gap: 24,
-                    padding: "14px 0",
-                    borderBottom: "1px solid var(--hairline)",
-                    cursor: "pointer",
-                    textDecoration: "none",
-                    color: "inherit",
-                  }}
-                >
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--fg)", letterSpacing: "0.04em" }}>
-                    {k.no}
-                  </span>
-                  <div>
-                    <div style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 18, color: "var(--fg)", letterSpacing: "-0.005em" }}>
-                      {k.client}
+              {commissions.length === 0 ? (
+                <div style={{ padding: "40px 0", textAlign: "center", color: "var(--fg-muted)", fontFamily: "var(--font-sans)" }}>
+                  Keine Kommissionen entsprechen der Suchanfrage.
+                </div>
+              ) : (
+                commissions.map((k) => (
+                  <Link
+                    key={k.no}
+                    href={`/kommissionen/${k.no}`}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "80px 1fr auto auto auto",
+                      alignItems: "center",
+                      gap: 24,
+                      padding: "14px 0",
+                      borderBottom: "1px solid var(--hairline)",
+                      cursor: "pointer",
+                      textDecoration: "none",
+                      color: "inherit",
+                    }}
+                  >
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--fg)", letterSpacing: "0.04em" }}>
+                      {k.no}
+                    </span>
+                    <div>
+                      <div style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 18, color: "var(--fg)", letterSpacing: "-0.005em" }}>
+                        {k.client}
+                      </div>
+                      <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--fg-muted)", marginTop: 2 }}>
+                        {k.project}
+                      </div>
                     </div>
-                    <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--fg-muted)", marginTop: 2 }}>
-                      {k.project}
-                    </div>
-                  </div>
-                  <Status value={k.status} />
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-subtle)", letterSpacing: "0.06em" }}>
-                    {k.docs} Dok.
-                  </span>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-subtle)", letterSpacing: "0.06em" }}>
-                    {k.updated}
-                  </span>
-                </Link>
-              ))}
+                    <Status value={k.status} />
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-subtle)", letterSpacing: "0.06em" }}>
+                      {k.docs} Dok.
+                    </span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-subtle)", letterSpacing: "0.06em" }}>
+                      {k.updated}
+                    </span>
+                  </Link>
+                ))
+              )}
             </div>
           </section>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 48 }}>
+            <section>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8 }}>
+                <span className="grb-eyebrow">Letzte Kommissionen</span>
+                <Link href="/kommissionen" className="grb-btn-link" style={{ fontSize: 11 }}>
+                  Alle ansehen <Icon name="arrow" size={12} />
+                </Link>
+              </div>
+              <div style={{ borderTop: "1px solid var(--fg)" }}>
+                {commissions.slice(0, 5).map((k) => (
+                  <Link
+                    key={k.no}
+                    href={`/kommissionen/${k.no}`}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "80px 1fr auto auto auto",
+                      alignItems: "center",
+                      gap: 24,
+                      padding: "14px 0",
+                      borderBottom: "1px solid var(--hairline)",
+                      cursor: "pointer",
+                      textDecoration: "none",
+                      color: "inherit",
+                    }}
+                  >
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--fg)", letterSpacing: "0.04em" }}>
+                      {k.no}
+                    </span>
+                    <div>
+                      <div style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 18, color: "var(--fg)", letterSpacing: "-0.005em" }}>
+                        {k.client}
+                      </div>
+                      <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--fg-muted)", marginTop: 2 }}>
+                        {k.project}
+                      </div>
+                    </div>
+                    <Status value={k.status} />
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-subtle)", letterSpacing: "0.06em" }}>
+                      {k.docs} Dok.
+                    </span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-subtle)", letterSpacing: "0.06em" }}>
+                      {k.updated}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </section>
 
-          <section>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8 }}>
-              <span className="grb-eyebrow">Zuletzt bearbeitet</span>
-              <Link href="/archiv" className="grb-btn-link" style={{ fontSize: 11 }}>
-                Archiv <Icon name="arrow" size={12} />
-              </Link>
-            </div>
-            <div style={{ borderTop: "1px solid var(--fg)" }}>
-              {recentDocs.map((d, i) => (
-                <Link
-                  key={i}
-                  href={`/kommissionen/${d.kommission}`}
-                  style={{
-                    padding: "14px 0",
-                    borderBottom: "1px solid var(--hairline)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 14,
-                    textDecoration: "none",
-                    color: "inherit",
-                  }}
-                >
-                  <Icon
-                    name={d.kind === "palette" ? "pkg" : "doc-stripe"}
-                    size={18}
-                    stroke={1.25}
-                    style={{ color: "var(--fg-muted)" }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: "var(--font-sans)", fontSize: 14, color: "var(--fg)", fontWeight: 500 }}>
-                      {d.label} · {d.client}
-                    </div>
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-subtle)", marginTop: 2 }}>
-                      {d.kommission} · {d.stamp} · {d.by}
-                    </div>
-                  </div>
-                  <Icon name="arrow" size={14} style={{ color: "var(--fg-subtle)" }} />
+            <section>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8 }}>
+                <span className="grb-eyebrow">Zuletzt bearbeitet</span>
+                <Link href="/archiv" className="grb-btn-link" style={{ fontSize: 11 }}>
+                  Archiv <Icon name="arrow" size={12} />
                 </Link>
-              ))}
-            </div>
-          </section>
-        </div>
+              </div>
+              <div style={{ borderTop: "1px solid var(--fg)" }}>
+                {recentDocs.map((d, i) => (
+                  <Link
+                    key={i}
+                    href={`/kommissionen/${d.kommission}`}
+                    style={{
+                      padding: "14px 0",
+                      borderBottom: "1px solid var(--hairline)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 14,
+                      textDecoration: "none",
+                      color: "inherit",
+                    }}
+                  >
+                    <Icon
+                      name={d.kind === "palette" ? "pkg" : "doc-stripe"}
+                      size={18}
+                      stroke={1.25}
+                      style={{ color: "var(--fg-muted)" }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontFamily: "var(--font-sans)", fontSize: 14, color: "var(--fg)", fontWeight: 500 }}>
+                        {d.label} · {d.client}
+                      </div>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-subtle)", marginTop: 2 }}>
+                        {d.kommission} · {d.stamp} · {d.by}
+                      </div>
+                    </div>
+                    <Icon name="arrow" size={14} style={{ color: "var(--fg-subtle)" }} />
+                  </Link>
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
       </div>
     </>
   );
 }
+

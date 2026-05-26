@@ -1,3 +1,6 @@
+
+
+
 # Schlutte — Designentscheidungen
 
 Stand: 2026-05-26 (Skelett, Daten-Kapselung & Browser-Druck implementiert).
@@ -15,7 +18,7 @@ Stand: 2026-05-26 (Skelett, Daten-Kapselung & Browser-Druck implementiert).
 ## Architektur
 
 - **GitHub** ist die Codebasis. **Vercel** deployed die Next.js-App.
-- **Supabase** liefert später Datenbank, Auth und Storage. Aktuell keine Live-Anbindung.
+- **Supabase** liefert die Live-Datenbank (Tabellen: `employees`, `commissions`, `documents`, `document_prints`).
 - Keine Secrets im Repo. Konfiguration ausschließlich über Umgebungsvariablen
   (lokal `.env.local`, in Vercel über das Projekt-Setting).
 - Keine lokalen Dateisystem-Abhängigkeiten — alles serverless-kompatibel.
@@ -24,24 +27,11 @@ Stand: 2026-05-26 (Skelett, Daten-Kapselung & Browser-Druck implementiert).
 
 - **Mock-Daten werden über Data-Funktionen gekapselt.** Pages und Komponenten
   importieren ausschließlich aus `lib/data/*`, nie direkt aus `mocks/*`.
-- **Supabase wird später hinter diese Data-Schicht gesetzt.** Funktionen wie
-  `getCommissions()`, `getCommissionByNumber(nr)` etc. sind bereits `async` und
-  geben `Promise` zurück; nur die Implementierung wird ausgetauscht.
-- API-Vertrag der Data-Schicht:
-  - `lib/data/commissions.ts`: `getCommissions`, `getCommissionByNumber`,
-    `searchCommissions`, `createCommission`
-  - `lib/data/documents.ts`: `getRecentDocuments`, `getDocumentsByCommissionNumber`,
-    `getPalettePrintPage`, `getPalettePrintRange`, `getLaufzettelPrintData`,
-    `getPalettesForCommission`
+- **Supabase ist live angebunden.** Die Daten-Funktionen in `lib/data/commissions.ts` und `lib/data/documents.ts` lesen und schreiben live in die Supabase-Datenbank.
+- **Transparenter Fallback auf Mock-Daten:** Wenn die Datenbank leer ist, bei RLS-Fehlern (wenn keine aktive Sitzung besteht) oder bei Verbindungsproblemen greift die Data-Schicht automatisch auf die lokalen Mock-Daten in `mocks/data.ts` zurück, so dass lokales Entwickeln und Testen unterbrechungsfrei möglich sind.
 - **Write-Pfad-Konvention:** Mutationen laufen über Next.js Server Actions
-  (`"use server"`) in Routen-nahen `actions.ts`-Dateien, niemals direkt aus
-  Komponenten. Die Action ruft die Data-Schicht, ruft `revalidatePath` und
-  ggf. `redirect`. Die Data-Schicht wirft typisierte Fehler (z. B.
-  `CommissionValidationError`), die Action mappt sie auf den Form-State.
-- Mocks sind im Speicher *mutable* (z. B. `COMMISSIONS.unshift(...)`); Restart
-  setzt den Stand zurück. Das ist für MVP ok, Supabase übernimmt das später.
-- Mock-Daten leben isoliert unter `mocks/data.ts` und werden später ersatzlos
-  entfernt, wenn Supabase übernimmt.
+  (`"use server"`) in Routen-nahen `actions.ts`-Dateien, die wiederum die Data-Schicht aufrufen, `revalidatePath` ausführen und bei Erfolg weiterleiten. Die Data-Schicht wirft typisierte Fehler, die von den Server Actions an die Formulare gereicht werden.
+- Mock-Daten leben isoliert unter `mocks/data.ts` und werden später entfernt, sobald Auth und RLS-Registrierung vollständig in der UI verankert sind.
 
 ## Druck
 
@@ -64,23 +54,56 @@ Stand: 2026-05-26 (Skelett, Daten-Kapselung & Browser-Druck implementiert).
 - Brass-Akzent `#A6824A` nur für Eyebrows / Index, nie für Flächen.
 - Hairlines statt Schatten. Scharfe Ecken.
 
-## Supabase-Schema (Entwurf)
+## Supabase-Schema (Produktiv)
 
-Eingecheckt unter `supabase/schema.sql` — noch nicht ausgerollt, dient als
-Vertrag für die Data-Schicht:
+Die Tabellen wurden verifiziert und die Data-Schicht auf das reale Schema angepasst:
 
-- `commissions` — `nr` als 6-stelliger Text mit CHECK, `client`, optional
-  `project` (Bauteil/Objekt), `status`, FK auf `profiles` als Owner.
-- `palettes` — `idx`, `total`, `content`, `weight`, `dim`, `positions text[]`,
-  FK auf Kommission, unique `(commission_id, idx)`.
-- `documents` — Druckstände (`kind in ('laufzettel','palette')`), optionaler
-  FK auf `palettes`, `storage_path` für später hochgeladene PDFs.
-- `profiles` — spiegelt `auth.users`, trägt `kuerzel` und `role`.
-- RLS aktiv, MVP-Policies: alle Authenticated dürfen lesen/schreiben; Vorlagen
-  bekommen später eine Admin-only-Policy.
+- `commissions`
+  - `id` (uuid, Primary Key)
+  - `commission_number` (text, 6 Ziffern)
+  - `customer_name` (text)
+  - `project_name` (text, optional)
+  - `notes` (text, optional)
+  - `created_by_initials` (text)
+  - `created_at` (timestamptz)
+  - `updated_at` (timestamptz)
+- `documents`
+  - `id` (uuid, Primary Key)
+  - `commission_id` (uuid references commissions)
+  - `document_type` (text: 'laufzettel' | 'palette')
+  - `title` (text, z.B. "Laufzettel")
+  - `form_data` (jsonb, strukturiert nach `LaufzettelFormData` / `PaletteFormData`)
+  - `created_by_initials` (text)
+  - `created_at` (timestamptz)
+  - `updated_at` (timestamptz)
+- `document_prints`
+  - `id` (uuid, Primary Key)
+  - `document_id` (uuid references documents)
+  - `print_label` (text, z.B. "Palette 1 / 5")
+  - `pdf_url` (text, optional)
+  - `created_by_initials` (text)
+  - `created_at` (timestamptz)
+- `employees`
+  - `id` (uuid, Primary Key)
+  - `initials` (text)
+  - `name` (text)
+  - `is_admin` (boolean)
+  - `is_active` (boolean)
+  - `created_at` (timestamptz)
 
-Sobald das Schema produktiv ist, wird `lib/data/*` umgestellt; Pages bleiben
-unverändert.
+- **Druck-Protokollierung:** Jeder Druckauftrag (Einzelseite oder Bereich) wird in der Tabelle `document_prints` protokolliert (sofern Berechtigungen dies zulassen).
+- **RLS aktiv:** MVP-Policies verlangen für Schreiboperationen einen angemeldeten Benutzer (authenticated). RLS-Fehlermeldungen werden an den Client als nutzerfreundliche Fehlermeldungen durchgereicht.
+- **Dokumenten-Speicherung:** Dokumente (Laufzettel und Palettenbeschriftungen) werden live in der Tabelle `documents` in Supabase gespeichert.
+- **Formulardaten (form_data):** Alle dokumentenspezifischen Felder werden als JSONB im Feld `form_data` abgelegt:
+  - *Laufzettel:* `area`, `componentName`, `material`, `surface`, `note`, `employeeInitials`, `categories`
+  - *Palette:* `objectName`, `dimensions`, `positionNumber`, `packageCount`, `shippingNote`, `employeeInitials`
+- **Kommissionsdetailseite:** Die Detailseite (`/kommissionen/[nr]`) lädt alle zugehörigen Dokumente aus Supabase und stellt sie in den jeweiligen Tabellen bzw. Rastern dar.
+
+## Authentifizierung & Berechtigungen
+
+- **Supabase Auth** ist als MVP-Voraussetzung integriert, um die Authentifizierung auf Datenbank-Ebene für RLS (Row Level Security) bereitzustellen.
+- **Rollen und Rechte im MVP:** Alle angemeldeten Benutzer (authenticated) besitzen die gleichen Rechte und können Kommissionen und Dokumente erstellen, bearbeiten und drucken.
+- **Zukünftige Erweiterung:** Feingranulare Rollenrechte, Admin-Rechte (z. B. für das Verwalten von Vorlagen) sowie die Kopplung an das `employees`-Schema sind für spätere Versionen vorgesehen.
 
 ## Offen
 

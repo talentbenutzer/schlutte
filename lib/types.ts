@@ -11,11 +11,25 @@ export type Commission = {
   note?: string;
 };
 
-export type Employee = {
-  kuerzel: string;
-  name: string;
-  role: string;
+export type CreateCommissionInput = {
+  no: string;
+  client: string;
+  project?: string;
+  owner?: string;
+  note?: string;
 };
+
+export type Employee = {
+  id?: string;
+  initials?: string;
+  kuerzel: string; // UI compatibility
+  name: string;
+  role: string;    // UI compatibility
+  is_admin?: boolean;
+  is_active?: boolean;
+  created_at?: string;
+};
+
 
 export type RecentDoc = {
   type: string;
@@ -36,28 +50,22 @@ export type Palette = {
 };
 
 export type LaufzettelFormData = {
-  commissionNo: string;
-  client: string;
-  project?: string;
-  room?: string;
-  partName?: string;
+  area?: string;
+  componentName?: string;
   material?: string;
   surface?: string;
   note?: string;
-  owner?: string;
-  components: string[];
+  employeeInitials: string;
+  categories: string[];
 };
 
 export type PaletteFormData = {
-  commissionNo: string;
-  client: string;
-  project?: string;
-  partName?: string;
-  dim?: string;
-  positions?: string;
-  count: number;
+  objectName?: string;
+  dimensions?: string;
+  positionNumber?: string;
+  packageCount: number;
   shippingNote?: string;
-  owner?: string;
+  employeeInitials: string;
 };
 
 
@@ -78,6 +86,7 @@ export type CommissionDocument = {
   client: string;
   stamp: string;
   by: string;
+  formData?: LaufzettelFormData | PaletteFormData;
 };
 
 export type LaufzettelPrintData = {
@@ -86,6 +95,7 @@ export type LaufzettelPrintData = {
   stations: string[];
   printedBy: string;
   printedAt: string;
+  formData?: LaufzettelFormData;
 };
 
 export type PalettePrintPage = {
@@ -93,6 +103,26 @@ export type PalettePrintPage = {
   palette: Palette;
   printedBy: string;
   printedAt: string;
+};
+
+export type Document = {
+  id: string;
+  commission_id: string;
+  document_type: "laufzettel" | "palette";
+  title: string;
+  form_data: LaufzettelFormData | PaletteFormData;
+  created_by_initials: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DocumentPrint = {
+  id: string;
+  document_id: string;
+  print_label: string;
+  pdf_url?: string;
+  created_by_initials: string;
+  created_at: string;
 };
 
 export const STATUS_LABEL: Record<CommissionStatus, string> = {

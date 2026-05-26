@@ -3,10 +3,7 @@ import { notFound } from "next/navigation";
 import { Icon } from "@/components/ui/Icon";
 import { Status } from "@/components/ui/Status";
 import { getCommissionByNumber } from "@/lib/data/commissions";
-import {
-  getDocumentsByCommissionNumber,
-  getPalettesForCommission,
-} from "@/lib/data/documents";
+import { getDocumentsByCommissionNumber } from "@/lib/data/documents";
 
 function SectionHeader({
   eyebrow,
@@ -61,18 +58,12 @@ export default async function CommissionDetailPage({
   const commission = await getCommissionByNumber(nr);
   if (!commission) notFound();
 
-  const [documents, palettes] = await Promise.all([
-    getDocumentsByCommissionNumber(nr),
-    getPalettesForCommission(nr),
-  ]);
+  const documents = await getDocumentsByCommissionNumber(nr);
 
   const laufzettelDocs = documents.filter((d) => d.kind === "laufzettel");
   const paletteDocs = documents.filter((d) => d.kind === "palette");
-  const totalPalettes = palettes.length;
-  const palettesPrintHref =
-    totalPalettes > 0
-      ? `/print/palette/${commission.no}/range/1/${totalPalettes}`
-      : `/print/palette/${commission.no}/1`;
+  // Action-bar "Palette drucken" points to the newest palette set if available
+  const firstPaletteId = paletteDocs.length > 0 ? paletteDocs[0].id : null;
 
   return (
     <div
@@ -187,20 +178,24 @@ export default async function CommissionDetailPage({
           </Link>
           <Link
             className="grb-btn grb-btn-ghost"
-            href={`/print/laufzettel/${commission.no}`}
+            href={`/kommissionen/${commission.no}/dokumente/laufzettel/neu`}
           >
-            <Icon name="print" size={14} /> Laufzettel drucken
+            <Icon name="doc-stripe" size={14} /> Laufzettel
           </Link>
+          {firstPaletteId ? (
+            <Link
+              className="grb-btn grb-btn-ghost"
+              href={`/print/palette/document/${firstPaletteId}/range/1/999`}
+            >
+              <Icon name="print" size={14} /> Palette drucken
+            </Link>
+          ) : null}
           <Link
-            className="grb-btn grb-btn-ghost"
-            href={palettesPrintHref}
+            className="grb-btn grb-btn-quiet"
+            href={`/kommissionen/${commission.no}/bearbeiten`}
           >
-            <Icon name="print" size={14} />
-            {totalPalettes > 1 ? `Alle ${totalPalettes} Paletten drucken` : "Palette drucken"}
-          </Link>
-          <button className="grb-btn grb-btn-quiet" disabled title="Folgt">
             <Icon name="edit" size={14} /> Bearbeiten
-          </button>
+          </Link>
         </div>
       </header>
 
@@ -212,7 +207,7 @@ export default async function CommissionDetailPage({
           index={laufzettelDocs.length > 0 ? `${laufzettelDocs.length} Stück` : undefined}
           action={
             <Link
-              href={`/print/laufzettel/${commission.no}`}
+              href={`/kommissionen/${commission.no}/dokumente/laufzettel/neu`}
               className="grb-btn-link"
               style={{ fontSize: 11 }}
             >
@@ -255,10 +250,10 @@ export default async function CommissionDetailPage({
               </div>
             </div>
             <Link
-              href={`/print/laufzettel/${commission.no}`}
+              href={`/kommissionen/${commission.no}/dokumente/laufzettel/neu`}
               className="grb-btn grb-btn-ghost"
             >
-              <Icon name="doc-stripe" size={14} /> Laufzettel öffnen
+              <Icon name="doc-stripe" size={14} /> Laufzettel erstellen
             </Link>
           </div>
         ) : (
@@ -309,129 +304,115 @@ export default async function CommissionDetailPage({
         <SectionHeader
           eyebrow="Dokumente · Palettenbeschriftung"
           title="Paletten zu dieser Kommission"
-          index={palettes.length > 0 ? `${palettes.length} Paletten` : undefined}
+          index={paletteDocs.length > 0 ? `${paletteDocs.length} Sets` : undefined}
           action={
-            paletteDocs.length > 0 ? (
-              <span
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 11,
-                  letterSpacing: "0.12em",
-                  color: "var(--fg-subtle)",
-                  textTransform: "uppercase",
-                }}
-              >
-                {paletteDocs.length} bereits gedruckt
-              </span>
-            ) : undefined
+            <Link
+              href={`/kommissionen/${commission.no}/dokumente/palette/neu`}
+              className="grb-btn-link"
+              style={{ fontSize: 11 }}
+            >
+              Neues Paletten-Set <Icon name="arrow" size={12} />
+            </Link>
           }
         />
 
-        {palettes.length === 0 ? (
+        {paletteDocs.length === 0 ? (
           <div
             style={{
               border: "1px dashed var(--border-strong)",
               padding: "24px 28px",
-              fontFamily: "var(--font-sans)",
-              fontSize: 13,
-              color: "var(--fg-muted)",
-            }}
-          >
-            Noch keine Paletten erfasst.
-          </div>
-        ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
               gap: 16,
             }}
           >
-            {palettes.map((p) => (
-              <Link
-                key={p.idx}
-                href={`/print/palette/${commission.no}/${p.idx}`}
+            <div>
+              <div
                 style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 12,
-                  padding: 18,
-                  background: "var(--bg-raised)",
-                  border: "1px solid var(--border)",
-                  minHeight: 200,
-                  textDecoration: "none",
-                  color: "inherit",
+                  fontFamily: "var(--font-sans)",
+                  fontSize: 14,
+                  color: "var(--fg)",
+                  fontWeight: 500,
                 }}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                  }}
-                >
-                  <span className="grb-eyebrow">Palette</span>
-                  <Icon
-                    name="print"
-                    size={14}
-                    style={{ color: "var(--fg-subtle)" }}
-                  />
-                </div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontWeight: 300,
-                      fontSize: 56,
-                      color: "var(--fg)",
-                      letterSpacing: "-0.02em",
-                      lineHeight: 1,
-                    }}
-                  >
-                    {p.idx}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontStyle: "italic",
-                      fontWeight: 200,
-                      fontSize: 22,
-                      color: "var(--fg-muted)",
-                    }}
-                  >
-                    von {p.total}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    fontFamily: "var(--font-sans)",
-                    fontSize: 13,
-                    color: "var(--fg)",
-                    lineHeight: 1.45,
-                  }}
-                >
-                  {p.content}
-                </div>
-                <div
-                  style={{
-                    marginTop: "auto",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 8,
-                    paddingTop: 10,
-                    borderTop: "1px solid var(--hairline)",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: 10,
-                    letterSpacing: "0.08em",
-                    color: "var(--fg-subtle)",
-                  }}
-                >
-                  <span>{p.weight}</span>
-                  <span>{p.dim}</span>
-                </div>
-              </Link>
-            ))}
+                Noch kein Paletten-Set angelegt.
+              </div>
+              <div
+                style={{
+                  fontFamily: "var(--font-sans)",
+                  fontSize: 13,
+                  color: "var(--fg-muted)",
+                  marginTop: 4,
+                }}
+              >
+                Packstückanzahl, Maße und Empfänger — bereit für den Versand.
+              </div>
+            </div>
+            <Link
+              href={`/kommissionen/${commission.no}/dokumente/palette/neu`}
+              className="grb-btn grb-btn-ghost"
+            >
+              <Icon name="plus" size={14} /> Paletten-Set anlegen
+            </Link>
           </div>
+        ) : (
+          <table className="grb-table">
+            <thead>
+              <tr>
+                <th style={{ width: 30 }} />
+                <th>Bezeichnung</th>
+                <th>Packstücke</th>
+                <th>Erstellt</th>
+                <th>Von</th>
+                <th style={{ textAlign: "right" }}>Aktion</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paletteDocs.map((d) => (
+                <tr key={d.id}>
+                  <td>
+                    <Icon
+                      name="box"
+                      size={16}
+                      stroke={1.25}
+                      style={{ color: "var(--fg-muted)" }}
+                    />
+                  </td>
+                  <td style={{ fontWeight: 500 }}>{d.label}</td>
+                  <td className="mono" style={{ color: "var(--fg-muted)" }}>—</td>
+                  <td className="mono">{d.stamp}</td>
+                  <td className="mono" style={{ color: "var(--accent)" }}>
+                    {d.by}
+                  </td>
+                  <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                    <Link
+                      href={`/kommissionen/${commission.no}/dokumente/palette/${d.id}/bearbeiten`}
+                      style={{ padding: "4px 8px", color: "var(--fg-muted)" }}
+                      title="Bearbeiten"
+                    >
+                      <Icon name="edit" size={14} />
+                    </Link>
+                    <Link
+                      href={`/print/palette/document/${d.id}/1`}
+                      style={{ padding: "4px 8px", color: "var(--fg)" }}
+                      title="Erste Palette drucken"
+                    >
+                      <Icon name="print" size={14} />
+                    </Link>
+                    <Link
+                      href={`/print/palette/document/${d.id}/range/1/999`}
+                      style={{ padding: "4px 8px", color: "var(--accent)" }}
+                      title="Alle Paletten drucken"
+                    >
+                      <Icon name="print" size={14} />
+                      <span style={{ fontSize: 11, marginLeft: 4 }}>Alle</span>
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </section>
 

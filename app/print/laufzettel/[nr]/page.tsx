@@ -11,7 +11,7 @@ export default async function LaufzettelPrintPage({
   const { nr } = await params;
   const data = await getLaufzettelPrintData(nr);
   if (!data) notFound();
-  const { commission, materials, stations, printedBy, printedAt } = data;
+  const { commission, materials, stations, printedBy, printedAt, formData } = data;
 
   return (
     <>
@@ -61,13 +61,13 @@ export default async function LaufzettelPrintPage({
                 <div>
                   <div className="print-label">Bereich / Raum</div>
                   <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "#0E0E0D", marginTop: 2, fontWeight: 500 }}>
-                    {commission.no === "260050" ? "Erdgeschoss / Küche" : "Innenbereich"}
+                    {formData?.area || (commission.no === "260050" ? "Erdgeschoss / Küche" : "Innenbereich")}
                   </div>
                 </div>
                 <div>
                   <div className="print-label">Bauteil / Bezeichnung</div>
                   <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "#0E0E0D", marginTop: 2, fontWeight: 500 }}>
-                    {commission.no === "260050" ? "Kücheninsel & Zeile" : "Möbelelemente"}
+                    {formData?.componentName || (commission.no === "260050" ? "Kücheninsel & Zeile" : "Möbelelemente")}
                   </div>
                 </div>
               </div>
@@ -76,13 +76,13 @@ export default async function LaufzettelPrintPage({
                 <div>
                   <div className="print-label">Material</div>
                   <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "#0E0E0D", marginTop: 2, fontWeight: 500 }}>
-                    Eiche furniert / massiv
+                    {formData?.material || "Eiche furniert / massiv"}
                   </div>
                 </div>
                 <div>
                   <div className="print-label">Oberfläche</div>
                   <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "#0E0E0D", marginTop: 2, fontWeight: 500 }}>
-                    Natur matt lackiert
+                    {formData?.surface || "Natur matt lackiert"}
                   </div>
                 </div>
               </div>
@@ -106,12 +106,25 @@ export default async function LaufzettelPrintPage({
                   "Fachböden",
                   "Konstruktionsböden",
                   "Sonstiges",
-                ].map((cb) => (
-                  <div key={cb} style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: "var(--font-sans)", fontSize: 12, color: "#0E0E0D" }}>
-                    <span style={{ display: "inline-block", width: 12, height: 12, border: "1px solid #0E0E0D", flexShrink: 0 }} />
-                    <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{cb}</span>
-                  </div>
-                ))}
+                ].map((cb) => {
+                  const checked = formData ? formData.categories?.includes(cb) : false;
+                  return (
+                    <div key={cb} style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: "var(--font-sans)", fontSize: 12, color: "#0E0E0D" }}>
+                      <span style={{
+                        display: "inline-grid",
+                        placeItems: "center",
+                        width: 12,
+                        height: 12,
+                        border: "1px solid #0E0E0D",
+                        background: checked ? "#0E0E0D" : "transparent",
+                        flexShrink: 0
+                      }}>
+                        {checked && <span style={{ width: 4, height: 4, background: "#FFF" }} />}
+                      </span>
+                      <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{cb}</span>
+                    </div>
+                  );
+                })}
               </div>
             </section>
 
@@ -120,7 +133,7 @@ export default async function LaufzettelPrintPage({
               <div>
                 <div className="print-label">Mitarbeiter (Kürzel)</div>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "#0E0E0D", marginTop: 4, letterSpacing: "0.06em" }}>
-                  {commission.owner}
+                  {formData?.employeeInitials || commission.owner}
                 </div>
               </div>
               <div>
@@ -192,9 +205,9 @@ export default async function LaufzettelPrintPage({
             </section>
 
             <section style={{ borderTop: "1px solid rgba(14,14,13,.18)", paddingTop: 10, flex: 1, display: "flex", flexDirection: "column" }}>
-              <div className="print-label" style={{ marginBottom: 6 }}>Notizen · handschriftlich</div>
-              <div style={{ flex: 1, border: "1px dashed rgba(14,14,13,.25)", minHeight: 80, padding: "8px 12px", fontSize: 11, color: "#8A8278", fontFamily: "var(--font-sans)" }}>
-                Ergänzungen zu Kanten, Beschlägen, Sondermaßen ...
+              <div className="print-label" style={{ marginBottom: 6 }}>{formData?.note ? "Notizen" : "Notizen · handschriftlich"}</div>
+              <div style={{ flex: 1, border: "1px dashed rgba(14,14,13,.25)", minHeight: 80, padding: "8px 12px", fontSize: 11, color: formData?.note ? "#0E0E0D" : "#8A8278", fontFamily: "var(--font-sans)", whiteSpace: "pre-wrap" }}>
+                {formData?.note || "Ergänzungen zu Kanten, Beschlägen, Sondermaßen ..."}
               </div>
             </section>
           </div>

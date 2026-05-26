@@ -1,26 +1,67 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
-import type { Commission } from "@/lib/types";
+import type { Commission, PaletteFormData } from "@/lib/types";
+import { createClient } from "@/lib/supabase/client";
+import { savePaletteAction } from "./actions";
 
-export function PaletteForm({ commission }: { commission: Commission }) {
+export function PaletteForm({
+  commission,
+  documentId,
+  initialData,
+}: {
+  commission: Commission;
+  documentId?: string;
+  initialData?: PaletteFormData;
+}) {
   const router = useRouter();
   const [project, setProject] = useState(commission.project || "");
-  const [partName, setPartName] = useState("");
-  const [dim, setDim] = useState("");
-  const [positions, setPositions] = useState("");
-  const [count, setCount] = useState<number>(1);
-  const [shippingNote, setShippingNote] = useState("");
-  const [owner, setOwner] = useState(commission.owner || "EDL");
+  const [partName, setPartName] = useState(initialData?.objectName || "");
+  const [dim, setDim] = useState(initialData?.dimensions || "");
+  const [positions, setPositions] = useState(initialData?.positionNumber || "");
+  const [count, setCount] = useState<number>(initialData?.packageCount || 1);
+  const [shippingNote, setShippingNote] = useState(initialData?.shippingNote || "");
+  const [owner, setOwner] = useState(initialData?.employeeInitials || commission.owner || "EDL");
+  const [submitAction, setSubmitAction] = useState<"single" | "range">("single");
   
   const [countError, setCountError] = useState("");
   const [ownerError, setOwnerError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
-  const handleSave = (e: React.FormEvent) => {
+  const supabase = createClient();
+
+  useEffect(() => {
+    if (initialData?.employeeInitials) return;
+    let active = true;
+    const loadUserKuerzel = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!active || !user) return;
+      
+      const { data } = await supabase
+        .from("employees")
+        .select("initials")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (!active) return;
+      if (data?.initials) {
+        setOwner(data.initials);
+      } else if (user.email) {
+        setOwner(user.email.slice(0, 3).toUpperCase());
+      }
+    };
+    loadUserKuerzel();
+    return () => {
+      active = false;
+    };
+  }, [supabase, initialData]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     let hasError = false;
 
@@ -40,13 +81,35 @@ export function PaletteForm({ commission }: { commission: Commission }) {
 
     if (hasError) return;
 
+    setIsSaving(true);
+    setSaveError("");
+
+    const payload: PaletteFormData = {
+      objectName: partName,
+      dimensions: dim,
+      positionNumber: positions,
+      packageCount: count,
+      shippingNote,
+      employeeInitials: owner,
+    };
+
+    const result = await savePaletteAction(commission.no, payload, documentId);
+    setIsSaving(false);
+
+    if (result.error) {
+      setSaveError(result.error);
+      return;
+    }
+
     setIsSaved(true);
     
-    // Simulate saving (e.g. redirects after brief delay)
-    setTimeout(() => {
-      router.push(`/kommissionen/${commission.no}`);
-      router.refresh();
-    }, 1500);
+    const docId = result.documentId;
+    if (submitAction === "single") {
+      router.push(`/print/palette/document/${docId}/1`);
+    } else {
+      router.push(`/print/palette/document/${docId}/range/1/${count}`);
+    }
+    router.refresh();
   };
 
   return (
@@ -63,7 +126,23 @@ export function PaletteForm({ commission }: { commission: Commission }) {
             fontSize: 14,
           }}
         >
-          ✓ Palettenbeschriftung erfolgreich simuliert gespeichert! Weiterleitung...
+          ✓ Palettenbeschriftung erfolgreich gespeichert! Weiterleitung...
+        </div>
+      )}
+
+      {saveError && (
+        <div
+          role="alert"
+          style={{
+            border: "1px solid var(--gd-danger)",
+            color: "var(--gd-danger)",
+            background: "var(--bg-alt)",
+            padding: "12px 14px",
+            fontFamily: "var(--font-sans)",
+            fontSize: 14,
+          }}
+        >
+          ❌ {saveError}
         </div>
       )}
 
@@ -184,24 +263,24 @@ export function PaletteForm({ commission }: { commission: Commission }) {
       )}
 
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 12, flexWrap: "wrap" }}>
-        <button type="submit" className="grb-btn grb-btn-primary" disabled={isSaved}>
+        <button
+          type="submit"
+          className="grb-btn grb-btn-primary"
+          disabled={isSaving || isSaved}
+          onClick={() => setSubmitAction("single")}
+        >
           <Icon name="check" size={14} />
-          {isSaved ? "Wird gespeichert..." : "Speichern simulieren"}
+          {isSaved && submitAction === "single" ? "Weiterleitung..." : isSaving ? "Wird gespeichert..." : "Speichern & Vorschau öffnen"}
         </button>
-        <Link
-          href={`/print/palette/${commission.no}/1`}
-          target="_blank"
+        <button
+          type="submit"
           className="grb-btn grb-btn-ghost"
+          disabled={isSaving || isSaved}
+          onClick={() => setSubmitAction("range")}
         >
-          <Icon name="eye" size={14} /> Vorschau 1. Palette
-        </Link>
-        <Link
-          href={`/print/palette/${commission.no}/range/1/${count || 1}`}
-          target="_blank"
-          className="grb-btn grb-btn-ghost"
-        >
-          <Icon name="print" size={14} /> Alle {count} drucken
-        </Link>
+          <Icon name="print" size={14} />
+          {isSaved && submitAction === "range" ? "Weiterleitung..." : "Alle Packstücke drucken"}
+        </button>
         <Link href={`/kommissionen/${commission.no}`} className="grb-btn grb-btn-quiet">
           Abbrechen
         </Link>

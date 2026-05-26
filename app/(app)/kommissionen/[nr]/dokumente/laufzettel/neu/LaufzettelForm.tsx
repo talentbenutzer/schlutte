@@ -1,24 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
-import type { Commission } from "@/lib/types";
+import type { Commission, LaufzettelFormData } from "@/lib/types";
+import { createClient } from "@/lib/supabase/client";
+import { saveLaufzettelAction } from "./actions";
 
-export function LaufzettelForm({ commission }: { commission: Commission }) {
+export function LaufzettelForm({
+  commission,
+  documentId,
+  initialData,
+}: {
+  commission: Commission;
+  documentId?: string;
+  initialData?: LaufzettelFormData;
+}) {
   const router = useRouter();
   const [project, setProject] = useState(commission.project || "");
-  const [room, setRoom] = useState("");
-  const [partName, setPartName] = useState("");
-  const [material, setMaterial] = useState("");
-  const [surface, setSurface] = useState("");
-  const [note, setNote] = useState("");
-  const [owner, setOwner] = useState(commission.owner || "EDL");
-  const [selectedComponents, setSelectedComponents] = useState<string[]>([]);
+  const [room, setRoom] = useState(initialData?.area || "");
+  const [partName, setPartName] = useState(initialData?.componentName || "");
+  const [material, setMaterial] = useState(initialData?.material || "");
+  const [surface, setSurface] = useState(initialData?.surface || "");
+  const [note, setNote] = useState(initialData?.note || "");
+  const [owner, setOwner] = useState(initialData?.employeeInitials || commission.owner || "EDL");
+  const [selectedComponents, setSelectedComponents] = useState<string[]>(initialData?.categories || []);
   
   const [ownerError, setOwnerError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  const supabase = createClient();
+
+  useEffect(() => {
+    if (initialData?.employeeInitials) return;
+    let active = true;
+    const loadUserKuerzel = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!active || !user) return;
+      
+      const { data } = await supabase
+        .from("employees")
+        .select("initials")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (!active) return;
+      if (data?.initials) {
+        setOwner(data.initials);
+      } else if (user.email) {
+        setOwner(user.email.slice(0, 3).toUpperCase());
+      }
+    };
+    loadUserKuerzel();
+    return () => {
+      active = false;
+    };
+  }, [supabase, initialData]);
 
   const COMPONENTS = [
     "Seiten",
@@ -44,20 +84,38 @@ export function LaufzettelForm({ commission }: { commission: Commission }) {
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (owner.length > 3) {
       setOwnerError("Mitarbeiterkürzel darf maximal 3 Zeichen lang sein.");
       return;
     }
     setOwnerError("");
+    setIsSaving(true);
+    setSaveError("");
+    
+    const payload: LaufzettelFormData = {
+      area: room,
+      componentName: partName,
+      material,
+      surface,
+      note,
+      employeeInitials: owner,
+      categories: selectedComponents,
+    };
+
+    const result = await saveLaufzettelAction(commission.no, payload, documentId);
+    setIsSaving(false);
+
+    if (result.error) {
+      setSaveError(result.error);
+      return;
+    }
+
     setIsSaved(true);
     
-    // Simulate saving (e.g. redirects after brief delay)
-    setTimeout(() => {
-      router.push(`/kommissionen/${commission.no}`);
-      router.refresh();
-    }, 1500);
+    router.push(`/print/laufzettel/${commission.no}`);
+    router.refresh();
   };
 
   return (
@@ -74,7 +132,23 @@ export function LaufzettelForm({ commission }: { commission: Commission }) {
             fontSize: 14,
           }}
         >
-          ✓ Laufzettel erfolgreich simuliert gespeichert! Weiterleitung...
+          ✓ Laufzettel erfolgreich gespeichert! Weiterleitung...
+        </div>
+      )}
+
+      {saveError && (
+        <div
+          role="alert"
+          style={{
+            border: "1px solid var(--gd-danger)",
+            color: "var(--gd-danger)",
+            background: "var(--bg-alt)",
+            padding: "12px 14px",
+            fontFamily: "var(--font-sans)",
+            fontSize: 14,
+          }}
+        >
+          ❌ {saveError}
         </div>
       )}
 
@@ -218,17 +292,10 @@ export function LaufzettelForm({ commission }: { commission: Commission }) {
       </div>
 
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 12, flexWrap: "wrap" }}>
-        <button type="submit" className="grb-btn grb-btn-primary" disabled={isSaved}>
+        <button type="submit" className="grb-btn grb-btn-primary" disabled={isSaving || isSaved}>
           <Icon name="check" size={14} />
-          {isSaved ? "Wird gespeichert..." : "Speichern simulieren"}
+          {isSaved ? "Weiterleitung..." : isSaving ? "Wird gespeichert..." : "Speichern & Vorschau öffnen"}
         </button>
-        <Link
-          href={`/print/laufzettel/${commission.no}`}
-          target="_blank"
-          className="grb-btn grb-btn-ghost"
-        >
-          <Icon name="eye" size={14} /> Vorschau & Drucken
-        </Link>
         <Link href={`/kommissionen/${commission.no}`} className="grb-btn grb-btn-quiet">
           Abbrechen
         </Link>

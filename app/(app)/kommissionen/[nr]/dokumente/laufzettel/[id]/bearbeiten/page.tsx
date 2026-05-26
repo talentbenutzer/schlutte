@@ -1,0 +1,68 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getCommissionByNumber } from "@/lib/data/commissions";
+import { getDocumentById } from "@/lib/data/documents";
+import { LaufzettelForm } from "../../neu/LaufzettelForm";
+import type { LaufzettelFormData } from "@/lib/types";
+
+export default async function EditLaufzettelPage({
+  params,
+}: {
+  params: Promise<{ nr: string; id: string }>;
+}) {
+  const { nr, id } = await params;
+  const [commission, document] = await Promise.all([
+    getCommissionByNumber(nr),
+    getDocumentById(id),
+  ]);
+
+  if (!commission || !document) notFound();
+  if (document.document_type !== "laufzettel") notFound();
+
+  const formData = document.form_data as unknown as LaufzettelFormData;
+
+  return (
+    <div
+      style={{
+        padding: "40px 56px 80px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 32,
+        maxWidth: 960,
+        margin: "0 auto",
+        width: "100%",
+      }}
+    >
+      <div>
+        <Link
+          href={`/kommissionen/${commission.no}`}
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: 11,
+            letterSpacing: "0.18em",
+            color: "var(--fg-muted)",
+            textTransform: "uppercase",
+            textDecoration: "none",
+          }}
+        >
+          ← Kommission {commission.no}
+        </Link>
+        <span className="grb-eyebrow" style={{ display: "block", marginTop: 18 }}>
+          Dokument bearbeiten
+        </span>
+        <h1 className="grb-h-h1" style={{ marginTop: 6 }}>
+          Laufzettel bearbeiten
+        </h1>
+        <p className="gd-lede" style={{ marginTop: 10 }}>
+          Aktualisieren Sie die Gewerke-Stationen, Stückliste oder Materialien für Kommission <strong>{commission.no}</strong> ({commission.client}).
+        </p>
+      </div>
+
+      <LaufzettelForm
+        commission={commission}
+        documentId={document.id}
+        initialData={formData}
+      />
+    </div>
+  );
+}

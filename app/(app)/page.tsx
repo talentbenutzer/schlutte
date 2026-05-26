@@ -97,14 +97,15 @@ export default async function DashboardPage() {
           <section>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8 }}>
               <span className="grb-eyebrow">Letzte Kommissionen</span>
-              <a className="grb-btn-link" style={{ fontSize: 11 }}>
+              <Link href="/kommissionen" className="grb-btn-link" style={{ fontSize: 11 }}>
                 Alle ansehen <Icon name="arrow" size={12} />
-              </a>
+              </Link>
             </div>
             <div style={{ borderTop: "1px solid var(--fg)" }}>
               {commissions.slice(0, 5).map((k) => (
-                <div
+                <Link
                   key={k.no}
+                  href={`/kommissionen/${k.no}`}
                   style={{
                     display: "grid",
                     gridTemplateColumns: "80px 1fr auto auto auto",
@@ -113,6 +114,8 @@ export default async function DashboardPage() {
                     padding: "14px 0",
                     borderBottom: "1px solid var(--hairline)",
                     cursor: "pointer",
+                    textDecoration: "none",
+                    color: "inherit",
                   }}
                 >
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--fg)", letterSpacing: "0.04em" }}>
@@ -133,7 +136,7 @@ export default async function DashboardPage() {
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-subtle)", letterSpacing: "0.06em" }}>
                     {k.updated}
                   </span>
-                </div>
+                </Link>
               ))}
             </div>
           </section>
@@ -141,20 +144,23 @@ export default async function DashboardPage() {
           <section>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8 }}>
               <span className="grb-eyebrow">Zuletzt bearbeitet</span>
-              <a className="grb-btn-link" style={{ fontSize: 11 }}>
+              <Link href="/archiv" className="grb-btn-link" style={{ fontSize: 11 }}>
                 Archiv <Icon name="arrow" size={12} />
-              </a>
+              </Link>
             </div>
             <div style={{ borderTop: "1px solid var(--fg)" }}>
               {recentDocs.map((d, i) => (
-                <div
+                <Link
                   key={i}
+                  href={`/kommissionen/${d.kommission}`}
                   style={{
                     padding: "14px 0",
                     borderBottom: "1px solid var(--hairline)",
                     display: "flex",
                     alignItems: "center",
                     gap: 14,
+                    textDecoration: "none",
+                    color: "inherit",
                   }}
                 >
                   <Icon
@@ -172,7 +178,7 @@ export default async function DashboardPage() {
                     </div>
                   </div>
                   <Icon name="arrow" size={14} style={{ color: "var(--fg-subtle)" }} />
-                </div>
+                </Link>
               ))}
             </div>
           </section>

@@ -1,6 +1,6 @@
 # Schlutte — Designentscheidungen
 
-Stand: 2026-05-26.
+Stand: 2026-05-26 (Skelett, Daten-Kapselung & Browser-Druck implementiert).
 
 ## Designvarianten aus dem Export
 

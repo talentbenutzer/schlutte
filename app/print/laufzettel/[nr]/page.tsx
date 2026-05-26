@@ -15,7 +15,7 @@ export default async function LaufzettelPrintPage({
 
   return (
     <>
-      <PrintToolbar />
+      <PrintToolbar backUrl={`/kommissionen/${nr}`} />
       <A4Sheet>
         <PrintHeader printedBy={printedBy} printedAt={printedAt} />
 

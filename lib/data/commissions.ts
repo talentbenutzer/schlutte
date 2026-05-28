@@ -1,4 +1,5 @@
 import type { Commission, CreateCommissionInput } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
 import { COMMISSIONS } from "@/mocks/data";
 import { createClient } from "@/lib/supabase/server";
 
@@ -33,7 +34,7 @@ export async function getCommissions(): Promise<Commission[]> {
       client: item.customer_name,
       project: item.project_name || "",
       status: "in-progress",
-      updated: new Date(item.updated_at || item.created_at).toLocaleDateString("de-DE"),
+      updated: formatDate(item.updated_at || item.created_at),
       owner: item.created_by_initials || "EDL",
       docs: 0,
       note: item.notes || "",
@@ -69,7 +70,7 @@ export async function getCommissionByNumber(
       client: data.customer_name,
       project: data.project_name || "",
       status: "in-progress",
-      updated: new Date(data.updated_at || data.created_at).toLocaleDateString("de-DE"),
+      updated: formatDate(data.updated_at || data.created_at),
       owner: data.created_by_initials || "EDL",
       docs: 0,
       note: data.notes || "",
@@ -106,7 +107,7 @@ export async function searchCommissions(query: string): Promise<Commission[]> {
       client: item.customer_name,
       project: item.project_name || "",
       status: "in-progress",
-      updated: new Date(item.updated_at || item.created_at).toLocaleDateString("de-DE"),
+      updated: formatDate(item.updated_at || item.created_at),
       owner: item.created_by_initials || "EDL",
       docs: 0,
       note: item.notes || "",
@@ -257,7 +258,7 @@ export async function updateCommission(
       existing.project = input.project?.trim() || "";
       existing.note = input.note?.trim() || "";
       existing.owner = owner.toUpperCase();
-      existing.updated = new Date().toLocaleDateString("de-DE");
+      existing.updated = formatDate(new Date());
     } else {
       throw new Error(`Kommission ${no} nicht gefunden.`);
     }

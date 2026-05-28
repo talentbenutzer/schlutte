@@ -24,11 +24,23 @@ export type Employee = {
   initials?: string;
   kuerzel: string; // UI compatibility
   name: string;
+  email?: string;
   role: string;    // UI compatibility
   is_admin?: boolean;
   is_active?: boolean;
   created_at?: string;
+  updated_at?: string;
 };
+
+export type CreateEmployeeInput = {
+  initials: string;
+  name: string;
+  email?: string;
+  is_admin?: boolean;
+  is_active?: boolean;
+};
+
+export type UpdateEmployeeInput = Partial<CreateEmployeeInput>;
 
 
 export type RecentDoc = {
@@ -137,4 +149,36 @@ export const STATUS_CLASS: Record<CommissionStatus, string> = {
   ready: "is-done",
   shipped: "is-shipped",
   archived: "is-archive",
+};
+
+// ---- Feedback ----
+
+export type FeedbackStatus = "offen" | "beantwortet" | "erledigt";
+
+export type FeedbackEntry = {
+  id: string;
+  message: string;
+  category?: string;
+  status: FeedbackStatus;
+  response_text?: string;
+  response_by_initials?: string;
+  response_at?: string;
+  created_by_user_id?: string;
+  created_by_email?: string;
+  created_by_initials?: string;
+  current_path?: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CreateFeedbackInput = {
+  message: string;
+  category?: string;
+  current_path?: string;
+};
+
+export type UpdateFeedbackInput = {
+  status?: FeedbackStatus;
+  response_text?: string;
+  response_by_initials?: string;
 };

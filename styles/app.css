@@ -33,9 +33,18 @@
 
 .grb-brand {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 10px;
   user-select: none;
+}
+.grb-logo {
+  height: 24px;
+  width: auto;
+  display: block;
+}
+:root[data-theme="dark"] .grb-logo,
+.theme-dark .grb-logo {
+  filter: invert(1) brightness(1.6);
 }
 .grb-brand-mark {
   font-family: var(--font-display);
@@ -552,3 +561,12 @@
   border: 1px solid var(--border);
   background: var(--bg-alt);
 }
+
+/* Hide app-shell elements in print */
+@media print {
+  .grb-feedback-fab,
+  .grb-brand-version {
+    display: none !important;
+  }
+}
+

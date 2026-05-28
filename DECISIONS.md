@@ -118,3 +118,57 @@ Die Tabellen wurden verifiziert und die Data-Schicht auf das reale Schema angepa
 - **HTML/CSS-Browserdruck** bleibt der primäre MVP-Druckweg, da er sich nahtlos über `@media print` und `break-after` konfigurieren lässt.
 - **PDF-Archivierung** wird nachgelagert über einen separaten Worker mit Supabase Storage angebunden.
 
+## Meilenstein: Admin- & Interne Ergänzungen (2026-05-26)
+
+### Mitarbeiter & Kürzel
+
+- **Mitarbeiterverwaltung** erfolgt über die bestehende `employees`-Tabelle in Supabase.
+- **Kürzel** sind 1–3 Zeichen, werden uppercase gespeichert, müssen eindeutig sein.
+- **Inaktive Mitarbeiter** werden per `is_active = false` behandelt (Soft-Delete bevorzugt). Historische Dokumente behalten ihr Kürzel.
+- **Echter DELETE** ist nur möglich, wenn kein Dokument oder Druckauftrag auf das Kürzel verweist. Sonst Fallback auf Soft-Delete.
+- **Auth-Verknüpfung:** Die Supabase Auth-Registrierung (Auth Dashboard) ist separat von der `employees`-Tabelle. Die `employees.id` muss der Supabase Auth-User-UUID entsprechen, damit die Topbar-Verknüpfung funktioniert.
+- **Schema-Erweiterung:** `email` und `updated_at` werden optional über die Migration `20260526_add_employee_fields.sql` ergänzt.
+
+### Datumsausgabe
+
+- **Alle sichtbaren Datumsangaben** erscheinen im Format `TT.MM.JJJJ`.
+- Die zentrale Utility-Funktion `formatDate()` (in `lib/utils.ts`) ist der einzige Ort für Datumsformatierung.
+- Optional: `formatDateTime()` → `TT.MM.JJJJ, HH:mm`.
+- Supabase speichert und liefert weiterhin `timestamptz`.
+
+### Begrüßung
+
+- **Tageszeit-abhängige Begrüßung** auf dem Dashboard:
+  - 05:00–10:59 → „Guten Morgen, Name."
+  - 11:00–17:59 → „Guten Tag, Name."
+  - 18:00–04:59 → „Guten Abend, Name."
+- Fallback: „Willkommen in Schlutte." wenn kein Name verfügbar.
+- Name wird aus `employees.name`, dann `employees.initials`, dann `email`-Prefix ermittelt.
+- Logik in `getGreeting()` in `lib/utils.ts`.
+
+### Versionierung
+
+- **Zentrale Version** in `lib/version.ts` als `APP_VERSION`-Konstante.
+- Wird neben dem Logo in der Topbar (BrandMark) angezeigt.
+- Im Drucklayout ausgeblendet (`@media print { .grb-brand-version { display: none } }`).
+- Auf der Feedback-Seite als „aktuell"-Badge beim Changelog-Eintrag sichtbar.
+
+### Feedback
+
+- **Feedback** wird in der Supabase-Tabelle `feedback` gespeichert.
+- **Status-Werte:** `offen`, `beantwortet`, `erledigt`.
+- **RLS:** Alle authenticated users dürfen Feedback erstellen, lesen und Status ändern (MVP — später auf Admin einschränken).
+- **Antwort-Felder:** `response_text`, `response_by_initials`, `response_at`.
+- Kein Service-Role-Key im Frontend. Kein Webhook. Nur direkte Supabase-Datenbankoperationen.
+- **Floating-Button „Feedback an Eddy"** in der App-Shell (unten rechts, fixiert). Nicht auf Druckseiten.
+
+### Changelog
+
+- **Statisch gepflegt** in `lib/changelog.ts` — kein Datenbank-Eintrag nötig.
+- Neue Einträge oben einfügen (neueste zuerst).
+- Auf der Feedback-Seite als „Update-Info"-Abschnitt sichtbar.
+
+### SQL-Migrationen
+
+- `supabase/migrations/20260526_add_employee_fields.sql` — manuell im Supabase SQL-Editor ausführen.
+- `supabase/migrations/20260526_create_feedback_table.sql` — manuell im Supabase SQL-Editor ausführen.

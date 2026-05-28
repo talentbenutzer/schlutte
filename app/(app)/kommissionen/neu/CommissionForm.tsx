@@ -21,8 +21,6 @@ export function CommissionForm() {
     state.fieldError?.field === "no" ? state.fieldError.message : undefined;
   const clientError =
     state.fieldError?.field === "client" ? state.fieldError.message : undefined;
-  const ownerError =
-    state.fieldError?.field === "owner" ? state.fieldError.message : undefined;
 
   return (
     <form action={formAction} style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 640 }}>
@@ -74,7 +72,7 @@ export function CommissionForm() {
       </Field>
 
       <Field
-        label="Bauteil · Objekt"
+        label="Objekt"
         hint={'Optional. Z. B. „Küche & Esszimmer".'}
       >
         <input
@@ -98,21 +96,6 @@ export function CommissionForm() {
         />
       </Field>
 
-      <Field
-        label="Owner / Kürzel"
-        hint="Mitarbeiterkürzel, maximal drei Buchstaben. Default: EDL."
-        error={ownerError}
-      >
-        <input
-          name="owner"
-          defaultValue={v?.owner ?? ""}
-          placeholder="EDL"
-          maxLength={3}
-          className="grb-input"
-          style={{ maxWidth: 120, textTransform: "uppercase" }}
-        />
-      </Field>
-
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 8 }}>
         <button type="submit" className="grb-btn grb-btn-primary" disabled={pending}>
           <Icon name="plus" size={14} />
@@ -122,19 +105,6 @@ export function CommissionForm() {
           Abbrechen
         </Link>
       </div>
-
-      <p
-        style={{
-          fontFamily: "var(--font-mono)",
-          fontSize: 10,
-          letterSpacing: "0.12em",
-          color: "var(--fg-subtle)",
-          textTransform: "uppercase",
-          marginTop: 4,
-        }}
-      >
-        Mock-Backend · Daten leben nur im Speicher des Servers
-      </p>
     </form>
   );
 }

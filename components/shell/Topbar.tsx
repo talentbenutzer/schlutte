@@ -14,6 +14,7 @@ const NAV = [
   { label: "Kommissionen", href: "/kommissionen" },
   { label: "Archiv", href: "/archiv" },
   { label: "Vorlagen", href: "/vorlagen" },
+  { label: "Mitarbeiter", href: "/mitarbeiter" },
 ];
 
 function isActive(href: string, pathname: string): boolean {
@@ -34,11 +35,11 @@ export function Topbar() {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (!active) return;
       setUser(currentUser);
-      if (currentUser) {
+      if (currentUser?.email) {
         const { data } = await supabase
           .from("employees")
           .select("initials, name, is_admin")
-          .eq("id", currentUser.id)
+          .ilike("email", currentUser.email)
           .maybeSingle();
         if (!active) return;
         setEmployee(data);
@@ -110,12 +111,30 @@ export function Topbar() {
         <kbd style={{ opacity: 0.6 }}>⌘ K</kbd>
       </div>
       {user && (
-        <UserChip
-          kuerzel={employee?.initials || (user.email ? user.email.slice(0, 3).toUpperCase() : "USR")}
-          name={employee?.name || user.email || "Benutzer"}
-          role={employee ? (employee.is_admin ? "Admin" : "Mitarbeiter") : "Mitarbeiter"}
-          onLogout={handleLogout}
-        />
+        <>
+          <Link
+            href="/feedback"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 10,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "var(--fg-subtle)",
+              textDecoration: "none",
+              padding: "4px 8px",
+              whiteSpace: "nowrap",
+            }}
+            title="Feedback an Eddy"
+          >
+            Feedback
+          </Link>
+          <UserChip
+            kuerzel={employee?.initials || (user.email ? user.email.slice(0, 3).toUpperCase() : "USR")}
+            name={employee?.name || user.email || "Benutzer"}
+            role={employee ? (employee.is_admin ? "Admin" : "Mitarbeiter") : "Mitarbeiter"}
+            onLogout={handleLogout}
+          />
+        </>
       )}
     </header>
   );

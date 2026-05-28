@@ -4,6 +4,7 @@ import { Status } from "@/components/ui/Status";
 import { getCommissions, searchCommissions } from "@/lib/data/commissions";
 import { getRecentDocuments } from "@/lib/data/documents";
 import { createClient } from "@/lib/supabase/server";
+import { getGreeting } from "@/lib/utils";
 import type { Commission, CommissionDocument } from "@/lib/types";
 
 function DashTile({
@@ -50,29 +51,30 @@ export default async function DashboardPage({
   const { q } = await searchParams;
   const searchQuery = q?.trim() || "";
 
-  // Load welcome user details
-  let welcomeName = " in Schlutte";
+  // Load greeting based on time of day and logged-in user
+  let displayName: string | null = null;
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
+    if (user?.email) {
       const { data } = await supabase
         .from("employees")
         .select("name, initials")
-        .eq("id", user.id)
+        .ilike("email", user.email)
         .maybeSingle();
       if (data?.name) {
-        welcomeName = `, ${data.name}`;
+        displayName = data.name;
       } else if (data?.initials) {
-        welcomeName = `, ${data.initials}`;
+        displayName = data.initials;
       } else if (user.email) {
         const localPart = user.email.split("@")[0];
-        welcomeName = `, ${localPart.charAt(0).toUpperCase() + localPart.slice(1)}`;
+        displayName = localPart.charAt(0).toUpperCase() + localPart.slice(1);
       }
     }
   } catch (e) {
-    console.error("Error loading user for welcome message:", e);
+    console.error("Error loading user for greeting:", e);
   }
+  const greeting = getGreeting(displayName);
 
   // Load data based on search query
   let commissions: Commission[] = [];
@@ -107,7 +109,7 @@ export default async function DashboardPage({
           <div>
             <span className="grb-eyebrow">Dashboard · Schlutte</span>
             <h1 className="grb-h-display" style={{ fontSize: 56, marginTop: 12 }}>
-              Willkommen{welcomeName}.
+              {greeting}
             </h1>
             <p style={{ fontFamily: "var(--font-sans)", fontSize: 16, color: "var(--fg-muted)", marginTop: 12, maxWidth: 560 }}>
               {isSearching 
@@ -115,7 +117,7 @@ export default async function DashboardPage({
                 : `${commissions.length} aktive Kommissionen in der Datenbank erfasst.`}
             </p>
           </div>
-          <div style={{ minWidth: 400, flex: "0 0 400px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, minWidth: 400, flex: "0 0 400px" }}>
             <form action="/" method="GET" style={{ width: "100%" }}>
               <div className="grb-search-big" style={{ padding: "14px 18px" }}>
                 <Icon name="search" size={20} />
@@ -136,20 +138,26 @@ export default async function DashboardPage({
                 )}
               </div>
             </form>
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", flexWrap: "wrap" }}>
+              <Link href="/kommissionen/neu" className="grb-btn grb-btn-primary">
+                <Icon name="plus" size={14} /> Neue Kommission
+              </Link>
+              <Link href="/archiv" className="grb-btn grb-btn-quiet">
+                <Icon name="archive" size={14} /> Archiv
+              </Link>
+            </div>
           </div>
         </div>
 
-        {/* Schnellaktionen */}
+        {/* Schnellaktionen — Dokument für bestehende Kommission erstellen */}
         <section>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 16 }}>
             <span className="grb-eyebrow">Dokument für bestehende Kommission erstellen</span>
             <span className="grb-index">01 / 02</span>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
             <DashTile idx="01" title="Neuer Laufzettel" hint="Gewerke-Stationen, Stückliste, Maße." icon="doc-stripe" href="/dokument-erstellen/laufzettel" />
-            <DashTile idx="02" title="Neue Palette" hint="Versand · Beschriftung 1 von n. Mehrfachdruck." icon="pkg" href="/dokument-erstellen/palette" />
-            <DashTile idx="03" title="Neue Kommission" hint="Nummer, Kunde, Projekt anlegen." icon="plus" href="/kommissionen/neu" />
-            <DashTile idx="04" title="Archiv öffnen" hint="Druckstände, PDFs, Versionen." icon="archive" href="/archiv" />
+            <DashTile idx="02" title="Neue Palette" hint="Versand · Beschriftung 1 von n. Mehrfachdruck." icon="pallet" href="/dokument-erstellen/palette" />
           </div>
         </section>
 

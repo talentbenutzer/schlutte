@@ -186,6 +186,8 @@ export default async function CommissionDetailPage({
             <Link
               className="grb-btn grb-btn-ghost"
               href={`/print/palette/document/${firstPaletteId}/range/1/999`}
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <Icon name="print" size={14} /> Palette drucken
             </Link>
@@ -286,6 +288,8 @@ export default async function CommissionDetailPage({
                   <td style={{ textAlign: "right" }}>
                     <Link
                       href={`/print/laufzettel/${commission.no}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       style={{ padding: 4, color: "var(--fg)" }}
                       title="Drucken"
                     >
@@ -395,6 +399,8 @@ export default async function CommissionDetailPage({
                     </Link>
                     <Link
                       href={`/print/palette/document/${d.id}/1`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       style={{ padding: "4px 8px", color: "var(--fg)" }}
                       title="Erste Palette drucken"
                     >
@@ -402,6 +408,8 @@ export default async function CommissionDetailPage({
                     </Link>
                     <Link
                       href={`/print/palette/document/${d.id}/range/1/999`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       style={{ padding: "4px 8px", color: "var(--accent)" }}
                       title="Alle Paletten drucken"
                     >

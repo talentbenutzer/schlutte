@@ -7,6 +7,7 @@ import {
   updateCommission,
   CommissionValidationError,
 } from "@/lib/data/commissions";
+import { getCurrentEmployee } from "@/lib/data/employees";
 
 export type CreateCommissionState = {
   error?: string;
@@ -21,8 +22,11 @@ export async function createCommissionAction(
   const no = String(formData.get("no") ?? "");
   const client = String(formData.get("client") ?? "");
   const project = String(formData.get("project") ?? "");
-  const owner = String(formData.get("owner") ?? "");
   const note = String(formData.get("note") ?? "");
+
+  // Kürzel automatisch vom eingeloggten Nutzer (Fallback: createCommission setzt "EDL").
+  const me = await getCurrentEmployee();
+  const owner = me?.initials ?? "";
 
   let created;
   try {

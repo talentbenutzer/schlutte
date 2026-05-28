@@ -1,29 +1,31 @@
 "use client";
 
 import { Icon } from "@/components/ui/Icon";
-import Link from "next/link";
 
 export function PrintToolbar({ backUrl }: { backUrl?: string }) {
+  const handleClose = () => {
+    // Druckseiten werden in einem neuen Tab geöffnet → window.close() funktioniert.
+    window.close();
+    // Fallback, falls der Browser das Schließen verweigert (Tab nicht per Skript geöffnet).
+    setTimeout(() => {
+      if (backUrl) {
+        window.location.href = backUrl;
+      } else {
+        window.history.back();
+      }
+    }, 250);
+  };
+
   return (
     <div className="print-toolbar no-print">
-      {backUrl ? (
-        <Link
-          href={backUrl}
-          className="grb-btn grb-btn-quiet"
-          style={{ background: "var(--bg-raised)" }}
-        >
-          <Icon name="arrow" size={14} style={{ transform: "rotate(180deg)" }} /> Zurück
-        </Link>
-      ) : (
-        <button
-          type="button"
-          className="grb-btn grb-btn-quiet"
-          onClick={() => window.history.back()}
-          style={{ background: "var(--bg-raised)" }}
-        >
-          <Icon name="arrow" size={14} style={{ transform: "rotate(180deg)" }} /> Zurück
-        </button>
-      )}
+      <button
+        type="button"
+        className="grb-btn grb-btn-quiet"
+        onClick={handleClose}
+        style={{ background: "var(--bg-raised)" }}
+      >
+        <Icon name="x" size={14} /> Schließen
+      </button>
       <button
         type="button"
         className="grb-btn grb-btn-primary"

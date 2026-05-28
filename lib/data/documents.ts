@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/utils";
 import type {
   CommissionDocument,
   DocumentKind,
@@ -107,7 +108,7 @@ export async function getRecentDocuments(
       kind: item.document_type as DocumentKind,
       label: item.title,
       client: item.commissions?.customer_name || "",
-      stamp: new Date(item.created_at).toLocaleDateString("de-DE"),
+      stamp: formatDate(item.created_at),
       by: item.created_by_initials || "EDL",
     }));
   } catch (e) {
@@ -157,7 +158,7 @@ export async function getDocumentsByCommissionNumber(
       kind: item.document_type as DocumentKind,
       label: item.title,
       client: comm.customer_name,
-      stamp: new Date(item.created_at).toLocaleDateString("de-DE"),
+      stamp: formatDate(item.created_at),
       by: item.created_by_initials || "EDL",
     }));
   } catch (e) {
@@ -265,7 +266,7 @@ export async function getPalettePrintPage(
     commission,
     palette,
     printedBy: commission.owner,
-    printedAt: new Date().toLocaleDateString("de-DE"),
+    printedAt: formatDate(new Date()),
   };
 }
 
@@ -321,7 +322,7 @@ export async function getPalettePrintRange(
     console.warn("Failed to log print range action:", e);
   }
 
-  const printedAt = new Date().toLocaleDateString("de-DE");
+  const printedAt = formatDate(new Date());
   return inRange.map((palette) => ({
     commission,
     palette,
@@ -374,7 +375,7 @@ export async function getLaufzettelPrintData(
     materials: MATERIALS,
     stations: STATIONS,
     printedBy: commission.owner,
-    printedAt: new Date().toLocaleDateString("de-DE"),
+    printedAt: formatDate(new Date()),
     formData,
   };
 }
@@ -549,7 +550,7 @@ export async function getPalettePrintPageByDocId(
       client: comm.customer_name,
       project: comm.project_name || "",
       status: "in-progress" as const,
-      updated: new Date(comm.updated_at || comm.created_at).toLocaleDateString("de-DE"),
+      updated: formatDate(comm.updated_at || comm.created_at),
       owner: comm.created_by_initials || "EDL",
       docs: 0,
       note: comm.notes || "",
@@ -582,7 +583,7 @@ export async function getPalettePrintPageByDocId(
       commission,
       palette,
       printedBy: commission.owner,
-      printedAt: new Date().toLocaleDateString("de-DE"),
+      printedAt: formatDate(new Date()),
     };
   } catch (e) {
     console.error("Error in getPalettePrintPageByDocId:", e);
@@ -618,7 +619,7 @@ export async function getPalettePrintRangeByDocId(
       client: comm.customer_name,
       project: comm.project_name || "",
       status: "in-progress" as const,
-      updated: new Date(comm.updated_at || comm.created_at).toLocaleDateString("de-DE"),
+      updated: formatDate(comm.updated_at || comm.created_at),
       owner: comm.created_by_initials || "EDL",
       docs: 0,
       note: comm.notes || "",
@@ -631,7 +632,7 @@ export async function getPalettePrintRangeByDocId(
       : [];
 
     const pages: PalettePrintPage[] = [];
-    const printedAt = new Date().toLocaleDateString("de-DE");
+    const printedAt = formatDate(new Date());
 
     for (let idx = lo; idx <= Math.min(hi, count); idx++) {
       const palette: Palette = {

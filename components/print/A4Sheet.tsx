@@ -22,10 +22,13 @@ export function PrintHeader({
       }}
     >
       <div>
-        <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 300, color: "#0E0E0D", letterSpacing: "-0.01em" }}>
-          Grabner
-        </div>
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.22em", color: "#0E0E0D", textTransform: "uppercase", marginTop: 2 }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/brand/grabner-schlutte-logo.svg"
+          alt="Grabner Schlutte"
+          style={{ height: 30, width: "auto", display: "block" }}
+        />
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.22em", color: "#0E0E0D", textTransform: "uppercase", marginTop: 6 }}>
           High-End Interior Design · Versand
         </div>
       </div>

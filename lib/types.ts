@@ -137,6 +137,53 @@ export type DocumentPrint = {
   created_at: string;
 };
 
+// ---- Bestellliste / Orders ----
+
+export const ORDER_SUPPLIERS = [
+  "Ostermann",
+  "OPO Oeschger",
+  "Contorion",
+  "Würth",
+  "Häfele",
+  "Schachermayer",
+  "Sonstiges",
+] as const;
+
+export type OrderSupplier = (typeof ORDER_SUPPLIERS)[number];
+
+export type Order = {
+  id: string;
+  supplier: string;
+  customSupplier?: string;
+  article?: string;
+  articleNumber?: string;
+  quantity: number;
+  note?: string;
+  employeeInitials: string;
+  urgent: boolean;
+  deliverBy?: string;
+  createdAt: string;
+};
+
+export type CreateOrderInput = {
+  supplier: string;
+  customSupplier?: string;
+  article?: string;
+  articleNumber?: string;
+  quantity: number;
+  note?: string;
+  employeeInitials: string;
+  urgent?: boolean;
+  deliverBy?: string;
+};
+
+export type OrderBatch = {
+  id: string;
+  placedAt: string;
+  placedByInitials?: string;
+  orders: Order[];
+};
+
 export const STATUS_LABEL: Record<CommissionStatus, string> = {
   "in-progress": "in Arbeit",
   ready: "fertig",

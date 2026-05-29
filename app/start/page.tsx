@@ -1,0 +1,68 @@
+import "@/styles/intranet.css";
+import { createClient } from "@/lib/supabase/server";
+import { IntranetHub } from "@/components/intranet/IntranetHub";
+
+export const dynamic = "force-dynamic";
+
+function salutationForHour(hour: number): string {
+  if (hour >= 5 && hour < 11) return "Guten Morgen";
+  if (hour >= 11 && hour < 18) return "Guten Tag";
+  return "Guten Abend";
+}
+
+function buildDateLine(now: Date): string {
+  const days = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+  const months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const kw = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return `${days[now.getDay()]} · ${now.getDate()}. ${months[now.getMonth()]} ${now.getFullYear()} · KW ${kw}`;
+}
+
+export default async function StartPage() {
+  let displayName: string | null = null;
+  let userName = "Benutzer";
+  let userInitials = "USR";
+  let userRole = "Mitarbeiter";
+
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user?.email) {
+      const { data } = await supabase
+        .from("employees")
+        .select("name, initials, is_admin")
+        .ilike("email", user.email)
+        .maybeSingle();
+      if (data) {
+        userName = data.name || user.email;
+        userInitials = data.initials || user.email.slice(0, 3).toUpperCase();
+        userRole = `${data.is_admin ? "Admin" : "Mitarbeiter"} · ${data.initials ?? ""}`.trim();
+        displayName = data.name || data.initials || null;
+      } else {
+        const local = user.email.split("@")[0];
+        userName = local.charAt(0).toUpperCase() + local.slice(1);
+        userInitials = user.email.slice(0, 3).toUpperCase();
+        displayName = userName;
+      }
+    }
+  } catch (e) {
+    console.error("Error loading user for intranet hub:", e);
+  }
+
+  const now = new Date();
+  return (
+    <IntranetHub
+      salutation={salutationForHour(now.getHours())}
+      displayName={displayName}
+      dateLine={buildDateLine(now)}
+      userName={userName}
+      userInitials={userInitials}
+      userRole={userRole}
+    />
+  );
+}

@@ -1,0 +1,335 @@
+/* =========================================================================
+   SCHLUTTE — Intranet Startseite (Hub)
+   Auf Grabner Design tokens aufgesetzt. Globale Resets kommen aus globals.css.
+   ========================================================================= */
+
+.sch {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+/* ---------- Topbar ---------- */
+.sch-topbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  height: 76px;
+  padding: 0 var(--sp-9);
+  background: var(--bg-alt);
+  border-bottom: 1px solid var(--border);
+}
+.sch-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 0 0 auto;
+}
+.sch-brand .grb-logo { height: 26px; width: auto; display: block; }
+.sch-brand-div {
+  width: 1px;
+  height: 26px;
+  background: var(--border-strong);
+}
+.sch-brand-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.sch-search {
+  flex: 1 1 auto;
+  max-width: 460px;
+  margin-left: var(--sp-7);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--fg-muted);
+  cursor: text;
+}
+.sch-search-ph {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--fg-subtle);
+}
+
+.sch-topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+}
+.sch-iconbtn {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--fg-muted);
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  border-radius: 0;
+  transition: color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+.sch-iconbtn:hover { color: var(--fg); border-color: var(--fg); }
+
+.sch-user {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-left: var(--sp-5);
+  border-left: 1px solid var(--border);
+}
+.sch-user-text { text-align: right; }
+.sch-user-name { font-size: 14px; font-weight: 500; color: var(--fg); }
+.sch-user-role {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+  margin-top: 2px;
+}
+.sch-user-initials {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  background: var(--fg);
+  color: var(--fg-inverse);
+}
+
+/* ---------- Main ---------- */
+.sch-main {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center;
+  padding: var(--sp-10) var(--sp-9) var(--sp-9);
+}
+.sch-inner {
+  width: 100%;
+  max-width: 1180px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-10);
+}
+
+/* ---------- Hero ---------- */
+.sch-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.sch-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+}
+.sch-greeting {
+  font-family: var(--font-display);
+  font-weight: 200;
+  font-size: clamp(3rem, 7vw, 6rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+  margin: 8px 0 0;
+}
+.sch-greeting em {
+  font-style: italic;
+  font-weight: 300;
+}
+.sch-lede {
+  font-family: var(--font-sans);
+  font-size: 19px;
+  font-weight: 300;
+  color: var(--fg-muted);
+  margin: 6px 0 0;
+}
+
+/* ---------- Tile grid ---------- */
+.sch-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-5);
+}
+
+.sch-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  min-height: 280px;
+  padding: var(--sp-7);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  transition: border-color var(--dur-base) var(--ease-architect),
+              background var(--dur-base) var(--ease-architect),
+              box-shadow var(--dur-base) var(--ease-architect),
+              transform var(--dur-base) var(--ease-architect);
+}
+.sch-tile::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 100%; bottom: 0;
+  height: 2px;
+  background: var(--accent);
+  transition: right var(--dur-slow) var(--ease-architect);
+}
+.sch-tile:hover {
+  background: var(--gd-bone);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-2);
+  transform: translateY(-2px);
+}
+.sch-tile:hover::after { right: 0; }
+.sch-tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Disabled / "folgt" tiles */
+.sch-tile.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.sch-tile.is-disabled:hover {
+  background: var(--bg-raised);
+  border-color: var(--border);
+  box-shadow: none;
+  transform: none;
+}
+.sch-tile.is-disabled:hover::after { right: 100%; }
+
+.sch-tile-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.sch-tile-icon {
+  color: var(--fg);
+  display: inline-flex;
+  transition: color var(--dur-base) var(--ease-out);
+}
+.sch-tile:not(.is-disabled):hover .sch-tile-icon { color: var(--accent); }
+.sch-tile-no {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+}
+
+.sch-tile-body {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sch-tile-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  color: var(--fg);
+  margin: 0;
+  text-wrap: balance;
+}
+.sch-tile-hint {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--fg-muted);
+  margin: 0;
+  max-width: 42ch;
+  text-wrap: pretty;
+}
+
+.sch-tile-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--hairline);
+}
+.sch-tile-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+}
+.sch-tile-arrow {
+  color: var(--fg-muted);
+  display: inline-flex;
+  transition: transform var(--dur-base) var(--ease-architect), color var(--dur-base) var(--ease-out);
+}
+.sch-tile:not(.is-disabled):hover .sch-tile-arrow {
+  color: var(--accent);
+  transform: translateX(6px);
+}
+
+/* Live tile gets a subtle marker */
+.sch-tile.is-live .sch-tile-meta::before {
+  content: '';
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gd-success);
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* "folgt" badge for disabled tiles */
+.sch-tile-soon {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+  border: 1px solid var(--border-strong);
+  padding: 2px 8px;
+}
+
+/* ---------- Footer ---------- */
+.sch-foot {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-5) var(--sp-9);
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+  background: var(--bg-alt);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .sch-topbar { padding: 0 var(--sp-6); height: 68px; }
+  .sch-search { display: none; }
+  .sch-main { padding: var(--sp-8) var(--sp-6) var(--sp-7); }
+  .sch-grid { grid-template-columns: 1fr; }
+  .sch-user-text { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sch-tile, .sch-tile::after, .sch-tile-arrow, .sch-tile-icon, .sch-iconbtn { transition-duration: 1ms !important; }
+}

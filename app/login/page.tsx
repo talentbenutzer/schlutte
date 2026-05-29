@@ -35,7 +35,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/");
+      router.push("/start");
       router.refresh();
     } catch {
       setErrorMsg("Ein unerwarteter Fehler ist aufgetreten.");

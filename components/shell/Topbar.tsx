@@ -59,7 +59,9 @@ export function Topbar() {
 
   return (
     <header className="grb-topbar">
-      <BrandMark />
+      <Link href="/start" aria-label="Zur Startseite" style={{ display: "flex", textDecoration: "none", color: "inherit" }}>
+        <BrandMark />
+      </Link>
       <nav className="grb-nav" style={{ marginLeft: 16 }}>
         {NAV.map((item) => {
           const isTemplates = item.label === "Vorlagen";

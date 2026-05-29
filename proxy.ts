@@ -58,7 +58,7 @@ export async function proxy(request: NextRequest) {
   if (user && isLoginRoute) {
     // Redirect authenticated user away from login page to home
     const homeUrl = request.nextUrl.clone();
-    homeUrl.pathname = "/";
+    homeUrl.pathname = "/start";
     return NextResponse.redirect(homeUrl);
   }
 

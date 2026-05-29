@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCommissionByNumber } from "@/lib/data/commissions";
+import { getActiveEmployees, getCurrentEmployee } from "@/lib/data/employees";
 import { LaufzettelForm } from "./LaufzettelForm";
 
 export default async function NewLaufzettelPage({
@@ -9,7 +10,11 @@ export default async function NewLaufzettelPage({
   params: Promise<{ nr: string }>;
 }) {
   const { nr } = await params;
-  const commission = await getCommissionByNumber(nr);
+  const [commission, employees, me] = await Promise.all([
+    getCommissionByNumber(nr),
+    getActiveEmployees(),
+    getCurrentEmployee(),
+  ]);
   if (!commission) notFound();
 
   return (
@@ -49,7 +54,11 @@ export default async function NewLaufzettelPage({
         </p>
       </div>
 
-      <LaufzettelForm commission={commission} />
+      <LaufzettelForm
+        commission={commission}
+        employees={employees.map((e) => ({ initials: e.initials ?? e.kuerzel, name: e.name }))}
+        currentInitials={me?.initials}
+      />
     </div>
   );
 }

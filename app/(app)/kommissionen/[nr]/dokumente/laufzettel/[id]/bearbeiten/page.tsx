@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCommissionByNumber } from "@/lib/data/commissions";
 import { getDocumentById } from "@/lib/data/documents";
+import { getActiveEmployees, getCurrentEmployee } from "@/lib/data/employees";
 import { LaufzettelForm } from "../../neu/LaufzettelForm";
 import type { LaufzettelFormData } from "@/lib/types";
 
@@ -11,9 +12,11 @@ export default async function EditLaufzettelPage({
   params: Promise<{ nr: string; id: string }>;
 }) {
   const { nr, id } = await params;
-  const [commission, document] = await Promise.all([
+  const [commission, document, employees, me] = await Promise.all([
     getCommissionByNumber(nr),
     getDocumentById(id),
+    getActiveEmployees(),
+    getCurrentEmployee(),
   ]);
 
   if (!commission || !document) notFound();
@@ -62,6 +65,8 @@ export default async function EditLaufzettelPage({
         commission={commission}
         documentId={document.id}
         initialData={formData}
+        employees={employees.map((e) => ({ initials: e.initials ?? e.kuerzel, name: e.name }))}
+        currentInitials={me?.initials}
       />
     </div>
   );

@@ -1,21 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import type { Commission, LaufzettelFormData } from "@/lib/types";
-import { createClient } from "@/lib/supabase/client";
 import { saveLaufzettelAction } from "./actions";
+
+type EmployeeOption = { initials: string; name: string };
 
 export function LaufzettelForm({
   commission,
   documentId,
   initialData,
+  employees,
+  currentInitials,
 }: {
   commission: Commission;
   documentId?: string;
   initialData?: LaufzettelFormData;
+  employees: EmployeeOption[];
+  currentInitials?: string;
 }) {
   const router = useRouter();
   const [project, setProject] = useState(commission.project || "");
@@ -24,41 +29,13 @@ export function LaufzettelForm({
   const [material, setMaterial] = useState(initialData?.material || "");
   const [surface, setSurface] = useState(initialData?.surface || "");
   const [note, setNote] = useState(initialData?.note || "");
-  const [owner, setOwner] = useState(initialData?.employeeInitials || commission.owner || "EDL");
+  const [owner, setOwner] = useState(initialData?.employeeInitials || currentInitials || "");
   const [selectedComponents, setSelectedComponents] = useState<string[]>(initialData?.categories || []);
-  
+
   const [ownerError, setOwnerError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
-
-  const supabase = createClient();
-
-  useEffect(() => {
-    if (initialData?.employeeInitials) return;
-    let active = true;
-    const loadUserKuerzel = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!active || !user) return;
-      
-      const { data } = await supabase
-        .from("employees")
-        .select("initials")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (!active) return;
-      if (data?.initials) {
-        setOwner(data.initials);
-      } else if (user.email) {
-        setOwner(user.email.slice(0, 3).toUpperCase());
-      }
-    };
-    loadUserKuerzel();
-    return () => {
-      active = false;
-    };
-  }, [supabase, initialData]);
 
   const COMPONENTS = [
     "Seiten",
@@ -232,18 +209,24 @@ export function LaufzettelForm({
       </Field>
 
       <Field
-        label="Owner / Kürzel"
-        hint="Mitarbeiterkürzel, maximal drei Buchstaben."
+        label="Mitarbeiter"
+        hint="Aus der Mitarbeiterverwaltung."
         error={ownerError}
       >
-        <input
+        <select
           value={owner}
-          onChange={(e) => setOwner(e.target.value.toUpperCase())}
-          placeholder="EDL"
-          maxLength={3}
+          onChange={(e) => setOwner(e.target.value)}
           className="grb-input"
-          style={{ maxWidth: 120, textTransform: "uppercase" }}
-        />
+          style={{ maxWidth: 320 }}
+          required
+        >
+          <option value="">— wählen —</option>
+          {employees.map((e) => (
+            <option key={e.initials} value={e.initials}>
+              {e.name} ({e.initials})
+            </option>
+          ))}
+        </select>
       </Field>
 
       <div style={{ borderTop: "1px solid var(--border)", paddingTop: 16 }}>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCommissionByNumber } from "@/lib/data/commissions";
+import { getActiveEmployees, getCurrentEmployee } from "@/lib/data/employees";
 import { PaletteForm } from "./PaletteForm";
 
 export default async function NewPalettePage({
@@ -9,7 +10,11 @@ export default async function NewPalettePage({
   params: Promise<{ nr: string }>;
 }) {
   const { nr } = await params;
-  const commission = await getCommissionByNumber(nr);
+  const [commission, employees, me] = await Promise.all([
+    getCommissionByNumber(nr),
+    getActiveEmployees(),
+    getCurrentEmployee(),
+  ]);
   if (!commission) notFound();
 
   return (
@@ -49,7 +54,11 @@ export default async function NewPalettePage({
         </p>
       </div>
 
-      <PaletteForm commission={commission} />
+      <PaletteForm
+        commission={commission}
+        employees={employees.map((e) => ({ initials: e.initials ?? e.kuerzel, name: e.name }))}
+        currentInitials={me?.initials}
+      />
     </div>
   );
 }

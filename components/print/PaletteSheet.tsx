@@ -19,7 +19,12 @@ export function PaletteSheet({
 }) {
   return (
     <A4Sheet>
-      <PrintHeader printedBy={printedBy} printedAt={printedAt} />
+      <PrintHeader
+        printedBy={printedBy}
+        printedAt={printedAt}
+        logoSrc="/brand/grabner-logo.svg"
+        logoAlt="Grabner"
+      />
 
       <div
         style={{
@@ -119,36 +124,6 @@ export function PaletteSheet({
             <div style={{ fontFamily: "var(--font-sans)", fontSize: 18, color: INK, lineHeight: 1.4, fontWeight: 500 }}>
               {palette.content}
             </div>
-          </section>
-
-          <section style={{ borderTop: `1px solid ${HAIRLINE}`, paddingTop: 10 }}>
-            <div className="print-label" style={{ marginBottom: 6 }}>Positionsnummern</div>
-            {palette.positions.length === 0 ? (
-              <div style={{ fontFamily: "var(--font-sans)", fontSize: 14, color: STONE, fontStyle: "italic" }}>
-                keine Positionen erfasst
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {palette.positions.map((pos) => (
-                  <span
-                    key={pos}
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: 22,
-                      fontWeight: 500,
-                      color: INK,
-                      letterSpacing: "0.04em",
-                      padding: "4px 12px",
-                      border: `1.5px solid ${INK}`,
-                      minWidth: 56,
-                      textAlign: "center",
-                    }}
-                  >
-                    Pos. {pos}
-                  </span>
-                ))}
-              </div>
-            )}
           </section>
 
           {palette.shippingNote && (

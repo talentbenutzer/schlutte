@@ -7,9 +7,13 @@ export function A4Sheet({ children }: { children: ReactNode }) {
 export function PrintHeader({
   printedBy,
   printedAt,
+  logoSrc = "/brand/grabner-schlutte-logo.svg",
+  logoAlt = "Grabner Schlutte",
 }: {
   printedBy: string;
   printedAt: string;
+  logoSrc?: string;
+  logoAlt?: string;
 }) {
   return (
     <header
@@ -24,8 +28,8 @@ export function PrintHeader({
       <div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/brand/grabner-schlutte-logo.svg"
-          alt="Grabner Schlutte"
+          src={logoSrc}
+          alt={logoAlt}
           style={{ height: 30, width: "auto", display: "block" }}
         />
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.22em", color: "#0E0E0D", textTransform: "uppercase", marginTop: 6 }}>

@@ -21,7 +21,6 @@ export function PaletteForm({
   const [project, setProject] = useState(commission.project || "");
   const [partName, setPartName] = useState(initialData?.objectName || "");
   const [dim, setDim] = useState(initialData?.dimensions || "");
-  const [positions, setPositions] = useState(initialData?.positionNumber || "");
   const [count, setCount] = useState<number>(initialData?.packageCount || 1);
   const [shippingNote, setShippingNote] = useState(initialData?.shippingNote || "");
   const [owner, setOwner] = useState(initialData?.employeeInitials || commission.owner || "EDL");
@@ -87,7 +86,6 @@ export function PaletteForm({
     const payload: PaletteFormData = {
       objectName: partName,
       dimensions: dim,
-      positionNumber: positions,
       packageCount: count,
       shippingNote,
       employeeInitials: owner,
@@ -146,6 +144,22 @@ export function PaletteForm({
         </div>
       )}
 
+      {/* Vorschau Nummernsequenz — direkt unter der Subheadline */}
+      {count > 0 && (
+        <div style={{ border: "1px solid var(--border)", padding: 16, background: "var(--bg-alt)", fontFamily: "var(--font-mono)", fontSize: 12 }}>
+          <span className="grb-eyebrow" style={{ display: "block", marginBottom: 8 }}>Vorschau Nummernsequenz</span>
+          <div>Es werden {count} Palettenzettel erzeugt:</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+            {Array.from({ length: Math.min(count, 5) }).map((_, i) => (
+              <span key={i} className="grb-chip">
+                {i + 1} von {count}
+              </span>
+            ))}
+            {count > 5 && <span style={{ color: "var(--fg-subtle)", alignSelf: "center" }}>... + {count - 5} weitere</span>}
+          </div>
+        </div>
+      )}
+
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         <Field label="Kommissionsnummer (Vorausgefüllt)">
           <input
@@ -175,25 +189,14 @@ export function PaletteForm({
         />
       </Field>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <Field label="Bauteil / Bezeichnung" hint="Optional. Z. B. Fronten / Korpora.">
-          <input
-            value={partName}
-            onChange={(e) => setPartName(e.target.value)}
-            placeholder="Fronten / Korpora"
-            className="grb-input"
-          />
-        </Field>
-
-        <Field label="Positionsnummern" hint="Optional. Z. B. 01, 02.">
-          <input
-            value={positions}
-            onChange={(e) => setPositions(e.target.value)}
-            placeholder="01, 02"
-            className="grb-input"
-          />
-        </Field>
-      </div>
+      <Field label="Bauteil / Bezeichnung" hint="Optional. Z. B. Fronten / Korpora.">
+        <input
+          value={partName}
+          onChange={(e) => setPartName(e.target.value)}
+          placeholder="Fronten / Korpora"
+          className="grb-input"
+        />
+      </Field>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         <Field label="Maße (Freitext)" hint="Optional. Z. B. 120 × 80 × 110 cm.">
@@ -245,22 +248,6 @@ export function PaletteForm({
           style={{ maxWidth: 120, textTransform: "uppercase" }}
         />
       </Field>
-
-      {/* Show sample label logic dynamically */}
-      {count > 0 && (
-        <div style={{ border: "1px solid var(--border)", padding: 16, background: "var(--bg-alt)", fontFamily: "var(--font-mono)", fontSize: 12 }}>
-          <span className="grb-eyebrow" style={{ display: "block", marginBottom: 8 }}>Vorschau Nummernsequenz</span>
-          <div>Es werden {count} Palettenzettel erzeugt:</div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
-            {Array.from({ length: Math.min(count, 5) }).map((_, i) => (
-              <span key={i} className="grb-chip">
-                {i + 1} von {count}
-              </span>
-            ))}
-            {count > 5 && <span style={{ color: "var(--fg-subtle)", alignSelf: "center" }}>... + {count - 5} weitere</span>}
-          </div>
-        </div>
-      )}
 
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 12, flexWrap: "wrap" }}>
         <button

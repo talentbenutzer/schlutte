@@ -58,11 +58,15 @@
   }
   .print-sheet {
     width: 297mm;
-    min-height: 210mm;
+    height: 210mm;
+    max-height: 210mm;
+    overflow: hidden;
     box-shadow: none !important;
     padding: 14mm 16mm !important;
     page-break-after: always;
     break-after: page;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
   .print-sheet:last-child {
     page-break-after: auto;

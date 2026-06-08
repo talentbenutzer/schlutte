@@ -39,7 +39,7 @@ export default function NeuMitarbeiterPage() {
           marginBottom: 32,
         }}
       >
-        Legen Sie einen neuen Mitarbeiter-Datensatz an. Für den Supabase-Login
+        Lege einen neuen Mitarbeiter-Datensatz an. Für den Supabase-Login
         muss der Nutzer separat im Supabase Dashboard registriert werden.
       </p>
       <EmployeeForm />

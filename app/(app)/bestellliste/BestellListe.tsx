@@ -137,7 +137,7 @@ export function BestellListe({
   const handlePlace = () => {
     if (
       !window.confirm(
-        "Komplette Liste aufgeben? Sie wandert ins Archiv und die offene Liste wird geleert."
+        "Komplette Liste aufgeben? Die Liste wandert ins Archiv und die offene Liste wird danach geleert."
       )
     )
       return;

@@ -57,7 +57,7 @@ export default async function EditLaufzettelPage({
           Laufzettel bearbeiten
         </h1>
         <p className="gd-lede" style={{ marginTop: 10 }}>
-          Aktualisieren Sie die Gewerke-Stationen, Stückliste oder Materialien für Kommission <strong>{commission.no}</strong> ({commission.client}).
+          Aktualisiere die Gewerke-Stationen oder Notizen für Kommission <strong>{commission.no}</strong> ({commission.client}).
         </p>
       </div>
 

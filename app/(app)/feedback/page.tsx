@@ -48,7 +48,7 @@ export default async function FeedbackPage() {
               maxWidth: 600,
             }}
           >
-            Schreiben Sie eine Nachricht zu Fehlern, Wünschen oder
+            Schreib eine Nachricht zu Fehlern, Wünschen oder
             Verbesserungsvorschlägen. Eddy liest alles.
           </p>
         </div>

@@ -280,7 +280,23 @@ export default async function CommissionDetailPage({
                       style={{ color: "var(--fg-muted)" }}
                     />
                   </td>
-                  <td style={{ fontWeight: 500 }}>{d.label}</td>
+                  <td style={{ fontWeight: 500 }}>
+                    {d.label}
+                    {commission.project && (
+                      <div
+                        style={{
+                          fontFamily: "var(--font-sans)",
+                          fontSize: 12,
+                          fontWeight: 400,
+                          fontStyle: "italic",
+                          color: "var(--fg-muted)",
+                          marginTop: 2,
+                        }}
+                      >
+                        {commission.project}
+                      </div>
+                    )}
+                  </td>
                   <td className="mono">{d.stamp}</td>
                   <td className="mono" style={{ color: "var(--accent)" }}>
                     {d.by}
@@ -390,7 +406,23 @@ export default async function CommissionDetailPage({
                       style={{ color: "var(--fg-muted)" }}
                     />
                   </td>
-                  <td style={{ fontWeight: 500 }}>{d.label}</td>
+                  <td style={{ fontWeight: 500 }}>
+                    {d.label}
+                    {commission.project && (
+                      <div
+                        style={{
+                          fontFamily: "var(--font-sans)",
+                          fontSize: 12,
+                          fontWeight: 400,
+                          fontStyle: "italic",
+                          color: "var(--fg-muted)",
+                          marginTop: 2,
+                        }}
+                      >
+                        {commission.project}
+                      </div>
+                    )}
+                  </td>
                   <td className="mono" style={{ color: "var(--fg-muted)" }}>—</td>
                   <td className="mono">{d.stamp}</td>
                   <td className="mono" style={{ color: "var(--accent)" }}>

@@ -1,10 +1,11 @@
 import { A4Sheet, PrintHeader } from "@/components/print/A4Sheet";
 import type { Commission, LaufzettelFormData } from "@/lib/types";
 
-const INK = "#0E0E0D";
-const STONE = "#5C5852";
-const SUBTLE = "#8A8278";
-const HAIRLINE = "rgba(14,14,13,.18)";
+// Druck: nur 100 % Schwarz, keine Grautöne.
+const INK = "#000";
+const STONE = "#000";
+const SUBTLE = "#000";
+const HAIRLINE = "#000";
 
 export function LaufzettelSheet({
   commission,
@@ -22,10 +23,17 @@ export function LaufzettelSheet({
   printedAt: string;
 }) {
   const checkedSet = new Set(formData?.stations ?? []);
+  // Overrides aus formData haben Vorrang vor der Kommission.
+  const clientLabel = formData?.client?.trim() || commission.client;
+  const projectLabel = formData?.project?.trim() || commission.project || "";
 
   return (
     <A4Sheet>
-      <PrintHeader printedBy={printedBy} printedAt={printedAt} />
+      <PrintHeader
+        printedBy={printedBy}
+        printedAt={printedAt}
+        tagline="High-End Interior Design · Laufzettel"
+      />
 
       {/* TOP — Kommissionsnummer auf voller Sheet-Breite */}
       <div
@@ -65,34 +73,34 @@ export function LaufzettelSheet({
         {/* LEFT (2/3) — Kunde, Projekt, Mitarbeiter/Datum */}
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div>
-            <div className="print-label" style={{ marginBottom: 2 }}>Kunde</div>
+            <div className="print-label" style={{ marginBottom: 4, fontSize: 15 }}>Kunde</div>
             <div
               style={{
                 fontFamily: "var(--font-display)",
                 fontWeight: 400,
-                fontSize: 40,
+                fontSize: 60,
                 color: INK,
                 letterSpacing: "-0.01em",
                 lineHeight: 1.0,
               }}
             >
-              {commission.client}
+              {clientLabel}
             </div>
-            {commission.project && (
+            {projectLabel && (
               <>
-                <div className="print-label" style={{ marginTop: 10, marginBottom: 2 }}>Projekt</div>
+                <div className="print-label" style={{ marginTop: 12, marginBottom: 4, fontSize: 15 }}>Projekt</div>
                 <div
                   style={{
                     fontFamily: "var(--font-display)",
                     fontStyle: "italic",
                     fontWeight: 400,
-                    fontSize: 40,
+                    fontSize: 60,
                     color: STONE,
                     letterSpacing: "-0.01em",
                     lineHeight: 1.0,
                   }}
                 >
-                  {commission.project}
+                  {projectLabel}
                 </div>
               </>
             )}
@@ -182,7 +190,7 @@ export function LaufzettelSheet({
             <div
               style={{
                 flex: 1,
-                border: `1px dashed rgba(14,14,13,.30)`,
+                border: `1px dashed #000`,
                 minHeight: 50,
                 padding: "6px 10px",
                 fontSize: 11,
@@ -198,23 +206,6 @@ export function LaufzettelSheet({
         </div>
       </div>
 
-      <footer
-        style={{
-          marginTop: 10,
-          paddingTop: 6,
-          borderTop: `1px solid ${HAIRLINE}`,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "baseline",
-          fontFamily: "var(--font-mono)",
-          fontSize: 9,
-          color: SUBTLE,
-          letterSpacing: "0.1em",
-        }}
-      >
-        <span>Schlutte · Laufzettel</span>
-        <span>{commission.no}</span>
-      </footer>
     </A4Sheet>
   );
 }

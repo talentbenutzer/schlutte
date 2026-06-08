@@ -50,7 +50,7 @@ export default async function NewLaufzettelPage({
           Laufzettel erstellen
         </h1>
         <p className="gd-lede" style={{ marginTop: 10 }}>
-          Erstellen Sie einen neuen Werkstatt-Laufzettel für die Kommission <strong>{commission.no}</strong>.
+          Erstelle einen neuen Werkstatt-Laufzettel für die Kommission <strong>{commission.no}</strong>.
         </p>
       </div>
 

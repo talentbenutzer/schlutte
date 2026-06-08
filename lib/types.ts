@@ -67,6 +67,9 @@ export type LaufzettelFormData = {
   material?: string;      // legacy
   surface?: string;       // legacy
   categories?: string[];  // legacy ("Bauteil-Komponenten")
+  // Overrides (leer = Wert aus der Kommission verwenden)
+  client?: string;
+  project?: string;
   note?: string;
   employeeInitials: string;
   stations?: string[];    // ausgewählte Stationen für die Werkstatt-Checkliste

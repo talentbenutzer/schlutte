@@ -50,7 +50,7 @@ export default async function NewPalettePage({
           Paletten erstellen
         </h1>
         <p className="gd-lede" style={{ marginTop: 10 }}>
-          Erstellen Sie neue Paletten-Versandaufkleber für die Kommission <strong>{commission.no}</strong>.
+          Erstelle neue Paletten-Versandaufkleber für die Kommission <strong>{commission.no}</strong>.
         </p>
       </div>
 

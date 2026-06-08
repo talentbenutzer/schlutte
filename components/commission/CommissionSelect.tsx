@@ -59,7 +59,7 @@ export function CommissionSelect({
               Keine Kommission gefunden.
             </div>
             <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--fg-muted)", marginTop: 4, marginBottom: 16 }}>
-              Möchten Sie eine neue Kommission mit dieser Nummer anlegen?
+              Möchtest du eine neue Kommission mit dieser Nummer anlegen?
             </div>
             <Link
               href="/kommissionen/neu"

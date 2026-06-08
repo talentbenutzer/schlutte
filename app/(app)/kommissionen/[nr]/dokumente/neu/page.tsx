@@ -45,7 +45,7 @@ export default async function NewDocumentSelectPage({
           Dokumenttyp wählen
         </h1>
         <p className="gd-lede" style={{ marginTop: 10 }}>
-          Wählen Sie den Typ des Druckdokuments für die Kommission <strong>{commission.no}</strong> ({commission.client}).
+          Wähle den Typ des Druckdokuments für die Kommission <strong>{commission.no}</strong> ({commission.client}).
         </p>
       </div>
 
@@ -77,7 +77,7 @@ export default async function NewDocumentSelectPage({
             Laufzettel
           </h2>
           <p style={{ fontFamily: "var(--font-sans)", fontSize: 14, color: "var(--fg-muted)", lineHeight: 1.5, margin: 0 }}>
-            Werkstatt / Produktion. Erstellen Sie eine Stückliste und weisen Sie Arbeitsschritte den einzelnen Gewerke-Stationen zu.
+            Werkstatt / Produktion. Erstelle eine Stückliste und weise die Arbeitsschritte den einzelnen Gewerke-Stationen zu.
           </p>
           <span style={{ marginTop: "auto", display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg)" }}>
             Erstellen <Icon name="arrow" size={14} />

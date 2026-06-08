@@ -30,6 +30,8 @@ export function LaufzettelForm({
   currentInitials?: string;
 }) {
   const router = useRouter();
+  const [client, setClient] = useState(initialData?.client || commission.client || "");
+  const [project, setProject] = useState(initialData?.project || commission.project || "");
   const [note, setNote] = useState(initialData?.note || "");
   const [owner, setOwner] = useState(initialData?.employeeInitials || currentInitials || "");
   // Default: keine Stationen vorgewählt — der Nutzer hakt im Formular ab.
@@ -37,19 +39,30 @@ export function LaufzettelForm({
     initialData?.stations ?? []
   );
 
-  // Preview an die Spaltenbreite anpassen (ResizeObserver).
+  // Preview an die Spaltenbreite anpassen + tatsächliche Sheet-Höhe messen,
+  // damit unter der Vorschau kein leerer weißer Bereich entsteht.
   const previewRef = useRef<HTMLDivElement | null>(null);
+  const innerRef = useRef<HTMLDivElement | null>(null);
   const [previewScale, setPreviewScale] = useState(0.5);
+  const [previewHeight, setPreviewHeight] = useState<number | null>(null);
   useEffect(() => {
-    const el = previewRef.current;
-    if (!el) return;
+    const outer = previewRef.current;
+    const inner = innerRef.current;
+    if (!outer || !inner) return;
     const update = () => {
-      const w = el.clientWidth;
-      if (w > 0) setPreviewScale(w / SHEET_WIDTH_PX);
+      const w = outer.clientWidth;
+      if (w <= 0) return;
+      const s = w / SHEET_WIDTH_PX;
+      setPreviewScale(s);
+      // tatsächliche unskalierte Höhe des Sheet-Inhalts
+      const sheet = inner.firstElementChild as HTMLElement | null;
+      const h = sheet?.scrollHeight ?? inner.scrollHeight;
+      if (h > 0) setPreviewHeight(h * s);
     };
     update();
     const ro = new ResizeObserver(update);
-    ro.observe(el);
+    ro.observe(outer);
+    if (inner.firstElementChild) ro.observe(inner.firstElementChild as Element);
     return () => ro.disconnect();
   }, []);
 
@@ -75,6 +88,8 @@ export function LaufzettelForm({
     setSaveError("");
     
     const payload: LaufzettelFormData = {
+      client,
+      project,
       note,
       employeeInitials: owner,
       stations: selectedStations,
@@ -96,6 +111,8 @@ export function LaufzettelForm({
 
   // Live-Vorschau-Daten aus dem aktuellen Formularzustand
   const previewFormData: LaufzettelFormData = {
+    client,
+    project,
     note,
     employeeInitials: owner,
     stations: selectedStations,
@@ -137,36 +154,34 @@ export function LaufzettelForm({
         </div>
       )}
 
+      <Field label="Kommissionsnummer (vorausgefüllt)">
+        <input
+          disabled
+          value={commission.no}
+          className="grb-input"
+          style={{ opacity: 0.6, cursor: "not-allowed", maxWidth: 180 }}
+        />
+      </Field>
+
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <Field label="Kommissionsnummer (Vorausgefüllt)">
+        <Field label="Kunde" hint="Aus der Kommission vorausgefüllt — kann hier überschrieben werden.">
           <input
-            disabled
-            value={commission.no}
+            value={client}
+            onChange={(e) => setClient(e.target.value)}
             className="grb-input"
-            style={{ opacity: 0.6, cursor: "not-allowed" }}
+            placeholder={commission.client}
           />
         </Field>
 
-        <Field label="Kunde (Vorausgefüllt)">
+        <Field label="Projekt" hint="Aus der Kommission vorausgefüllt — kann hier überschrieben werden.">
           <input
-            disabled
-            value={commission.client}
+            value={project}
+            onChange={(e) => setProject(e.target.value)}
             className="grb-input"
-            style={{ opacity: 0.6, cursor: "not-allowed" }}
+            placeholder={commission.project || "Optional"}
           />
         </Field>
       </div>
-
-      {commission.project && (
-        <Field label="Projekt (aus Kommission)">
-          <input
-            disabled
-            value={commission.project}
-            className="grb-input"
-            style={{ opacity: 0.6, cursor: "not-allowed" }}
-          />
-        </Field>
-      )}
 
       <Field label="Notiz / Hinweis" hint="Optional. Erscheint auf dem Ausdruck für Sonderwünsche.">
         <textarea
@@ -268,7 +283,7 @@ export function LaufzettelForm({
         ref={previewRef}
         style={{
           width: "100%",
-          aspectRatio: "297 / 210",
+          height: previewHeight ? `${previewHeight}px` : "auto",
           overflow: "hidden",
           position: "relative",
           border: "1px solid var(--border)",
@@ -277,6 +292,7 @@ export function LaufzettelForm({
         }}
       >
         <div
+          ref={innerRef}
           style={{
             transform: `scale(${previewScale})`,
             transformOrigin: "top left",

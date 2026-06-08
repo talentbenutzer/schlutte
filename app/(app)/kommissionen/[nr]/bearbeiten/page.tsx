@@ -45,7 +45,7 @@ export default async function EditCommissionPage({
           {nr}
         </h1>
         <p className="gd-lede" style={{ marginTop: 10 }}>
-          Aktualisieren Sie den Kunden, das Projekt oder interne Hinweise für diese Kommission.
+          Aktualisiere den Kunden, das Projekt oder interne Hinweise für diese Kommission.
         </p>
       </div>
 

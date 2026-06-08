@@ -57,7 +57,7 @@ export default async function EditPalettePage({
           Palettenbeschriftung bearbeiten
         </h1>
         <p className="gd-lede" style={{ marginTop: 10 }}>
-          Aktualisieren Sie Packstücke, Maße oder Versandhinweise für Kommission <strong>{commission.no}</strong> ({commission.client}).
+          Aktualisiere Packstücke, Maße oder Versandhinweise für Kommission <strong>{commission.no}</strong> ({commission.client}).
         </p>
       </div>
 

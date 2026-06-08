@@ -1,10 +1,11 @@
 import { A4Sheet, PrintHeader } from "@/components/print/A4Sheet";
 import type { Commission, Palette } from "@/lib/types";
 
-const INK = "#0E0E0D";
-const STONE = "#5C5852";
-const SUBTLE = "#8A8278";
-const HAIRLINE = "rgba(14,14,13,.18)";
+// Druck: nur 100 % Schwarz, keine Grautöne.
+const INK = "#000";
+const STONE = "#000";
+const SUBTLE = "#000";
+const HAIRLINE = "#000";
 
 export function PaletteSheet({
   commission,

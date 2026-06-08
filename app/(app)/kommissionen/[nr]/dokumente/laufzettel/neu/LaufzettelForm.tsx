@@ -39,8 +39,8 @@ export function LaufzettelForm({
     initialData?.stations ?? []
   );
 
-  // Preview an die Spaltenbreite anpassen + tatsächliche Sheet-Höhe messen,
-  // damit unter der Vorschau kein leerer weißer Bereich entsteht.
+  // Wrapper-Höhe an die tatsächlich gerenderte Sheet-Höhe binden
+  // (sonst entsteht unter der Vorschau ein leeres weißes Feld).
   const previewRef = useRef<HTMLDivElement | null>(null);
   const innerRef = useRef<HTMLDivElement | null>(null);
   const [previewScale, setPreviewScale] = useState(0.5);
@@ -54,7 +54,6 @@ export function LaufzettelForm({
       if (w <= 0) return;
       const s = w / SHEET_WIDTH_PX;
       setPreviewScale(s);
-      // tatsächliche unskalierte Höhe des Sheet-Inhalts
       const sheet = inner.firstElementChild as HTMLElement | null;
       const h = sheet?.scrollHeight ?? inner.scrollHeight;
       if (h > 0) setPreviewHeight(h * s);

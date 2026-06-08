@@ -142,11 +142,11 @@ export function LaufzettelSheet({
                     key={s}
                     style={{
                       fontFamily: "var(--font-sans)",
-                      fontSize: 12,
+                      fontSize: 18,
                       color: INK,
                       display: "flex",
                       alignItems: "center",
-                      gap: 8,
+                      gap: 10,
                       fontWeight: checked ? 700 : 400,
                     }}
                   >
@@ -154,8 +154,8 @@ export function LaufzettelSheet({
                       style={{
                         display: "inline-grid",
                         placeItems: "center",
-                        width: 14,
-                        height: 14,
+                        width: 18,
+                        height: 18,
                         border: `1.5px solid ${INK}`,
                         background: checked ? INK : "transparent",
                         color: "#fff",
@@ -163,7 +163,7 @@ export function LaufzettelSheet({
                       }}
                     >
                       {checked && (
-                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
                           <path d="M5 12.5 9.5 17 19 7.5" />
                         </svg>
                       )}

@@ -285,12 +285,19 @@ export default async function CommissionDetailPage({
                   <td className="mono" style={{ color: "var(--accent)" }}>
                     {d.by}
                   </td>
-                  <td style={{ textAlign: "right" }}>
+                  <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                    <Link
+                      href={`/kommissionen/${commission.no}/dokumente/laufzettel/${d.id}/bearbeiten`}
+                      style={{ padding: "4px 8px", color: "var(--fg-muted)" }}
+                      title="Bearbeiten"
+                    >
+                      <Icon name="edit" size={14} />
+                    </Link>
                     <Link
                       href={`/print/laufzettel/${commission.no}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ padding: 4, color: "var(--fg)" }}
+                      style={{ padding: "4px 8px", color: "var(--fg)" }}
                       title="Drucken"
                     >
                       <Icon name="print" size={14} />

@@ -35,14 +35,14 @@ export function Topbar() {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (!active) return;
       setUser(currentUser);
-      if (currentUser?.email) {
-        const { data } = await supabase
+      if (currentUser) {
+        const { data: rows } = await supabase
           .from("employees")
           .select("initials, name, is_admin")
-          .ilike("email", currentUser.email)
-          .maybeSingle();
+          .or(`id.eq.${currentUser.id},email.ilike.${currentUser.email ?? ""}`)
+          .limit(1);
         if (!active) return;
-        setEmployee(data);
+        setEmployee(rows?.[0] ?? null);
       }
     };
     fetchUser();

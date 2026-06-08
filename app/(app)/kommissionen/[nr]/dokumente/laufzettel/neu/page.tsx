@@ -24,7 +24,7 @@ export default async function NewLaufzettelPage({
         display: "flex",
         flexDirection: "column",
         gap: 32,
-        maxWidth: 960,
+        maxWidth: 1440,
         margin: "0 auto",
         width: "100%",
       }}

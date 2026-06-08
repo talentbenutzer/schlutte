@@ -62,13 +62,14 @@ export type Palette = {
 };
 
 export type LaufzettelFormData = {
-  area?: string;
-  componentName?: string;
-  material?: string;
-  surface?: string;
+  area?: string;          // legacy
+  componentName?: string; // legacy
+  material?: string;      // legacy
+  surface?: string;       // legacy
+  categories?: string[];  // legacy ("Bauteil-Komponenten")
   note?: string;
   employeeInitials: string;
-  categories: string[];
+  stations?: string[];    // ausgewählte Stationen für die Werkstatt-Checkliste
 };
 
 export type PaletteFormData = {

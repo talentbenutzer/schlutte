@@ -370,9 +370,10 @@ export async function getLaufzettelPrintData(
     console.warn("Failed to fetch Laufzettel form data or log print action:", e);
   }
 
+  // Sheet rendert IMMER alle Stationen; abgehakte werden über formData.stations markiert.
   return {
     commission,
-    materials: MATERIALS,
+    materials: MATERIALS, // legacy field — Material/Stückliste nicht mehr im Sheet
     stations: STATIONS,
     printedBy: commission.owner,
     printedAt: formatDate(new Date()),

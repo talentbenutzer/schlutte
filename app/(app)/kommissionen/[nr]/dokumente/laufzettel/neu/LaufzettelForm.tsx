@@ -1,11 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import "@/styles/print.css";
+
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import type { Commission, LaufzettelFormData } from "@/lib/types";
+import { STATIONS } from "@/mocks/data";
+import { LaufzettelSheet } from "@/components/print/LaufzettelSheet";
 import { saveLaufzettelAction } from "./actions";
+
+// 297mm in CSS-px bei 96 dpi
+const SHEET_WIDTH_PX = (297 * 96) / 25.4;
 
 type EmployeeOption = { initials: string; name: string };
 
@@ -23,42 +30,38 @@ export function LaufzettelForm({
   currentInitials?: string;
 }) {
   const router = useRouter();
-  const [project, setProject] = useState(commission.project || "");
-  const [room, setRoom] = useState(initialData?.area || "");
-  const [partName, setPartName] = useState(initialData?.componentName || "");
-  const [material, setMaterial] = useState(initialData?.material || "");
-  const [surface, setSurface] = useState(initialData?.surface || "");
   const [note, setNote] = useState(initialData?.note || "");
   const [owner, setOwner] = useState(initialData?.employeeInitials || currentInitials || "");
-  const [selectedComponents, setSelectedComponents] = useState<string[]>(initialData?.categories || []);
+  // Default: keine Stationen vorgewählt — der Nutzer hakt im Formular ab.
+  const [selectedStations, setSelectedStations] = useState<string[]>(
+    initialData?.stations ?? []
+  );
+
+  // Preview an die Spaltenbreite anpassen (ResizeObserver).
+  const previewRef = useRef<HTMLDivElement | null>(null);
+  const [previewScale, setPreviewScale] = useState(0.5);
+  useEffect(() => {
+    const el = previewRef.current;
+    if (!el) return;
+    const update = () => {
+      const w = el.clientWidth;
+      if (w > 0) setPreviewScale(w / SHEET_WIDTH_PX);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const [ownerError, setOwnerError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
 
-  const COMPONENTS = [
-    "Seiten",
-    "Sockel",
-    "RW-Schub",
-    "Boden / Deckel",
-    "Fronten",
-    "Boden-Schub",
-    "Traverse",
-    "Blenden",
-    "Rückwände",
-    "UK",
-    "Fachböden",
-    "Konstruktionsböden",
-    "Sonstiges",
-  ];
-
-  const handleComponentChange = (comp: string) => {
-    if (selectedComponents.includes(comp)) {
-      setSelectedComponents(selectedComponents.filter((c) => c !== comp));
-    } else {
-      setSelectedComponents([...selectedComponents, comp]);
-    }
+  const toggleStation = (s: string) => {
+    setSelectedStations((prev) =>
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+    );
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -72,13 +75,9 @@ export function LaufzettelForm({
     setSaveError("");
     
     const payload: LaufzettelFormData = {
-      area: room,
-      componentName: partName,
-      material,
-      surface,
       note,
       employeeInitials: owner,
-      categories: selectedComponents,
+      stations: selectedStations,
     };
 
     const result = await saveLaufzettelAction(commission.no, payload, documentId);
@@ -95,8 +94,17 @@ export function LaufzettelForm({
     router.refresh();
   };
 
+  // Live-Vorschau-Daten aus dem aktuellen Formularzustand
+  const previewFormData: LaufzettelFormData = {
+    note,
+    employeeInitials: owner,
+    stations: selectedStations,
+  };
+  const today = new Date().toISOString().slice(0, 10);
+
   return (
-    <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 640 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 40, alignItems: "start" }}>
+    <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0 }}>
       {isSaved && (
         <div
           role="alert"
@@ -149,56 +157,18 @@ export function LaufzettelForm({
         </Field>
       </div>
 
-      <Field label="Projekt / Objekt" hint="Optional. Z. B. Küche & Esszimmer.">
-        <input
-          value={project}
-          onChange={(e) => setProject(e.target.value)}
-          placeholder="Küche & Esszimmer"
-          className="grb-input"
-        />
-      </Field>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <Field label="Bereich / Raum" hint="Optional. Z. B. Erdgeschoss / Küche.">
+      {commission.project && (
+        <Field label="Projekt (aus Kommission)">
           <input
-            value={room}
-            onChange={(e) => setRoom(e.target.value)}
-            placeholder="Erdgeschoss / Küche"
+            disabled
+            value={commission.project}
             className="grb-input"
+            style={{ opacity: 0.6, cursor: "not-allowed" }}
           />
         </Field>
+      )}
 
-        <Field label="Bauteil / Bezeichnung" hint="Optional. Z. B. Kücheninsel & Zeile.">
-          <input
-            value={partName}
-            onChange={(e) => setPartName(e.target.value)}
-            placeholder="Kücheninsel & Zeile"
-            className="grb-input"
-          />
-        </Field>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <Field label="Material" hint="Optional. Z. B. Eiche furniert.">
-          <input
-            value={material}
-            onChange={(e) => setMaterial(e.target.value)}
-            placeholder="Eiche furniert"
-            className="grb-input"
-          />
-        </Field>
-
-        <Field label="Oberfläche" hint="Optional. Z. B. Natur matt lackiert.">
-          <input
-            value={surface}
-            onChange={(e) => setSurface(e.target.value)}
-            placeholder="Natur matt lackiert"
-            className="grb-input"
-          />
-        </Field>
-      </div>
-
-      <Field label="Hinweis / Freitext" hint="Optional. Erscheint auf dem Ausdruck für Sonderwünsche.">
+      <Field label="Notiz / Hinweis" hint="Optional. Erscheint auf dem Ausdruck für Sonderwünsche.">
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
@@ -230,13 +200,16 @@ export function LaufzettelForm({
       </Field>
 
       <div style={{ borderTop: "1px solid var(--border)", paddingTop: 16 }}>
-        <span className="grb-eyebrow" style={{ display: "block", marginBottom: 12 }}>Bauteil-Komponenten</span>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-          {COMPONENTS.map((comp) => {
-            const checked = selectedComponents.includes(comp);
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
+          <span className="grb-eyebrow">Stationen · Werkstatt</span>
+          <span className="grb-index">{selectedStations.length} / {STATIONS.length}</span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+          {STATIONS.map((s) => {
+            const checked = selectedStations.includes(s);
             return (
               <label
-                key={comp}
+                key={s}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -250,7 +223,7 @@ export function LaufzettelForm({
                 <input
                   type="checkbox"
                   checked={checked}
-                  onChange={() => handleComponentChange(comp)}
+                  onChange={() => toggleStation(s)}
                   style={{ display: "none" }}
                 />
                 <span
@@ -267,7 +240,7 @@ export function LaufzettelForm({
                 >
                   {checked && <Icon name="check" size={12} stroke={2.5} />}
                 </span>
-                {comp}
+                {s}
               </label>
             );
           })}
@@ -284,6 +257,46 @@ export function LaufzettelForm({
         </Link>
       </div>
     </form>
+
+    {/* Live-Vorschau A4 Querformat */}
+    <aside style={{ position: "sticky", top: 24, minWidth: 0 }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
+        <span className="grb-eyebrow">Live-Vorschau · A4 Querformat</span>
+        <span className="grb-index">aktualisiert sich live</span>
+      </div>
+      <div
+        ref={previewRef}
+        style={{
+          width: "100%",
+          aspectRatio: "297 / 210",
+          overflow: "hidden",
+          position: "relative",
+          border: "1px solid var(--border)",
+          background: "#fff",
+          colorScheme: "light",
+        }}
+      >
+        <div
+          style={{
+            transform: `scale(${previewScale})`,
+            transformOrigin: "top left",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: `${SHEET_WIDTH_PX}px`,
+          }}
+        >
+          <LaufzettelSheet
+            commission={commission}
+            stations={STATIONS}
+            formData={previewFormData}
+            printedBy={owner || commission.owner || "—"}
+            printedAt={today}
+          />
+        </div>
+      </div>
+    </aside>
+    </div>
   );
 }
 

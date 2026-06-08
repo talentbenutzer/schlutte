@@ -33,11 +33,38 @@ export default async function StartPage() {
       data: { user },
     } = await supabase.auth.getUser();
     if (user?.email) {
-      const { data } = await supabase
+      // Self-Provisioning: legt den Mitarbeiter-Eintrag an, falls noch keiner existiert.
+      const { data: existing } = await supabase
         .from("employees")
-        .select("name, initials, is_admin")
+        .select("id")
         .ilike("email", user.email)
         .maybeSingle();
+
+      if (!existing) {
+        const local = user.email.split("@")[0];
+        const metaName =
+          typeof user.user_metadata?.full_name === "string"
+            ? (user.user_metadata.full_name as string)
+            : "";
+        const fullName = metaName || local.charAt(0).toUpperCase() + local.slice(1);
+        const initials =
+          local.replace(/[^a-zA-Z]/g, "").slice(0, 3).toUpperCase() || "USR";
+        await supabase.from("employees").insert({
+          id: user.id,
+          email: user.email,
+          name: fullName,
+          initials,
+          is_admin: false,
+          is_active: true,
+        });
+      }
+
+      const { data: rows } = await supabase
+        .from("employees")
+        .select("name, initials, is_admin")
+        .or(`id.eq.${user.id},email.ilike.${user.email}`)
+        .limit(1);
+      const data = rows?.[0] ?? null;
       if (data) {
         userName = data.name || user.email;
         userInitials = data.initials || user.email.slice(0, 3).toUpperCase();

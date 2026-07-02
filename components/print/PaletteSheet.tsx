@@ -1,4 +1,6 @@
 import { A4Sheet, PrintHeader } from "@/components/print/A4Sheet";
+import { FitText } from "@/components/print/FitText";
+import { FitLines } from "@/components/print/FitLines";
 import type { Commission, Palette } from "@/lib/types";
 
 // Druck: nur 100 % Schwarz, keine Grautöne.
@@ -38,13 +40,16 @@ export function PaletteSheet({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1.05fr 1fr",
+          // Linke Spalte = Breite der Kommissionsnummer (auto/inhaltsbasiert),
+          // rechte Spalte nimmt den Rest (1fr).
+          gridTemplateColumns: "auto 1fr",
           gap: 28,
           flex: 1,
           marginTop: 16,
         }}
       >
-        {/* LEFT — dominante Zahlen */}
+        {/* LEFT — dominante Zahlen. Die Spaltenbreite ergibt sich aus der Kommissionsnummer;
+            der Kundenname (FitText, overflow:hidden) trägt nichts zur Spaltenbreite bei. */}
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div>
             <div className="print-eyebrow" style={{ marginBottom: 4 }}>Kommission</div>
@@ -60,6 +65,23 @@ export function PaletteSheet({
             >
               {commission.no}
             </div>
+
+            {/* Feine Trennlinie zwischen Kommissionsnummer und Kundenname */}
+            <div style={{ borderTop: `1px solid ${HAIRLINE}`, marginTop: 14, marginBottom: 10 }} />
+
+            {/* Kundenname direkt unter der Kommissionsnummer, gleiche Größe (Thin), schrumpft proportional bei Überbreite */}
+            <div className="print-eyebrow" style={{ marginBottom: 4 }}>Kunde</div>
+            <FitText
+              text={commission.client}
+              maxFontSize={210}
+              style={{
+                fontFamily: "var(--font-display)",
+                fontWeight: 100,
+                color: INK,
+                letterSpacing: "-0.03em",
+                lineHeight: 0.92,
+              }}
+            />
           </div>
 
           {!palette.hidePackageCount && (
@@ -105,24 +127,8 @@ export function PaletteSheet({
             borderLeft: `1px solid ${INK}`,
           }}
         >
-          <section>
-            <div className="print-label" style={{ marginBottom: 4 }}>Kunde</div>
-            <div
-              style={{
-                fontFamily: "var(--font-display)",
-                fontWeight: 400,
-                fontSize: 44,
-                color: INK,
-                letterSpacing: "-0.01em",
-                lineHeight: 1.04,
-              }}
-            >
-              {commission.client}
-            </div>
-          </section>
-
           {objectLabel && (
-            <section style={{ borderTop: `1px solid ${HAIRLINE}`, paddingTop: 10 }}>
+            <section>
               <div className="print-label" style={{ marginBottom: 4 }}>Objektbezeichnung</div>
               <div style={{ fontFamily: "var(--font-sans)", fontSize: 22, color: INK, lineHeight: 1.2 }}>
                 {objectLabel}
@@ -188,21 +194,17 @@ export function PaletteSheet({
               {palette.dim && (
                 <div>
                   <div className="print-label">Maße</div>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: 32,
-                      color: INK,
-                      marginTop: 4,
-                      lineHeight: 1.15,
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 2,
-                    }}
-                  >
-                    {palette.dim.split("\n").map((line, i) => (
-                      <span key={i}>{line}</span>
-                    ))}
+                  <div style={{ marginTop: 4 }}>
+                    <FitLines
+                      lines={palette.dim.split("\n")}
+                      maxFontSize={32}
+                      gap={2}
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        color: INK,
+                        lineHeight: 1.15,
+                      }}
+                    />
                   </div>
                 </div>
               )}

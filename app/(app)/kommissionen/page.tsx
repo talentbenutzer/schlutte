@@ -33,9 +33,9 @@ export default async function KommissionenPage() {
           }}
         >
           <span className="grb-eyebrow">Nr.</span>
-          <span className="grb-eyebrow">Kunde · Projekt</span>
+          <span className="grb-eyebrow">Kunde</span>
           <span className="grb-eyebrow">Status</span>
-          <span className="grb-eyebrow">Dok.</span>
+          <span className="grb-eyebrow">Dokumente</span>
           <span className="grb-eyebrow">Aktualisiert</span>
           <span className="grb-eyebrow" style={{ textAlign: "right" }}>Owner</span>
         </div>
@@ -59,12 +59,11 @@ export default async function KommissionenPage() {
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 18, color: "var(--fg)" }}>
                 {k.client}
               </div>
-              <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--fg-muted)", marginTop: 2 }}>
-                {k.project}
-              </div>
             </div>
             <Status value={k.status} />
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-subtle)" }}>{k.docs} Dok.</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-subtle)", whiteSpace: "nowrap" }}>
+              {k.laufzettelCount ?? 0} Laufz. · {k.paletteCount ?? 0} Pal.
+            </span>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-subtle)" }}>{k.updated}</span>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-subtle)", textAlign: "right" }}>{k.owner}</span>
           </Link>

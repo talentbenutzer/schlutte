@@ -4,6 +4,8 @@ import { Icon } from "@/components/ui/Icon";
 import { Status } from "@/components/ui/Status";
 import { getCommissionByNumber } from "@/lib/data/commissions";
 import { getDocumentsByCommissionNumber } from "@/lib/data/documents";
+import type { LaufzettelFormData } from "@/lib/types";
+import { DeleteDocumentButton } from "./DeleteDocumentButton";
 
 function SectionHeader({
   eyebrow,
@@ -270,7 +272,12 @@ export default async function CommissionDetailPage({
               </tr>
             </thead>
             <tbody>
-              {laufzettelDocs.map((d) => (
+              {laufzettelDocs.map((d) => {
+                // Ein Laufzettel kann seine eigene Projektbezeichnung überschreiben (formData.project) —
+                // die hat Vorrang vor der Bezeichnung der Kommission (analog zum Druck-Sheet).
+                const laufzettelFormData = d.formData as LaufzettelFormData | undefined;
+                const laufzettelProject = laufzettelFormData?.project?.trim() || commission.project;
+                return (
                 <tr key={d.id}>
                   <td>
                     <Icon
@@ -282,7 +289,7 @@ export default async function CommissionDetailPage({
                   </td>
                   <td style={{ fontWeight: 500 }}>
                     {d.label}
-                    {commission.project && (
+                    {laufzettelProject && (
                       <div
                         style={{
                           fontFamily: "var(--font-sans)",
@@ -293,7 +300,7 @@ export default async function CommissionDetailPage({
                           marginTop: 2,
                         }}
                       >
-                        {commission.project}
+                        {laufzettelProject}
                       </div>
                     )}
                   </td>
@@ -310,7 +317,7 @@ export default async function CommissionDetailPage({
                       <Icon name="edit" size={14} />
                     </Link>
                     <Link
-                      href={`/print/laufzettel/${commission.no}`}
+                      href={`/print/laufzettel/document/${d.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{ padding: "4px 8px", color: "var(--fg)" }}
@@ -318,9 +325,15 @@ export default async function CommissionDetailPage({
                     >
                       <Icon name="print" size={14} />
                     </Link>
+                    <DeleteDocumentButton
+                      commissionNo={commission.no}
+                      documentId={d.id}
+                      label="Laufzettel"
+                    />
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         )}
@@ -455,6 +468,11 @@ export default async function CommissionDetailPage({
                       <Icon name="print" size={14} />
                       <span style={{ fontSize: 11, marginLeft: 4 }}>Alle</span>
                     </Link>
+                    <DeleteDocumentButton
+                      commissionNo={commission.no}
+                      documentId={d.id}
+                      label="Paletten-Set"
+                    />
                   </td>
                 </tr>
               ))}

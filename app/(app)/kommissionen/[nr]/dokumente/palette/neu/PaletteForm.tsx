@@ -23,10 +23,19 @@ export function PaletteForm({
   currentInitials?: string;
 }) {
   const router = useRouter();
-  const [project, setProject] = useState(commission.project || "");
-  const [partName, setPartName] = useState(initialData?.objectName || "");
-  const [dim, setDim] = useState(initialData?.dimensions || "");
+  // Objektbezeichnung: bei neuer Palette aus dem Projekt der Kommission vorausgefüllt, sonst gespeicherter Wert.
+  const [objectName, setObjectName] = useState(
+    initialData?.objectName ?? (documentId ? "" : commission.project ?? "") ?? ""
+  );
+  const [content, setContent] = useState(initialData?.content ?? "");
+  const [lengthMm, setLengthMm] = useState(initialData?.lengthMm ?? "");
+  const [widthMm, setWidthMm] = useState(initialData?.widthMm ?? "");
+  const [heightMm, setHeightMm] = useState(initialData?.heightMm ?? "");
+  const [weight, setWeight] = useState(initialData?.weight ?? "");
   const [count, setCount] = useState<number>(initialData?.packageCount || 1);
+  const [hidePackageCount, setHidePackageCount] = useState<boolean>(
+    initialData?.hidePackageCount ?? false
+  );
   const [shippingNote, setShippingNote] = useState(initialData?.shippingNote || "");
   const [owner, setOwner] = useState(initialData?.employeeInitials || currentInitials || "");
   const [submitAction, setSubmitAction] = useState<"single" | "range">("single");
@@ -41,7 +50,10 @@ export function PaletteForm({
     e.preventDefault();
     let hasError = false;
 
-    if (count < 1) {
+    // Bei ausgeblendeter Nummerierung wird genau ein Etikett erzeugt.
+    const effectiveCount = hidePackageCount ? 1 : count;
+
+    if (!hidePackageCount && count < 1) {
       setCountError("Anzahl Packstücke muss mindestens 1 sein.");
       hasError = true;
     } else {
@@ -61,9 +73,14 @@ export function PaletteForm({
     setSaveError("");
 
     const payload: PaletteFormData = {
-      objectName: partName,
-      dimensions: dim,
-      packageCount: count,
+      objectName,
+      content,
+      lengthMm,
+      widthMm,
+      heightMm,
+      weight,
+      packageCount: effectiveCount,
+      hidePackageCount,
       shippingNote,
       employeeInitials: owner,
     };
@@ -77,12 +94,12 @@ export function PaletteForm({
     }
 
     setIsSaved(true);
-    
+
     const docId = result.documentId;
     if (submitAction === "single") {
       router.push(`/print/palette/document/${docId}/1`);
     } else {
-      router.push(`/print/palette/document/${docId}/range/1/${count}`);
+      router.push(`/print/palette/document/${docId}/range/1/${effectiveCount}`);
     }
     router.refresh();
   };
@@ -122,7 +139,7 @@ export function PaletteForm({
       )}
 
       {/* Vorschau Nummernsequenz — direkt unter der Subheadline */}
-      {count > 0 && (
+      {!hidePackageCount && count > 0 && (
         <div style={{ border: "1px solid var(--border)", padding: 16, background: "var(--bg-alt)", fontFamily: "var(--font-mono)", fontSize: 12 }}>
           <span className="grb-eyebrow" style={{ display: "block", marginBottom: 8 }}>Vorschau Nummernsequenz</span>
           <div>Es werden {count} Palettenzettel erzeugt:</div>
@@ -157,49 +174,104 @@ export function PaletteForm({
         </Field>
       </div>
 
-      <Field label="Projekt / Objekt" hint="Optional. Z. B. Küche & Esszimmer.">
+      <Field label="Objektbezeichnung" hint="Optional. Z. B. Küche & Esszimmer.">
         <input
-          value={project}
-          onChange={(e) => setProject(e.target.value)}
+          value={objectName}
+          onChange={(e) => setObjectName(e.target.value)}
           placeholder="Küche & Esszimmer"
           className="grb-input"
         />
       </Field>
 
-      <Field label="Bauteil / Bezeichnung" hint="Optional. Z. B. Fronten / Korpora.">
-        <input
-          value={partName}
-          onChange={(e) => setPartName(e.target.value)}
-          placeholder="Fronten / Korpora"
+      <Field label="Bauteil / Bezeichnung" hint="Optional. Ein Eintrag pro Zeile — wird untereinander aufgelistet.">
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder={"Fronten\nKorpora\nSockelleisten"}
+          rows={4}
           className="grb-input"
+          style={{ resize: "vertical", minHeight: 96, fontFamily: "var(--font-sans)" }}
         />
       </Field>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <Field label="Maße (Freitext)" hint="Optional. Z. B. 120 × 80 × 110 cm.">
-          <input
-            value={dim}
-            onChange={(e) => setDim(e.target.value)}
-            placeholder="120 × 80 × 110 cm"
-            className="grb-input"
-          />
-        </Field>
+      <Field label="Maße (mm)" hint="Optional. Länge / Breite / Höhe in Millimeter.">
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-muted)" }}>L</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              value={lengthMm}
+              onChange={(e) => setLengthMm(e.target.value)}
+              placeholder="1234"
+              className="grb-input"
+            />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-muted)" }}>B</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              value={widthMm}
+              onChange={(e) => setWidthMm(e.target.value)}
+              placeholder="1234"
+              className="grb-input"
+            />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-muted)" }}>H</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              value={heightMm}
+              onChange={(e) => setHeightMm(e.target.value)}
+              placeholder="1234"
+              className="grb-input"
+            />
+          </div>
+        </div>
+      </Field>
 
-        <Field
-          label="Anzahl Packstücke"
-          hint="Pflichtfeld. Mindestens 1."
-          error={countError}
-        >
+      <Field label="Gewicht (Freitext)" hint="Optional. Z. B. 85 kg.">
+        <input
+          value={weight}
+          onChange={(e) => setWeight(e.target.value)}
+          placeholder="85 kg"
+          className="grb-input"
+          style={{ maxWidth: 320 }}
+        />
+      </Field>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
           <input
-            type="number"
-            min={1}
-            required
-            value={count}
-            onChange={(e) => setCount(Number(e.target.value))}
-            placeholder="1"
-            className="grb-input"
+            type="checkbox"
+            checked={hidePackageCount}
+            onChange={(e) => setHidePackageCount(e.target.checked)}
           />
-        </Field>
+          <span style={{ fontFamily: "var(--font-sans)", fontSize: 14, color: "var(--fg)" }}>
+            Packstück-Nummerierung ausblenden (ein einzelnes Etikett ohne „X von Y")
+          </span>
+        </label>
+
+        {!hidePackageCount && (
+          <Field
+            label="Anzahl Packstücke"
+            hint="Pflichtfeld. Mindestens 1."
+            error={countError}
+          >
+            <input
+              type="number"
+              min={1}
+              required
+              value={count}
+              onChange={(e) => setCount(Number(e.target.value))}
+              placeholder="1"
+              className="grb-input"
+              style={{ maxWidth: 320 }}
+            />
+          </Field>
+        )}
       </div>
 
       <Field label="Versandhinweis" hint="Optional. Erscheint auf den Paketscheinen (z. B. Fragile, Trocken lagern).">
@@ -242,15 +314,17 @@ export function PaletteForm({
           <Icon name="check" size={14} />
           {isSaved && submitAction === "single" ? "Weiterleitung..." : isSaving ? "Wird gespeichert..." : "Speichern & Vorschau öffnen"}
         </button>
-        <button
-          type="submit"
-          className="grb-btn grb-btn-ghost"
-          disabled={isSaving || isSaved}
-          onClick={() => setSubmitAction("range")}
-        >
-          <Icon name="print" size={14} />
-          {isSaved && submitAction === "range" ? "Weiterleitung..." : "Alle Packstücke drucken"}
-        </button>
+        {!hidePackageCount && (
+          <button
+            type="submit"
+            className="grb-btn grb-btn-ghost"
+            disabled={isSaving || isSaved}
+            onClick={() => setSubmitAction("range")}
+          >
+            <Icon name="print" size={14} />
+            {isSaved && submitAction === "range" ? "Weiterleitung..." : "Alle Packstücke drucken"}
+          </button>
+        )}
         <Link href={`/kommissionen/${commission.no}`} className="grb-btn grb-btn-quiet">
           Abbrechen
         </Link>

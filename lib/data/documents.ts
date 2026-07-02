@@ -22,6 +22,20 @@ function inferKind(label: string): DocumentKind {
   return label.toLowerCase().startsWith("palette") ? "palette" : "laufzettel";
 }
 
+/**
+ * Formatiert die Maße als "L: 1234 mm / B: 800 mm / H: 1100 mm" — je Wert eine Zeile
+ * (durch Zeilenumbruch getrennt, im Druck untereinander aufgelistet).
+ * Nur ausgefüllte Werte werden aufgenommen; ohne L/B/H greift die Legacy-Freitextangabe.
+ */
+function formatPaletteDimensions(fd: PaletteFormData): string {
+  const parts: string[] = [];
+  if (fd.lengthMm?.trim()) parts.push(`L: ${fd.lengthMm.trim()} mm`);
+  if (fd.widthMm?.trim()) parts.push(`B: ${fd.widthMm.trim()} mm`);
+  if (fd.heightMm?.trim()) parts.push(`H: ${fd.heightMm.trim()} mm`);
+  if (parts.length > 0) return parts.join("\n");
+  return fd.dimensions?.trim() || "";
+}
+
 function toDocument(
   src: (typeof RECENT_DOCS)[number],
   i: number
@@ -139,7 +153,7 @@ export async function getDocumentsByCommissionNumber(
 
     const { data, error } = await supabase
       .from("documents")
-      .select("id, document_type, title, created_by_initials, created_at")
+      .select("id, document_type, title, created_by_initials, created_at, form_data")
       .eq("commission_id", comm.id)
       .order("created_at", { ascending: false });
 
@@ -160,11 +174,52 @@ export async function getDocumentsByCommissionNumber(
       client: comm.customer_name,
       stamp: formatDate(item.created_at),
       by: item.created_by_initials || "EDL",
+      formData: item.form_data as unknown as LaufzettelFormData | PaletteFormData | undefined,
     }));
   } catch (e) {
     console.error("Failed to connect to Supabase server client for commission documents:", e);
     return RECENT_DOCS.filter((d) => d.kommission === nr).map(toDocument);
   }
+}
+
+export type DocumentCounts = { laufzettel: number; palette: number };
+
+/**
+ * Liefert die Anzahl der Laufzettel- und Paletten-Dokumente je Kommission,
+ * gekeyed nach der Kommissions-UUID (commission_id).
+ */
+export async function getDocumentCountsByCommission(): Promise<
+  Map<string, DocumentCounts>
+> {
+  const counts = new Map<string, DocumentCounts>();
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("documents")
+      .select("commission_id, document_type");
+
+    if (error || !data) {
+      if (error) {
+        console.error("Error fetching document counts from Supabase:", error.message);
+      }
+      return counts;
+    }
+
+    for (const row of data) {
+      const id = row.commission_id as string | null;
+      if (!id) continue;
+      const entry = counts.get(id) ?? { laufzettel: 0, palette: 0 };
+      if (row.document_type === "palette") {
+        entry.palette += 1;
+      } else {
+        entry.laufzettel += 1;
+      }
+      counts.set(id, entry);
+    }
+  } catch (e) {
+    console.error("Failed to connect to Supabase for document counts:", e);
+  }
+  return counts;
 }
 
 export async function getPalettesForCommission(
@@ -210,11 +265,13 @@ export async function getPalettesForCommission(
     return Array.from({ length: count }).map((_, i) => ({
       idx: i + 1,
       total: count,
-      content: formData.objectName || "Möbelelemente",
-      weight: "—",
-      dim: formData.dimensions || "—",
+      objectName: formData.objectName || "",
+      content: formData.content || formData.objectName || "Möbelelemente",
+      weight: formData.weight?.trim() || "",
+      dim: formatPaletteDimensions(formData),
       positions: positionsList,
       shippingNote: formData.shippingNote,
+      hidePackageCount: formData.hidePackageCount || false,
     }));
   } catch {
     return PALETTES;
@@ -379,6 +436,79 @@ export async function getLaufzettelPrintData(
     printedAt: formatDate(new Date()),
     formData,
   };
+}
+
+export async function getLaufzettelPrintDataByDocId(
+  docId: string
+): Promise<LaufzettelPrintData | null> {
+  try {
+    const supabase = await createClient();
+    const { data: docData, error } = await supabase
+      .from("documents")
+      .select("id, form_data, commissions(*)")
+      .eq("id", docId)
+      .eq("document_type", "laufzettel")
+      .maybeSingle();
+
+    if (error || !docData) {
+      console.error(`Error fetching Laufzettel document ${docId}:`, error?.message);
+      return null;
+    }
+
+    const comm = docData.commissions as unknown as {
+      commission_number: string;
+      customer_name: string;
+      project_name: string | null;
+      notes: string | null;
+      created_by_initials: string | null;
+      created_at: string;
+      updated_at: string | null;
+    } | null;
+    if (!comm) return null;
+
+    const commission = {
+      no: comm.commission_number,
+      client: comm.customer_name,
+      project: comm.project_name || "",
+      status: "in-progress" as const,
+      updated: formatDate(comm.updated_at || comm.created_at),
+      owner: comm.created_by_initials || "EDL",
+      docs: 0,
+      note: comm.notes || "",
+    };
+
+    const formData = docData.form_data as unknown as LaufzettelFormData;
+
+    await logPrintAction(docId, "Laufzettel", commission.owner);
+
+    return {
+      commission,
+      materials: MATERIALS, // legacy field — Material/Stückliste nicht mehr im Sheet
+      stations: STATIONS,
+      printedBy: commission.owner,
+      printedAt: formatDate(new Date()),
+      formData,
+    };
+  } catch (e) {
+    console.error("Error in getLaufzettelPrintDataByDocId:", e);
+    return null;
+  }
+}
+
+export async function deleteDocument(id: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("documents")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error(`Error deleting document ${id}:`, error.message);
+    if (error.message.includes("row-level security") || error.message.includes("violates row-level security")) {
+      throw new Error("Bitte melden Sie sich an, um Dokumente zu löschen.");
+    }
+    throw new Error(`Supabase Fehler: ${error.message}`);
+  }
 }
 
 export async function createLaufzettelDocument(
@@ -566,11 +696,13 @@ export async function getPalettePrintPageByDocId(
     const palette: Palette = {
       idx,
       total: count,
-      content: formData.objectName || "Möbelelemente",
-      weight: "—",
-      dim: formData.dimensions || "—",
+      objectName: formData.objectName || "",
+      content: formData.content || formData.objectName || "Möbelelemente",
+      weight: formData.weight?.trim() || "",
+      dim: formatPaletteDimensions(formData),
       positions: positionsList,
       shippingNote: formData.shippingNote,
+      hidePackageCount: formData.hidePackageCount || false,
     };
 
     // Log print action
@@ -639,11 +771,13 @@ export async function getPalettePrintRangeByDocId(
       const palette: Palette = {
         idx,
         total: count,
-        content: formData.objectName || "Möbelelemente",
-        weight: "—",
-        dim: formData.dimensions || "—",
+        objectName: formData.objectName || "",
+        content: formData.content || formData.objectName || "Möbelelemente",
+        weight: formData.weight?.trim() || "",
+        dim: formatPaletteDimensions(formData),
         positions: positionsList,
         shippingNote: formData.shippingNote,
+        hidePackageCount: formData.hidePackageCount || false,
       };
 
       await logPrintAction(

@@ -18,6 +18,14 @@ export function PaletteSheet({
   printedBy: string;
   printedAt: string;
 }) {
+  // Objektbezeichnung: pro Palette überschreibbar, sonst Projekt der Kommission.
+  const objectLabel = palette.objectName?.trim() || commission.project || "";
+  // Inhalt: mehrzeilig — ein Eintrag pro Zeile, untereinander aufgelistet.
+  const contentItems = (palette.content || "")
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
   return (
     <A4Sheet>
       <PrintHeader
@@ -54,35 +62,37 @@ export function PaletteSheet({
             </div>
           </div>
 
-          <div>
-            <div className="print-eyebrow" style={{ marginBottom: 4 }}>Packstück</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 18 }}>
-              <span
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontWeight: 300,
-                  fontSize: 200,
-                  color: INK,
-                  letterSpacing: "-0.02em",
-                  lineHeight: 0.9,
-                }}
-              >
-                {palette.idx}
-              </span>
-              <span
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontWeight: 200,
-                  fontSize: 90,
-                  color: STONE,
-                  letterSpacing: "-0.02em",
-                  fontStyle: "italic",
-                }}
-              >
-                von {palette.total}
-              </span>
+          {!palette.hidePackageCount && (
+            <div>
+              <div className="print-eyebrow" style={{ marginBottom: 4 }}>Packstück</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 18 }}>
+                <span
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontWeight: 300,
+                    fontSize: 200,
+                    color: INK,
+                    letterSpacing: "-0.02em",
+                    lineHeight: 0.9,
+                  }}
+                >
+                  {palette.idx}
+                </span>
+                <span
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontWeight: 200,
+                    fontSize: 90,
+                    color: STONE,
+                    letterSpacing: "-0.02em",
+                    fontStyle: "italic",
+                  }}
+                >
+                  von {palette.total}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* RIGHT — Details */}
@@ -111,21 +121,48 @@ export function PaletteSheet({
             </div>
           </section>
 
-          {commission.project && (
+          {objectLabel && (
             <section style={{ borderTop: `1px solid ${HAIRLINE}`, paddingTop: 10 }}>
-              <div className="print-label" style={{ marginBottom: 4 }}>Bauteil · Objekt</div>
+              <div className="print-label" style={{ marginBottom: 4 }}>Objektbezeichnung</div>
               <div style={{ fontFamily: "var(--font-sans)", fontSize: 22, color: INK, lineHeight: 1.2 }}>
-                {commission.project}
+                {objectLabel}
               </div>
             </section>
           )}
 
-          <section style={{ borderTop: `1px solid ${HAIRLINE}`, paddingTop: 10 }}>
-            <div className="print-label" style={{ marginBottom: 4 }}>Inhalt dieser Palette</div>
-            <div style={{ fontFamily: "var(--font-sans)", fontSize: 18, color: INK, lineHeight: 1.4, fontWeight: 500 }}>
-              {palette.content}
-            </div>
-          </section>
+          {contentItems.length > 0 && (
+            <section style={{ borderTop: `1px solid ${HAIRLINE}`, paddingTop: 10 }}>
+              <div className="print-label" style={{ marginBottom: 4 }}>Bauteil / Bezeichnung</div>
+              <ul
+                style={{
+                  margin: 0,
+                  padding: 0,
+                  listStyle: "none",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 4,
+                }}
+              >
+                {contentItems.map((item, i) => (
+                  <li
+                    key={i}
+                    style={{
+                      fontFamily: "var(--font-sans)",
+                      fontSize: 18,
+                      color: INK,
+                      lineHeight: 1.3,
+                      fontWeight: 500,
+                      display: "flex",
+                      gap: 8,
+                    }}
+                  >
+                    <span aria-hidden style={{ flexShrink: 0 }}>·</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {palette.shippingNote && (
             <section style={{ borderTop: `1px solid ${HAIRLINE}`, paddingTop: 10 }}>
@@ -136,28 +173,49 @@ export function PaletteSheet({
             </section>
           )}
 
-          <section
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 14,
-              borderTop: `1px solid ${HAIRLINE}`,
-              paddingTop: 10,
-            }}
-          >
-            <div>
-              <div className="print-label">Gewicht</div>
-              <div style={{ fontFamily: "var(--font-sans)", fontSize: 24, color: INK, marginTop: 4, fontWeight: 500 }}>
-                {palette.weight}
-              </div>
-            </div>
-            <div>
-              <div className="print-label">Maße</div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 18, color: INK, marginTop: 4 }}>
-                {palette.dim}
-              </div>
-            </div>
-          </section>
+          {/* Maße & Gewicht — unten ausgerichtet, untereinander, groß. Leere Angaben ausgeblendet. */}
+          {(palette.dim || palette.weight) && (
+            <section
+              style={{
+                marginTop: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
+                borderTop: `1px solid ${HAIRLINE}`,
+                paddingTop: 12,
+              }}
+            >
+              {palette.dim && (
+                <div>
+                  <div className="print-label">Maße</div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 32,
+                      color: INK,
+                      marginTop: 4,
+                      lineHeight: 1.15,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                    }}
+                  >
+                    {palette.dim.split("\n").map((line, i) => (
+                      <span key={i}>{line}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {palette.weight && (
+                <div>
+                  <div className="print-label">Gewicht</div>
+                  <div style={{ fontFamily: "var(--font-sans)", fontSize: 40, color: INK, marginTop: 4, fontWeight: 500, lineHeight: 1.0 }}>
+                    {palette.weight}
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
         </div>
       </div>
 
@@ -177,7 +235,8 @@ export function PaletteSheet({
       >
         <span>Schlutte · Palettenbeschriftung</span>
         <span>
-          {commission.no} · Packstück {palette.idx} / {palette.total}
+          {commission.no}
+          {!palette.hidePackageCount && ` · Packstück ${palette.idx} / ${palette.total}`}
         </span>
       </footer>
     </A4Sheet>

@@ -199,13 +199,10 @@ export default async function DashboardPage({
                       <div style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 18, color: "var(--fg)", letterSpacing: "-0.005em" }}>
                         {k.client}
                       </div>
-                      <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--fg-muted)", marginTop: 2 }}>
-                        {k.project}
-                      </div>
                     </div>
                     <Status value={k.status} />
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-subtle)", letterSpacing: "0.06em" }}>
-                      {k.docs} Dok.
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-subtle)", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
+                      {k.laufzettelCount ?? 0} Laufz. · {k.paletteCount ?? 0} Pal.
                     </span>
                     <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-subtle)", letterSpacing: "0.06em" }}>
                       {k.updated}
@@ -248,13 +245,10 @@ export default async function DashboardPage({
                       <div style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 18, color: "var(--fg)", letterSpacing: "-0.005em" }}>
                         {k.client}
                       </div>
-                      <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--fg-muted)", marginTop: 2 }}>
-                        {k.project}
-                      </div>
                     </div>
                     <Status value={k.status} />
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-subtle)", letterSpacing: "0.06em" }}>
-                      {k.docs} Dok.
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-subtle)", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
+                      {k.laufzettelCount ?? 0} Laufz. · {k.paletteCount ?? 0} Pal.
                     </span>
                     <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-subtle)", letterSpacing: "0.06em" }}>
                       {k.updated}

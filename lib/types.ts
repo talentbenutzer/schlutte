@@ -8,6 +8,10 @@ export type Commission = {
   updated: string;
   owner: string;
   docs: number;
+  /** Anzahl Laufzettel-Dokumente dieser Kommission. */
+  laufzettelCount?: number;
+  /** Anzahl Paletten-Dokumente dieser Kommission. */
+  paletteCount?: number;
   note?: string;
 };
 
@@ -54,11 +58,18 @@ export type RecentDoc = {
 export type Palette = {
   idx: number;
   total: number;
+  /** Objektbezeichnung → "Objektbezeichnung". */
+  objectName?: string;
+  /** Bauteil / Bezeichnung — mehrzeilig (ein Eintrag pro Zeile). */
   content: string;
+  /** Gewicht (Freitext, leer = ausblenden). */
   weight: string;
+  /** Maße als formatierter String "L: … × B: … × H: … mm" (leer = ausblenden). */
   dim: string;
   positions: string[];
   shippingNote?: string;
+  /** Packstück-Nummerierung ("X von Y") auf dem Etikett ausblenden. */
+  hidePackageCount?: boolean;
 };
 
 export type LaufzettelFormData = {
@@ -76,10 +87,21 @@ export type LaufzettelFormData = {
 };
 
 export type PaletteFormData = {
+  /** Objektbezeichnung. */
   objectName?: string;
+  /** Bauteil / Bezeichnung — mehrzeilig (ein Eintrag pro Zeile). */
+  content?: string;
+  /** Maße in mm — Länge / Breite / Höhe (jeweils Freitext). */
+  lengthMm?: string;
+  widthMm?: string;
+  heightMm?: string;
+  /** Legacy: alte Maßangabe als Freitext. */
   dimensions?: string;
+  weight?: string;
   positionNumber?: string;
   packageCount: number;
+  /** Packstück-Nummerierung auf dem Etikett ausblenden. */
+  hidePackageCount?: boolean;
   shippingNote?: string;
   employeeInitials: string;
 };

@@ -2,6 +2,7 @@ import type { Commission, CreateCommissionInput } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import { COMMISSIONS } from "@/mocks/data";
 import { createClient } from "@/lib/supabase/server";
+import { getDocumentCountsByCommission } from "@/lib/data/documents";
 
 export class CommissionValidationError extends Error {
   field: "no" | "client" | "owner";
@@ -29,16 +30,23 @@ export async function getCommissions(): Promise<Commission[]> {
       return COMMISSIONS;
     }
 
-    return data.map((item) => ({
-      no: item.commission_number,
-      client: item.customer_name,
-      project: item.project_name || "",
-      status: "in-progress",
-      updated: formatDate(item.updated_at || item.created_at),
-      owner: item.created_by_initials || "EDL",
-      docs: 0,
-      note: item.notes || "",
-    }));
+    const counts = await getDocumentCountsByCommission();
+
+    return data.map((item) => {
+      const c = counts.get(item.id) ?? { laufzettel: 0, palette: 0 };
+      return {
+        no: item.commission_number,
+        client: item.customer_name,
+        project: item.project_name || "",
+        status: "in-progress",
+        updated: formatDate(item.updated_at || item.created_at),
+        owner: item.created_by_initials || "EDL",
+        docs: c.laufzettel + c.palette,
+        laufzettelCount: c.laufzettel,
+        paletteCount: c.palette,
+        note: item.notes || "",
+      };
+    });
   } catch (e) {
     console.error("Failed to connect to Supabase server client:", e);
     return COMMISSIONS;
@@ -102,16 +110,23 @@ export async function searchCommissions(query: string): Promise<Commission[]> {
       );
     }
 
-    return data.map((item) => ({
-      no: item.commission_number,
-      client: item.customer_name,
-      project: item.project_name || "",
-      status: "in-progress",
-      updated: formatDate(item.updated_at || item.created_at),
-      owner: item.created_by_initials || "EDL",
-      docs: 0,
-      note: item.notes || "",
-    }));
+    const counts = await getDocumentCountsByCommission();
+
+    return data.map((item) => {
+      const c = counts.get(item.id) ?? { laufzettel: 0, palette: 0 };
+      return {
+        no: item.commission_number,
+        client: item.customer_name,
+        project: item.project_name || "",
+        status: "in-progress",
+        updated: formatDate(item.updated_at || item.created_at),
+        owner: item.created_by_initials || "EDL",
+        docs: c.laufzettel + c.palette,
+        laufzettelCount: c.laufzettel,
+        paletteCount: c.palette,
+        note: item.notes || "",
+      };
+    });
   } catch {
     return COMMISSIONS.filter(
       (c) =>

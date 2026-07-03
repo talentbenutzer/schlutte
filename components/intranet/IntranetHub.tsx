@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 type IconName =
-  | "workshop" | "staff" | "order" | "vacation" | "inventory" | "report"
+  | "workshop" | "staff" | "order" | "vacation" | "inventory" | "report" | "list"
   | "arrow" | "search" | "sun" | "moon" | "logout";
 
 function SIcon({
@@ -38,6 +38,7 @@ function SIcon({
     case "vacation": return <svg {...p}><circle cx="12" cy="9" r="3.5"/><path d="M12 2v1.5M12 14.5V16M19 9h-1.5M6.5 9H5M16.95 4.05l-1.06 1.06M8.11 12.89l-1.06 1.06M16.95 13.95l-1.06-1.06M8.11 5.11 7.05 4.05M3 21h18"/></svg>;
     case "inventory": return <svg {...p}><path d="M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35a2 2 0 0 1 1.26-1.86l8-3.2a2 2 0 0 1 1.48 0l8 3.2A2 2 0 0 1 22 8.35z"/><path d="M6 18h12M6 14h12"/><rect x="6" y="10" width="12" height="12"/></svg>;
     case "report":   return <svg {...p}><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/></svg>;
+    case "list":     return <svg {...p}><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>;
     case "arrow":    return <svg {...p}><path d="M5 12h14M13 5l7 7-7 7"/></svg>;
     case "search":   return <svg {...p}><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>;
     case "sun":      return <svg {...p}><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>;
@@ -110,6 +111,16 @@ const TILES: Tile[] = [
     title: "Urlaubsantrag",
     hint: "Urlaub und Abwesenheit beantragen. Übersicht über Resttage und das Team.",
     meta: "Personal · Abwesenheit",
+  },
+  {
+    no: "07",
+    icon: "list",
+    title: "Höllental",
+    hint: "Aufgaben und Positionen im Blick behalten — Liste öffnen, Einträge prüfen und abarbeiten.",
+    meta: "Höllental · Liste",
+    href: "https://ast-navy.vercel.app/list",
+    live: true,
+    external: true,
   },
 ];
 

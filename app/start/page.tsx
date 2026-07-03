@@ -21,6 +21,22 @@ function buildDateLine(now: Date): string {
   return `${days[now.getDay()]} · ${now.getDate()}. ${months[now.getMonth()]} ${now.getFullYear()} · KW ${kw}`;
 }
 
+// "edmund.laabs" / "edmund_laabs" -> "Edmund Laabs"
+function humanizeName(raw: string): string {
+  return raw
+    .split(/[._\-\s]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ")
+    .trim();
+}
+
+// Nur der Vorname für die Begrüßung: "Edmund Laabs" / "Edmund.laabs" -> "Edmund"
+function firstNameOf(raw: string): string {
+  const first = raw.split(/[._\-\s]+/).filter(Boolean)[0] ?? raw;
+  return first.charAt(0).toUpperCase() + first.slice(1);
+}
+
 export default async function StartPage() {
   let displayName: string | null = null;
   let userName = "Benutzer";
@@ -46,7 +62,7 @@ export default async function StartPage() {
           typeof user.user_metadata?.full_name === "string"
             ? (user.user_metadata.full_name as string)
             : "";
-        const fullName = metaName || local.charAt(0).toUpperCase() + local.slice(1);
+        const fullName = metaName || humanizeName(local);
         const initials =
           local.replace(/[^a-zA-Z]/g, "").slice(0, 3).toUpperCase() || "USR";
         await supabase.from("employees").insert({
@@ -65,16 +81,16 @@ export default async function StartPage() {
         .or(`id.eq.${user.id},email.ilike.${user.email}`)
         .limit(1);
       const data = rows?.[0] ?? null;
+      const local = user.email.split("@")[0];
       if (data) {
-        userName = data.name || user.email;
+        userName = data.name ? humanizeName(data.name) : humanizeName(local);
         userInitials = data.initials || user.email.slice(0, 3).toUpperCase();
         userRole = `${data.is_admin ? "Admin" : "Mitarbeiter"} · ${data.initials ?? ""}`.trim();
-        displayName = data.name || data.initials || null;
+        displayName = firstNameOf(data.name || local);
       } else {
-        const local = user.email.split("@")[0];
-        userName = local.charAt(0).toUpperCase() + local.slice(1);
+        userName = humanizeName(local);
         userInitials = user.email.slice(0, 3).toUpperCase();
-        displayName = userName;
+        displayName = firstNameOf(local);
       }
     }
   } catch (e) {

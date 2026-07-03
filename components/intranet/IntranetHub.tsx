@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 type IconName =
-  | "workshop" | "staff" | "order" | "vacation"
+  | "workshop" | "staff" | "order" | "vacation" | "inventory" | "report"
   | "arrow" | "search" | "sun" | "moon" | "logout";
 
 function SIcon({
@@ -36,6 +36,8 @@ function SIcon({
     case "staff":    return <svg {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></svg>;
     case "order":    return <svg {...p}><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-4"/><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M8 11h8M8 15h6"/></svg>;
     case "vacation": return <svg {...p}><circle cx="12" cy="9" r="3.5"/><path d="M12 2v1.5M12 14.5V16M19 9h-1.5M6.5 9H5M16.95 4.05l-1.06 1.06M8.11 12.89l-1.06 1.06M16.95 13.95l-1.06-1.06M8.11 5.11 7.05 4.05M3 21h18"/></svg>;
+    case "inventory": return <svg {...p}><path d="M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35a2 2 0 0 1 1.26-1.86l8-3.2a2 2 0 0 1 1.48 0l8 3.2A2 2 0 0 1 22 8.35z"/><path d="M6 18h12M6 14h12"/><rect x="6" y="10" width="12" height="12"/></svg>;
+    case "report":   return <svg {...p}><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/></svg>;
     case "arrow":    return <svg {...p}><path d="M5 12h14M13 5l7 7-7 7"/></svg>;
     case "search":   return <svg {...p}><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>;
     case "sun":      return <svg {...p}><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>;
@@ -53,11 +55,22 @@ type Tile = {
   meta: string;
   href?: string;
   live?: boolean;
+  external?: boolean;
 };
 
 const TILES: Tile[] = [
   {
     no: "01",
+    icon: "report",
+    title: "Gerda",
+    hint: "Auswertungen und Gesamt-Reports auf einen Blick — Kennzahlen erfassen, analysieren und exportieren.",
+    meta: "Auswertung · Report",
+    href: "https://ppl-two.vercel.app/",
+    live: true,
+    external: true,
+  },
+  {
+    no: "02",
     icon: "workshop",
     title: "Druckvorlagen Werkstatt",
     hint: "Laufzettel & Palettenbeschriftung. Kommissionen verwalten, Dokumente erstellen, drucken und archivieren.",
@@ -66,14 +79,24 @@ const TILES: Tile[] = [
     live: true,
   },
   {
-    no: "02",
+    no: "03",
     icon: "staff",
     title: "Druckvorlagen Personal",
     hint: "Vorlagen für Büro & Verwaltung — Bescheinigungen, Aushänge, interne Schreiben.",
     meta: "Personal · Büro",
   },
   {
-    no: "03",
+    no: "04",
+    icon: "inventory",
+    title: "Warenbestand WERK 2",
+    hint: "Mobiles Kommissionslager — Bestände erfassen, Ein- und Auslagerungen buchen, Kommissionen im Blick behalten.",
+    meta: "Lager · Kommission",
+    href: "https://warenbestand-werk-2.vercel.app/",
+    live: true,
+    external: true,
+  },
+  {
+    no: "05",
     icon: "order",
     title: "Bestellliste",
     hint: "Material, Beschläge und Verbrauch erfassen. Sammelbestellung für die Werkstatt vorbereiten.",
@@ -82,7 +105,7 @@ const TILES: Tile[] = [
     live: true,
   },
   {
-    no: "04",
+    no: "06",
     icon: "vacation",
     title: "Urlaubsantrag",
     hint: "Urlaub und Abwesenheit beantragen. Übersicht über Resttage und das Team.",
@@ -207,9 +230,21 @@ export function IntranetHub({
           <section className="sch-grid" aria-label="Bereiche">
             {TILES.map((tile) =>
               tile.live && tile.href ? (
-                <Link key={tile.no} href={tile.href} className="sch-tile is-live">
-                  <TileInner tile={tile} />
-                </Link>
+                tile.external ? (
+                  <a
+                    key={tile.no}
+                    href={tile.href}
+                    className="sch-tile is-live"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <TileInner tile={tile} />
+                  </a>
+                ) : (
+                  <Link key={tile.no} href={tile.href} className="sch-tile is-live">
+                    <TileInner tile={tile} />
+                  </Link>
+                )
               ) : (
                 <div
                   key={tile.no}

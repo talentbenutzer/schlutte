@@ -1,10 +1,19 @@
 import Link from "next/link";
 import { getEmployees } from "@/lib/data/employees";
+import { getLoginEmails } from "@/lib/data/auth-admin";
 import { Icon } from "@/components/ui/Icon";
 import { EmployeeActions } from "./EmployeeActions";
 
 export default async function MitarbeiterPage() {
   const employees = await getEmployees();
+
+  // Login-Status je Mitarbeiter (per E-Mail). Bei fehlender Konfiguration null → Status unbekannt.
+  let loginEmails: Set<string> | null = null;
+  try {
+    loginEmails = await getLoginEmails();
+  } catch {
+    loginEmails = null;
+  }
 
   return (
     <div
@@ -73,6 +82,7 @@ export default async function MitarbeiterPage() {
               <th style={{ width: 60 }}>Kürzel</th>
               <th>Name</th>
               <th>E-Mail</th>
+              <th>Login</th>
               <th>Status</th>
               <th>Rolle</th>
               <th>Angelegt</th>
@@ -107,6 +117,30 @@ export default async function MitarbeiterPage() {
                   }}
                 >
                   {emp.email || "—"}
+                </td>
+                <td>
+                  {loginEmails === null ? (
+                    <span
+                      title="Login-Status nicht verfügbar (Service-Role-Key fehlt)"
+                      style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-subtle)" }}
+                    >
+                      ?
+                    </span>
+                  ) : emp.email && loginEmails.has(emp.email.toLowerCase()) ? (
+                    <span
+                      title="Login vorhanden"
+                      style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--accent)" }}
+                    >
+                      ✓ Login
+                    </span>
+                  ) : (
+                    <span
+                      title={emp.email ? "Kein Login — beim Passwort-Setzen wird einer angelegt" : "Keine E-Mail hinterlegt"}
+                      style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-subtle)" }}
+                    >
+                      —
+                    </span>
+                  )}
                 </td>
                 <td>
                   <span

@@ -39,8 +39,9 @@ export default function NeuMitarbeiterPage() {
           marginBottom: 32,
         }}
       >
-        Lege einen neuen Mitarbeiter-Datensatz an. Für den Supabase-Login
-        muss der Nutzer separat im Supabase Dashboard registriert werden.
+        Lege einen neuen Mitarbeiter an. Mit E-Mail und Passwort wird direkt ein
+        Login erstellt — ohne Passwort entsteht nur der Datensatz (Login später
+        über „Bearbeiten").
       </p>
       <EmployeeForm />
     </div>

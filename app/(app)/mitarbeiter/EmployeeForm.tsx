@@ -128,6 +128,39 @@ export function EmployeeForm({
         />
       </div>
 
+      {/* Passwort (nur beim Anlegen — optional, erzeugt den Login) */}
+      {!isEditing && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <label
+            htmlFor="emp-password"
+            style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--fg-muted)" }}
+          >
+            Passwort (optional)
+          </label>
+          <input
+            id="emp-password"
+            name="password"
+            type="password"
+            minLength={8}
+            autoComplete="new-password"
+            placeholder="Mind. 8 Zeichen — leer = kein Login"
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontSize: 15,
+              padding: "10px 14px",
+              border: "1px solid var(--border-strong)",
+              background: "var(--bg)",
+              color: "var(--fg)",
+              maxWidth: 400,
+            }}
+          />
+          <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--fg-subtle)" }}>
+            Wird ein Passwort gesetzt, wird zusammen mit der E-Mail direkt ein Login angelegt.
+            Ohne Passwort entsteht nur ein Datensatz (Login später über „Bearbeiten").
+          </span>
+        </div>
+      )}
+
       {/* Admin + Aktiv */}
       <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
         <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 14 }}>

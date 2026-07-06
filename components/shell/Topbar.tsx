@@ -14,7 +14,7 @@ const NAV = [
   { label: "Kommissionen", href: "/kommissionen" },
   { label: "Archiv", href: "/archiv" },
   { label: "Vorlagen", href: "/vorlagen" },
-  { label: "Mitarbeiter", href: "/mitarbeiter" },
+  { label: "Mitarbeiter", href: "/mitarbeiter", adminOnly: true },
 ];
 
 function isActive(href: string, pathname: string): boolean {
@@ -63,7 +63,7 @@ export function Topbar() {
         <BrandMark />
       </Link>
       <nav className="grb-nav" style={{ marginLeft: 16 }}>
-        {NAV.map((item) => {
+        {NAV.filter((item) => !item.adminOnly || employee?.is_admin).map((item) => {
           const isTemplates = item.label === "Vorlagen";
           if (isTemplates) {
             return (

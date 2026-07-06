@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getEmployeeById } from "@/lib/data/employees";
 import { EmployeeForm } from "../../EmployeeForm";
+import { EmployeePassword } from "../../EmployeePassword";
 
 export default async function BearbeitenMitarbeiterPage({
   params,
@@ -52,6 +53,7 @@ export default async function BearbeitenMitarbeiterPage({
         Kürzel: <strong>{employee.initials}</strong>
       </p>
       <EmployeeForm employee={employee} />
+      <EmployeePassword employeeId={employee.id!} email={employee.email} />
     </div>
   );
 }

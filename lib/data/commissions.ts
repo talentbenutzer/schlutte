@@ -227,6 +227,55 @@ export async function createCommission(
   }
 }
 
+/**
+ * Löscht eine Kommission samt aller zugehörigen Dokumente (Laufzettel & Paletten).
+ * Dokumente werden explizit vorab entfernt, damit es unabhängig von der
+ * DB-Cascade-Konfiguration keine verwaisten Datensätze gibt.
+ * Rückgabe: Anzahl der mitgelöschten Dokumente.
+ */
+export async function deleteCommission(nr: string): Promise<{ deletedDocuments: number }> {
+  const supabase = await createClient();
+
+  const { data: comm, error: commErr } = await supabase
+    .from("commissions")
+    .select("id")
+    .eq("commission_number", nr)
+    .maybeSingle();
+
+  if (commErr) throw new Error(`Supabase Fehler: ${commErr.message}`);
+  if (!comm) throw new Error(`Kommission ${nr} nicht gefunden.`);
+
+  const { data: docs } = await supabase
+    .from("documents")
+    .select("id")
+    .eq("commission_id", comm.id);
+  const deletedDocuments = docs?.length ?? 0;
+
+  if (deletedDocuments > 0) {
+    const { error: docErr } = await supabase
+      .from("documents")
+      .delete()
+      .eq("commission_id", comm.id);
+    if (docErr) {
+      throw new Error(`Zugehörige Dokumente konnten nicht gelöscht werden: ${docErr.message}`);
+    }
+  }
+
+  const { error: delErr } = await supabase
+    .from("commissions")
+    .delete()
+    .eq("id", comm.id);
+
+  if (delErr) {
+    if (delErr.message.includes("row-level security") || delErr.message.includes("violates row-level security")) {
+      throw new Error("Bitte melden Sie sich an, um Kommissionen zu löschen.");
+    }
+    throw new Error(`Supabase Fehler: ${delErr.message}`);
+  }
+
+  return { deletedDocuments };
+}
+
 export async function updateCommission(
   no: string,
   input: { client: string; project?: string; owner?: string; note?: string }

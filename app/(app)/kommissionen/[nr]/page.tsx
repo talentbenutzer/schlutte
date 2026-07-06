@@ -6,6 +6,7 @@ import { getCommissionByNumber } from "@/lib/data/commissions";
 import { getDocumentsByCommissionNumber } from "@/lib/data/documents";
 import type { LaufzettelFormData } from "@/lib/types";
 import { DeleteDocumentButton } from "./DeleteDocumentButton";
+import { DeleteCommissionButton } from "./DeleteCommissionButton";
 
 function SectionHeader({
   eyebrow,
@@ -200,6 +201,11 @@ export default async function CommissionDetailPage({
           >
             <Icon name="edit" size={14} /> Bearbeiten
           </Link>
+          <DeleteCommissionButton
+            commissionNo={commission.no}
+            client={commission.client}
+            documentCount={laufzettelDocs.length + paletteDocs.length}
+          />
         </div>
       </header>
 

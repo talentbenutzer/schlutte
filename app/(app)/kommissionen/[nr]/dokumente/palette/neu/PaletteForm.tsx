@@ -51,6 +51,8 @@ export function PaletteForm({
     }));
   });
   const [activeIdx, setActiveIdx] = useState(0);
+  // Nummer des Zettels, auf den zuletzt übernommen wurde (für die grüne Bestätigung). null = keine.
+  const [copiedToSheet, setCopiedToSheet] = useState<number | null>(null);
   const [submitAction, setSubmitAction] = useState<"single" | "range">("single");
 
   const [countError, setCountError] = useState("");
@@ -62,6 +64,7 @@ export function PaletteForm({
   // Anzahl der Packstücke ändern → Array wächst/schrumpft (bestehende Einträge bleiben).
   const changeCount = (n: number) => {
     const newCount = Math.max(1, Number.isFinite(n) ? n : 1);
+    setCopiedToSheet(null);
     setCount(newCount);
     setPackages((prev) => {
       if (prev.length === newCount) return prev;
@@ -90,16 +93,22 @@ export function PaletteForm({
   // Es gibt einen nächsten Zettel, auf den übernommen werden kann?
   const hasNext = !hidePackageCount && activeIdx < count - 1;
 
-  // Aktuellen Zettel als Vorlage auf den nächsten übernehmen (überschreibt dessen Daten) und dorthin wechseln.
+  // Zettel wechseln (blendet eine offene Übernahme-Bestätigung aus).
+  const selectSheet = (i: number) => {
+    setActiveIdx(i);
+    setCopiedToSheet(null);
+  };
+
+  // Aktuellen Zettel als Vorlage auf den nächsten übernehmen (überschreibt dessen Daten).
+  // Bleibt auf dem aktuellen Zettel und zeigt eine grüne Bestätigung.
   const copyToNext = () => {
+    if (activeIdx + 1 >= count) return;
     setPackages((prev) => {
       const next = [...prev];
-      if (activeIdx + 1 < next.length) {
-        next[activeIdx + 1] = { ...prev[activeIdx] };
-      }
+      next[activeIdx + 1] = { ...prev[activeIdx] };
       return next;
     });
-    setActiveIdx((idx) => Math.min(idx + 1, count - 1));
+    setCopiedToSheet(activeIdx + 2); // 1-indexierter nächster Zettel
   };
 
   // Enter soll nicht das Formular absenden (sonst springt es ungewollt in die Druckvorschau).
@@ -179,7 +188,7 @@ export function PaletteForm({
   };
 
   return (
-    <form onSubmit={handleSave} onKeyDown={preventEnterSubmit} style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 640 }}>
+    <form onSubmit={handleSave} onKeyDown={preventEnterSubmit} style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 780 }}>
       {isSaved && (
         <div
           role="alert"
@@ -212,40 +221,7 @@ export function PaletteForm({
         </div>
       )}
 
-      {/* Vorschau Nummernsequenz — klickbar: wechselt das gerade bearbeitete Packstück. */}
-      {!hidePackageCount && count > 0 && (
-        <div style={{ border: "1px solid var(--border)", padding: 16, background: "var(--bg-alt)" }}>
-          <span className="grb-eyebrow" style={{ display: "block", marginBottom: 8 }}>Vorschau Nummernsequenz</span>
-          <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--fg-muted)" }}>
-            Es werden {count} Palettenzettel erzeugt. Klick einen Zettel an, um dessen Felder zu bearbeiten.
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
-            {Array.from({ length: count }).map((_, i) => {
-              const isActive = i === activeIdx;
-              return (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setActiveIdx(i)}
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: 12,
-                    letterSpacing: "0.06em",
-                    padding: "6px 12px",
-                    background: isActive ? "var(--fg)" : "transparent",
-                    color: isActive ? "var(--fg-inverse)" : "var(--fg)",
-                    border: `1px solid ${isActive ? "var(--fg)" : "var(--border-strong)"}`,
-                    cursor: "pointer",
-                  }}
-                >
-                  {i + 1} von {count}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
+      {/* Kommissionsnummer / Kunde — für alle Zettel gleich */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         <Field label="Kommissionsnummer (Vorausgefüllt)">
           <input
@@ -266,19 +242,63 @@ export function PaletteForm({
         </Field>
       </div>
 
-      <div
-        style={{
-          fontFamily: "var(--font-mono)",
-          fontSize: 10,
-          letterSpacing: "0.14em",
-          textTransform: "uppercase",
-          color: "var(--fg-subtle)",
-        }}
-      >
-        {hidePackageCount
-          ? "Felder für dieses Etikett"
-          : `Felder für Zettel ${activeIdx + 1} von ${count}`}
-      </div>
+      {/* Zwei Spalten: links die Zettel-Navigation (untereinander), rechts die Felder */}
+      <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+        {!hidePackageCount && count > 0 && (
+          <aside style={{ flex: "0 0 132px", display: "flex", flexDirection: "column", gap: 8 }}>
+            <span className="grb-eyebrow">Zettel</span>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 6,
+                maxHeight: 440,
+                overflowY: "auto",
+                paddingRight: 2,
+              }}
+            >
+              {Array.from({ length: count }).map((_, i) => {
+                const isActive = i === activeIdx;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => selectSheet(i)}
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 12,
+                      letterSpacing: "0.06em",
+                      padding: "8px 10px",
+                      textAlign: "left",
+                      background: isActive ? "var(--fg)" : "transparent",
+                      color: isActive ? "var(--fg-inverse)" : "var(--fg)",
+                      border: `1px solid ${isActive ? "var(--fg)" : "var(--border-strong)"}`,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {i + 1} von {count}
+                  </button>
+                );
+              })}
+            </div>
+          </aside>
+        )}
+
+        {/* RECHTS: Felder des aktiven Zettels */}
+        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 24 }}>
+          <div
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 10,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "var(--fg-subtle)",
+            }}
+          >
+            {hidePackageCount
+              ? "Felder für dieses Etikett"
+              : `Felder für Zettel ${activeIdx + 1} von ${count}`}
+          </div>
 
       <Field label="Objektbezeichnung" hint="Pro Zettel individuell.">
         <input
@@ -391,14 +411,31 @@ export function PaletteForm({
 
       {hasNext && (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <button
-            type="button"
-            onClick={copyToNext}
-            className="grb-btn grb-btn-ghost"
-            style={{ alignSelf: "flex-start" }}
-          >
-            <Icon name="arrow" size={14} /> Für nächste Platte übernehmen
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={copyToNext}
+              className="grb-btn grb-btn-ghost"
+            >
+              <Icon name="arrow" size={14} /> Für nächste Platte übernehmen
+            </button>
+            {copiedToSheet !== null && (
+              <span
+                role="status"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontFamily: "var(--font-sans)",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "var(--gd-success)",
+                }}
+              >
+                <Icon name="check" size={16} /> Auf Zettel {copiedToSheet} übernommen
+              </span>
+            )}
+          </div>
           <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--fg-subtle)" }}>
             Übernimmt die Daten von Zettel {activeIdx + 1} auf Zettel {activeIdx + 2}.
             Hinweis: Die bisherigen Daten von Zettel {activeIdx + 2} werden dabei überschrieben.
@@ -457,6 +494,8 @@ export function PaletteForm({
         <Link href={`/kommissionen/${commission.no}`} className="grb-btn grb-btn-quiet">
           Abbrechen
         </Link>
+      </div>
+        </div>
       </div>
     </form>
   );

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
-import type { Commission, PaletteFormData } from "@/lib/types";
+import type { Commission, PaletteFormData, PalettePackage } from "@/lib/types";
 import { savePaletteAction } from "./actions";
 
 type EmployeeOption = { initials: string; name: string };
@@ -23,21 +23,34 @@ export function PaletteForm({
   currentInitials?: string;
 }) {
   const router = useRouter();
-  // Objektbezeichnung: bei neuer Palette aus dem Projekt der Kommission vorausgefüllt, sonst gespeicherter Wert.
-  const [objectName, setObjectName] = useState(
-    initialData?.objectName ?? (documentId ? "" : commission.project ?? "") ?? ""
-  );
-  const [content, setContent] = useState(initialData?.content ?? "");
-  const [lengthMm, setLengthMm] = useState(initialData?.lengthMm ?? "");
-  const [widthMm, setWidthMm] = useState(initialData?.widthMm ?? "");
-  const [heightMm, setHeightMm] = useState(initialData?.heightMm ?? "");
-  const [weight, setWeight] = useState(initialData?.weight ?? "");
+
+  // Shared (gilt für alle Packstücke gleich)
   const [count, setCount] = useState<number>(initialData?.packageCount || 1);
   const [hidePackageCount, setHidePackageCount] = useState<boolean>(
     initialData?.hidePackageCount ?? false
   );
-  const [shippingNote, setShippingNote] = useState(initialData?.shippingNote || "");
   const [owner, setOwner] = useState(initialData?.employeeInitials || currentInitials || "");
+
+  // Pro-Packstück-Daten. Init aus initialData.packages ODER aus den Top-Level-Legacy-Werten,
+  // die dann für alle N Packstücke als Standard übernommen werden.
+  const [packages, setPackages] = useState<PalettePackage[]>(() => {
+    const initCount = initialData?.packageCount || 1;
+    const defaults: PalettePackage = {
+      objectName:
+        initialData?.objectName ?? (documentId ? "" : commission.project ?? "") ?? "",
+      content: initialData?.content ?? "",
+      lengthMm: initialData?.lengthMm ?? "",
+      widthMm: initialData?.widthMm ?? "",
+      heightMm: initialData?.heightMm ?? "",
+      weight: initialData?.weight ?? "",
+      shippingNote: initialData?.shippingNote ?? "",
+    };
+    return Array.from({ length: initCount }, (_, i) => ({
+      ...defaults,
+      ...(initialData?.packages?.[i] ?? {}),
+    }));
+  });
+  const [activeIdx, setActiveIdx] = useState(0);
   const [submitAction, setSubmitAction] = useState<"single" | "range">("single");
 
   const [countError, setCountError] = useState("");
@@ -45,6 +58,34 @@ export function PaletteForm({
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
+
+  // Anzahl der Packstücke ändern → Array wächst/schrumpft (bestehende Einträge bleiben).
+  const changeCount = (n: number) => {
+    const newCount = Math.max(1, Number.isFinite(n) ? n : 1);
+    setCount(newCount);
+    setPackages((prev) => {
+      if (prev.length === newCount) return prev;
+      if (prev.length < newCount) {
+        const tmpl = prev[prev.length - 1] ?? {};
+        return [
+          ...prev,
+          ...Array.from({ length: newCount - prev.length }, () => ({ ...tmpl })),
+        ];
+      }
+      return prev.slice(0, newCount);
+    });
+    setActiveIdx((idx) => Math.min(idx, Math.max(0, newCount - 1)));
+  };
+
+  const effectiveIdx = hidePackageCount ? 0 : activeIdx;
+  const active = packages[effectiveIdx] ?? {};
+  const setActive = (field: keyof PalettePackage, value: string) => {
+    setPackages((prev) => {
+      const next = [...prev];
+      next[effectiveIdx] = { ...next[effectiveIdx], [field]: value };
+      return next;
+    });
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,17 +113,24 @@ export function PaletteForm({
     setIsSaving(true);
     setSaveError("");
 
+    // Bei hidePackageCount = true wird genau ein Etikett erzeugt.
+    const outPackages = packages.slice(0, effectiveCount);
+    const first = outPackages[0] ?? {};
+
     const payload: PaletteFormData = {
-      objectName,
-      content,
-      lengthMm,
-      widthMm,
-      heightMm,
-      weight,
       packageCount: effectiveCount,
       hidePackageCount,
-      shippingNote,
       employeeInitials: owner,
+      // Legacy/Default (erstes Packstück als Fallback für alte Renderer)
+      objectName: first.objectName,
+      content: first.content,
+      lengthMm: first.lengthMm,
+      widthMm: first.widthMm,
+      heightMm: first.heightMm,
+      weight: first.weight,
+      shippingNote: first.shippingNote,
+      // Pro-Packstück-Werte
+      packages: outPackages,
     };
 
     const result = await savePaletteAction(commission.no, payload, documentId);
@@ -97,7 +145,9 @@ export function PaletteForm({
 
     const docId = result.documentId;
     if (submitAction === "single") {
-      router.push(`/print/palette/document/${docId}/1`);
+      // Aktuell gewählten Zettel öffnen (nicht zwingend #1) — 1-indexiert.
+      const targetIdx = Math.min(activeIdx + 1, effectiveCount);
+      router.push(`/print/palette/document/${docId}/${targetIdx}`);
     } else {
       router.push(`/print/palette/document/${docId}/range/1/${effectiveCount}`);
     }
@@ -138,18 +188,36 @@ export function PaletteForm({
         </div>
       )}
 
-      {/* Vorschau Nummernsequenz — direkt unter der Subheadline */}
+      {/* Vorschau Nummernsequenz — klickbar: wechselt das gerade bearbeitete Packstück. */}
       {!hidePackageCount && count > 0 && (
-        <div style={{ border: "1px solid var(--border)", padding: 16, background: "var(--bg-alt)", fontFamily: "var(--font-mono)", fontSize: 12 }}>
+        <div style={{ border: "1px solid var(--border)", padding: 16, background: "var(--bg-alt)" }}>
           <span className="grb-eyebrow" style={{ display: "block", marginBottom: 8 }}>Vorschau Nummernsequenz</span>
-          <div>Es werden {count} Palettenzettel erzeugt:</div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
-            {Array.from({ length: Math.min(count, 5) }).map((_, i) => (
-              <span key={i} className="grb-chip">
-                {i + 1} von {count}
-              </span>
-            ))}
-            {count > 5 && <span style={{ color: "var(--fg-subtle)", alignSelf: "center" }}>... + {count - 5} weitere</span>}
+          <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--fg-muted)" }}>
+            Es werden {count} Palettenzettel erzeugt. Klick einen Zettel an, um dessen Felder zu bearbeiten.
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
+            {Array.from({ length: count }).map((_, i) => {
+              const isActive = i === activeIdx;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setActiveIdx(i)}
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 12,
+                    letterSpacing: "0.06em",
+                    padding: "6px 12px",
+                    background: isActive ? "var(--fg)" : "transparent",
+                    color: isActive ? "var(--fg-inverse)" : "var(--fg)",
+                    border: `1px solid ${isActive ? "var(--fg)" : "var(--border-strong)"}`,
+                    cursor: "pointer",
+                  }}
+                >
+                  {i + 1} von {count}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -174,19 +242,33 @@ export function PaletteForm({
         </Field>
       </div>
 
-      <Field label="Objektbezeichnung" hint="Optional. Z. B. Küche & Esszimmer.">
+      <div
+        style={{
+          fontFamily: "var(--font-mono)",
+          fontSize: 10,
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          color: "var(--fg-subtle)",
+        }}
+      >
+        {hidePackageCount
+          ? "Felder für dieses Etikett"
+          : `Felder für Zettel ${activeIdx + 1} von ${count}`}
+      </div>
+
+      <Field label="Objektbezeichnung" hint="Pro Zettel individuell.">
         <input
-          value={objectName}
-          onChange={(e) => setObjectName(e.target.value)}
+          value={active.objectName ?? ""}
+          onChange={(e) => setActive("objectName", e.target.value)}
           placeholder="Küche & Esszimmer"
           className="grb-input"
         />
       </Field>
 
-      <Field label="Bauteil / Bezeichnung" hint="Optional. Ein Eintrag pro Zeile — wird untereinander aufgelistet.">
+      <Field label="Bauteil / Bezeichnung" hint="Pro Zettel individuell. Ein Eintrag pro Zeile.">
         <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
+          value={active.content ?? ""}
+          onChange={(e) => setActive("content", e.target.value)}
           placeholder={"Fronten\nKorpora\nSockelleisten"}
           rows={4}
           className="grb-input"
@@ -194,15 +276,15 @@ export function PaletteForm({
         />
       </Field>
 
-      <Field label="Maße (mm)" hint="Optional. Länge / Breite / Höhe in Millimeter.">
+      <Field label="Maße (mm)" hint="Pro Zettel individuell. Länge / Breite / Höhe.">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-muted)" }}>L</span>
             <input
               type="number"
               inputMode="numeric"
-              value={lengthMm}
-              onChange={(e) => setLengthMm(e.target.value)}
+              value={active.lengthMm ?? ""}
+              onChange={(e) => setActive("lengthMm", e.target.value)}
               placeholder="1234"
               className="grb-input"
             />
@@ -212,8 +294,8 @@ export function PaletteForm({
             <input
               type="number"
               inputMode="numeric"
-              value={widthMm}
-              onChange={(e) => setWidthMm(e.target.value)}
+              value={active.widthMm ?? ""}
+              onChange={(e) => setActive("widthMm", e.target.value)}
               placeholder="1234"
               className="grb-input"
             />
@@ -223,8 +305,8 @@ export function PaletteForm({
             <input
               type="number"
               inputMode="numeric"
-              value={heightMm}
-              onChange={(e) => setHeightMm(e.target.value)}
+              value={active.heightMm ?? ""}
+              onChange={(e) => setActive("heightMm", e.target.value)}
               placeholder="1234"
               className="grb-input"
             />
@@ -232,10 +314,10 @@ export function PaletteForm({
         </div>
       </Field>
 
-      <Field label="Gewicht (Freitext)" hint="Optional. Z. B. 85 kg.">
+      <Field label="Gewicht (Freitext)" hint="Pro Zettel individuell. Z. B. 85 kg.">
         <input
-          value={weight}
-          onChange={(e) => setWeight(e.target.value)}
+          value={active.weight ?? ""}
+          onChange={(e) => setActive("weight", e.target.value)}
           placeholder="85 kg"
           className="grb-input"
           style={{ maxWidth: 320 }}
@@ -265,7 +347,7 @@ export function PaletteForm({
               min={1}
               required
               value={count}
-              onChange={(e) => setCount(Number(e.target.value))}
+              onChange={(e) => changeCount(Number(e.target.value))}
               placeholder="1"
               className="grb-input"
               style={{ maxWidth: 320 }}
@@ -274,10 +356,10 @@ export function PaletteForm({
         )}
       </div>
 
-      <Field label="Versandhinweis" hint="Optional. Erscheint auf den Paketscheinen (z. B. Fragile, Trocken lagern).">
+      <Field label="Versandhinweis" hint="Pro Zettel individuell (z. B. Fragile, Trocken lagern).">
         <input
-          value={shippingNote}
-          onChange={(e) => setShippingNote(e.target.value)}
+          value={active.shippingNote ?? ""}
+          onChange={(e) => setActive("shippingNote", e.target.value)}
           placeholder="Achtung: Naturstein! Vorsichtig transportieren."
           className="grb-input"
         />
@@ -312,7 +394,13 @@ export function PaletteForm({
           onClick={() => setSubmitAction("single")}
         >
           <Icon name="check" size={14} />
-          {isSaved && submitAction === "single" ? "Weiterleitung..." : isSaving ? "Wird gespeichert..." : "Speichern & Vorschau öffnen"}
+          {isSaved && submitAction === "single"
+            ? "Weiterleitung..."
+            : isSaving
+            ? "Wird gespeichert..."
+            : hidePackageCount
+            ? "Speichern & Vorschau öffnen"
+            : `Speichern & Zettel ${activeIdx + 1} drucken`}
         </button>
         {!hidePackageCount && (
           <button

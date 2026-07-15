@@ -1,6 +1,8 @@
 import "@/styles/intranet.css";
 import { createClient } from "@/lib/supabase/server";
 import { IntranetHub } from "@/components/intranet/IntranetHub";
+import { getUpcomingEvents, getUpcomingBirthdays } from "@/lib/data/hub";
+import type { UpcomingItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +44,7 @@ export default async function StartPage() {
   let userName = "Benutzer";
   let userInitials = "USR";
   let userRole = "Mitarbeiter";
+  let isAdmin = false;
 
   try {
     const supabase = await createClient();
@@ -87,6 +90,7 @@ export default async function StartPage() {
         userInitials = data.initials || user.email.slice(0, 3).toUpperCase();
         userRole = `${data.is_admin ? "Admin" : "Mitarbeiter"} · ${data.initials ?? ""}`.trim();
         displayName = firstNameOf(data.name || local);
+        isAdmin = !!data.is_admin;
       } else {
         userName = humanizeName(local);
         userInitials = user.email.slice(0, 3).toUpperCase();
@@ -97,6 +101,11 @@ export default async function StartPage() {
     console.error("Error loading user for intranet hub:", e);
   }
 
+  const [events, birthdays]: [UpcomingItem[], UpcomingItem[]] = await Promise.all([
+    getUpcomingEvents(),
+    getUpcomingBirthdays(),
+  ]);
+
   const now = new Date();
   return (
     <IntranetHub
@@ -106,6 +115,9 @@ export default async function StartPage() {
       userName={userName}
       userInitials={userInitials}
       userRole={userRole}
+      isAdmin={isAdmin}
+      events={events}
+      birthdays={birthdays}
     />
   );
 }

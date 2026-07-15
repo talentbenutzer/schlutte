@@ -45,6 +45,10 @@ export function PaletteSheet({
           gridTemplateColumns: "auto 1fr",
           gap: 28,
           flex: 1,
+          // Wichtig: erlaubt dem Grid im Flex-Column-Sheet zu schrumpfen —
+          // sonst schiebt zu viel Content den Footer aus der A4-Höhe heraus.
+          minHeight: 0,
+          overflow: "hidden",
           marginTop: 16,
         }}
       >
@@ -130,7 +134,7 @@ export function PaletteSheet({
           {objectLabel && (
             <section>
               <div className="print-label" style={{ marginBottom: 4 }}>Objektbezeichnung</div>
-              <div style={{ fontFamily: "var(--font-sans)", fontSize: 22, color: INK, lineHeight: 1.2 }}>
+              <div style={{ fontFamily: "var(--font-sans)", fontSize: 44, color: INK, lineHeight: 1.15, fontWeight: 500 }}>
                 {objectLabel}
               </div>
             </section>

@@ -193,6 +193,8 @@ export function PaletteSheet({
                 gap: 14,
                 borderTop: `1px solid ${HAIRLINE}`,
                 paddingTop: 12,
+                // Abstand nach unten, damit Unterlängen (z. B. "g" in "kg") im Druck nicht abgeschnitten werden.
+                paddingBottom: 12,
               }}
             >
               {palette.dim && (
@@ -215,7 +217,7 @@ export function PaletteSheet({
               {palette.weight && (
                 <div>
                   <div className="print-label">Gewicht</div>
-                  <div style={{ fontFamily: "var(--font-sans)", fontSize: 40, color: INK, marginTop: 4, fontWeight: 500, lineHeight: 1.0 }}>
+                  <div style={{ fontFamily: "var(--font-sans)", fontSize: 40, color: INK, marginTop: 4, fontWeight: 500, lineHeight: 1.2 }}>
                     {palette.weight}
                   </div>
                 </div>

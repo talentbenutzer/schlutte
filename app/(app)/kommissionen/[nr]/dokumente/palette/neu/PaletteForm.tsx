@@ -87,6 +87,30 @@ export function PaletteForm({
     });
   };
 
+  // Es gibt einen nächsten Zettel, auf den übernommen werden kann?
+  const hasNext = !hidePackageCount && activeIdx < count - 1;
+
+  // Aktuellen Zettel als Vorlage auf den nächsten übernehmen (überschreibt dessen Daten) und dorthin wechseln.
+  const copyToNext = () => {
+    setPackages((prev) => {
+      const next = [...prev];
+      if (activeIdx + 1 < next.length) {
+        next[activeIdx + 1] = { ...prev[activeIdx] };
+      }
+      return next;
+    });
+    setActiveIdx((idx) => Math.min(idx + 1, count - 1));
+  };
+
+  // Enter soll nicht das Formular absenden (sonst springt es ungewollt in die Druckvorschau).
+  // In Textareas bleibt Enter erhalten (Zeilenumbruch im Inhalt).
+  const preventEnterSubmit = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    const target = e.target as HTMLElement;
+    if (e.key === "Enter" && target.tagName !== "TEXTAREA") {
+      e.preventDefault();
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     let hasError = false;
@@ -155,7 +179,7 @@ export function PaletteForm({
   };
 
   return (
-    <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 640 }}>
+    <form onSubmit={handleSave} onKeyDown={preventEnterSubmit} style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 640 }}>
       {isSaved && (
         <div
           role="alert"
@@ -364,6 +388,23 @@ export function PaletteForm({
           className="grb-input"
         />
       </Field>
+
+      {hasNext && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <button
+            type="button"
+            onClick={copyToNext}
+            className="grb-btn grb-btn-ghost"
+            style={{ alignSelf: "flex-start" }}
+          >
+            <Icon name="arrow" size={14} /> Für nächste Platte übernehmen
+          </button>
+          <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--fg-subtle)" }}>
+            Übernimmt die Daten von Zettel {activeIdx + 1} auf Zettel {activeIdx + 2}.
+            Hinweis: Die bisherigen Daten von Zettel {activeIdx + 2} werden dabei überschrieben.
+          </span>
+        </div>
+      )}
 
       <Field
         label="Mitarbeiter"

@@ -4,6 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import type { UpcomingItem } from "@/lib/types";
+import { ListTile } from "@/components/intranet/ListTile";
+import {
+  createEventAction,
+  updateEventAction,
+  deleteEventAction,
+  createBirthdayAction,
+  updateBirthdayAction,
+  deleteBirthdayAction,
+} from "@/app/start/actions";
 
 type IconName =
   | "workshop" | "staff" | "order" | "vacation" | "inventory" | "report" | "list"
@@ -159,6 +169,9 @@ export function IntranetHub({
   userName,
   userInitials,
   userRole,
+  isAdmin,
+  events,
+  birthdays,
 }: {
   salutation: string;
   displayName: string | null;
@@ -166,6 +179,9 @@ export function IntranetHub({
   userName: string;
   userInitials: string;
   userRole: string;
+  isAdmin: boolean;
+  events: UpcomingItem[];
+  birthdays: UpcomingItem[];
 }) {
   const router = useRouter();
   const [dark, setDark] = useState(false);
@@ -236,6 +252,31 @@ export function IntranetHub({
               )}
             </h1>
             <p className="sch-lede">Willkommen im Schlutte-Intranet. Wähle einen Bereich.</p>
+          </section>
+
+          <section className="sch-info" aria-label="Events und Geburtstage">
+            <ListTile
+              heading="Events"
+              items={events}
+              isAdmin={isAdmin}
+              textLabel="Bezeichnung"
+              textPlaceholder="z. B. Sommerfest"
+              emptyText="Keine anstehenden Events."
+              onCreate={createEventAction}
+              onUpdate={updateEventAction}
+              onDelete={deleteEventAction}
+            />
+            <ListTile
+              heading="Geburtstage"
+              items={birthdays}
+              isAdmin={isAdmin}
+              textLabel="Name"
+              textPlaceholder="z. B. Max Mustermann"
+              emptyText="Keine Geburtstage hinterlegt."
+              onCreate={createBirthdayAction}
+              onUpdate={updateBirthdayAction}
+              onDelete={deleteBirthdayAction}
+            />
           </section>
 
           <section className="sch-grid" aria-label="Bereiche">

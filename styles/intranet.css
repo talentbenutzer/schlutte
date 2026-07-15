@@ -158,6 +158,14 @@
   margin: 6px 0 0;
 }
 
+/* ---------- Info-Sektion (Events / Geburtstage) ---------- */
+.sch-info {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-5);
+  margin-bottom: var(--sp-8);
+}
+
 /* ---------- Tile grid ---------- */
 .sch-grid {
   display: grid;
@@ -327,6 +335,7 @@
   .sch-search { display: none; }
   .sch-main { padding: var(--sp-8) var(--sp-6) var(--sp-7); }
   .sch-grid { grid-template-columns: 1fr; }
+  .sch-info { grid-template-columns: 1fr; }
   .sch-user-text { display: none; }
 }
 

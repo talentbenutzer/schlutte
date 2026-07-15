@@ -1,5 +1,19 @@
 export type CommissionStatus = "in-progress" | "ready" | "shipped" | "archived";
 
+/** Einheitliches Anzeige-Item für die Intranet-Kacheln (Events / Geburtstage). */
+export type UpcomingItem = {
+  id: string;
+  /** Angezeigter Text: Event-Titel bzw. Name. */
+  text: string;
+  /** Rohdatum yyyy-mm-dd (für das Bearbeiten-Formular). */
+  dateISO: string;
+  /** Formatiertes Datum: "06.07.2026" (Event) bzw. "15.03." (Geburtstag). */
+  dateLabel: string;
+  /** "heute" | "morgen" | "in X Tagen". */
+  daysLabel: string;
+  daysUntil: number;
+};
+
 export type Commission = {
   no: string;
   client: string;
@@ -86,24 +100,35 @@ export type LaufzettelFormData = {
   stations?: string[];    // ausgewählte Stationen für die Werkstatt-Checkliste
 };
 
-export type PaletteFormData = {
-  /** Objektbezeichnung. */
+/** Pro-Packstück-Daten. Jeder Zettel „X von N" kann eigene Werte haben. */
+export type PalettePackage = {
   objectName?: string;
-  /** Bauteil / Bezeichnung — mehrzeilig (ein Eintrag pro Zeile). */
   content?: string;
-  /** Maße in mm — Länge / Breite / Höhe (jeweils Freitext). */
   lengthMm?: string;
   widthMm?: string;
   heightMm?: string;
-  /** Legacy: alte Maßangabe als Freitext. */
-  dimensions?: string;
   weight?: string;
-  positionNumber?: string;
+  shippingNote?: string;
+};
+
+export type PaletteFormData = {
+  // Shared
   packageCount: number;
   /** Packstück-Nummerierung auf dem Etikett ausblenden. */
   hidePackageCount?: boolean;
-  shippingNote?: string;
   employeeInitials: string;
+  positionNumber?: string;
+  // Legacy / Default-Werte (wenn packages fehlen oder ein Feld leer ist).
+  objectName?: string;
+  content?: string;
+  lengthMm?: string;
+  widthMm?: string;
+  heightMm?: string;
+  dimensions?: string;
+  weight?: string;
+  shippingNote?: string;
+  /** Individuelle Werte pro Packstück (Index 0 = „1 von N"). */
+  packages?: PalettePackage[];
 };
 
 

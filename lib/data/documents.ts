@@ -27,13 +27,36 @@ function inferKind(label: string): DocumentKind {
  * (durch Zeilenumbruch getrennt, im Druck untereinander aufgelistet).
  * Nur ausgefüllte Werte werden aufgenommen; ohne L/B/H greift die Legacy-Freitextangabe.
  */
-function formatPaletteDimensions(fd: PaletteFormData): string {
+function formatPaletteDimensions(d: {
+  lengthMm?: string;
+  widthMm?: string;
+  heightMm?: string;
+  dimensions?: string;
+}): string {
   const parts: string[] = [];
-  if (fd.lengthMm?.trim()) parts.push(`L: ${fd.lengthMm.trim()} mm`);
-  if (fd.widthMm?.trim()) parts.push(`B: ${fd.widthMm.trim()} mm`);
-  if (fd.heightMm?.trim()) parts.push(`H: ${fd.heightMm.trim()} mm`);
+  if (d.lengthMm?.trim()) parts.push(`L: ${d.lengthMm.trim()} mm`);
+  if (d.widthMm?.trim()) parts.push(`B: ${d.widthMm.trim()} mm`);
+  if (d.heightMm?.trim()) parts.push(`H: ${d.heightMm.trim()} mm`);
   if (parts.length > 0) return parts.join("\n");
-  return fd.dimensions?.trim() || "";
+  return d.dimensions?.trim() || "";
+}
+
+/**
+ * Liefert für ein bestimmtes Packstück die effektiven Werte:
+ * Zuerst der packages[idx-1]-Override, danach Fallback auf die Top-Level-Werte
+ * aus dem Formular (Legacy / gemeinsame Standardwerte).
+ */
+function pickPaletteValues(fd: PaletteFormData, idx: number) {
+  const pkg = fd.packages?.[idx - 1] ?? {};
+  return {
+    objectName: pkg.objectName ?? fd.objectName ?? "",
+    content: pkg.content ?? fd.content ?? "",
+    lengthMm: pkg.lengthMm ?? fd.lengthMm ?? "",
+    widthMm: pkg.widthMm ?? fd.widthMm ?? "",
+    heightMm: pkg.heightMm ?? fd.heightMm ?? "",
+    weight: (pkg.weight ?? fd.weight ?? "").trim(),
+    shippingNote: pkg.shippingNote ?? fd.shippingNote,
+  };
 }
 
 function toDocument(
@@ -689,19 +712,20 @@ export async function getPalettePrintPageByDocId(
 
     const formData = docData.form_data as unknown as PaletteFormData;
     const count = formData.packageCount || 1;
-    const positionsList = formData.positionNumber 
+    const positionsList = formData.positionNumber
       ? formData.positionNumber.split(",").map((s: string) => s.trim()).filter(Boolean)
       : [];
 
+    const v = pickPaletteValues(formData, idx);
     const palette: Palette = {
       idx,
       total: count,
-      objectName: formData.objectName || "",
-      content: formData.content || formData.objectName || "Möbelelemente",
-      weight: formData.weight?.trim() || "",
-      dim: formatPaletteDimensions(formData),
+      objectName: v.objectName,
+      content: v.content || v.objectName || "Möbelelemente",
+      weight: v.weight,
+      dim: formatPaletteDimensions(v),
       positions: positionsList,
-      shippingNote: formData.shippingNote,
+      shippingNote: v.shippingNote,
       hidePackageCount: formData.hidePackageCount || false,
     };
 
@@ -768,15 +792,16 @@ export async function getPalettePrintRangeByDocId(
     const printedAt = formatDate(new Date());
 
     for (let idx = lo; idx <= Math.min(hi, count); idx++) {
+      const v = pickPaletteValues(formData, idx);
       const palette: Palette = {
         idx,
         total: count,
-        objectName: formData.objectName || "",
-        content: formData.content || formData.objectName || "Möbelelemente",
-        weight: formData.weight?.trim() || "",
-        dim: formatPaletteDimensions(formData),
+        objectName: v.objectName,
+        content: v.content || v.objectName || "Möbelelemente",
+        weight: v.weight,
+        dim: formatPaletteDimensions(v),
         positions: positionsList,
-        shippingNote: formData.shippingNote,
+        shippingNote: v.shippingNote,
         hidePackageCount: formData.hidePackageCount || false,
       };
 

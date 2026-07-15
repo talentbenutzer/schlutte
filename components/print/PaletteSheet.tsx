@@ -77,7 +77,7 @@ export function PaletteSheet({
             <div className="print-eyebrow" style={{ marginBottom: 4 }}>Kunde</div>
             <FitText
               text={commission.client}
-              maxFontSize={210}
+              maxFontSize={120}
               style={{
                 fontFamily: "var(--font-display)",
                 fontWeight: 100,
@@ -96,7 +96,7 @@ export function PaletteSheet({
                   style={{
                     fontFamily: "var(--font-display)",
                     fontWeight: 300,
-                    fontSize: 200,
+                    fontSize: 120,
                     color: INK,
                     letterSpacing: "-0.02em",
                     lineHeight: 0.9,
@@ -108,7 +108,7 @@ export function PaletteSheet({
                   style={{
                     fontFamily: "var(--font-display)",
                     fontWeight: 200,
-                    fontSize: 90,
+                    fontSize: 54,
                     color: STONE,
                     letterSpacing: "-0.02em",
                     fontStyle: "italic",

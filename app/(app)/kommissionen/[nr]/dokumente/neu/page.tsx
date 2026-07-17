@@ -70,11 +70,11 @@ export default async function NewDocumentSelectPage({
           className="grb-card-hover"
         >
           <span style={{ position: "absolute", top: 16, right: 16, color: "var(--fg-subtle)" }}>
-            <Icon name="doc-stripe" size={24} stroke={1.25} />
+            <Icon name="pallet-boards" size={24} stroke={1.25} />
           </span>
           <span className="grb-eyebrow" style={{ color: "var(--accent)" }}>01 / Werkstatt</span>
           <h2 className="grb-h-h2" style={{ fontSize: 28, margin: "12px 0 6px" }}>
-            Laufzettel
+            Palettenlabel intern
           </h2>
           <p style={{ fontFamily: "var(--font-sans)", fontSize: 14, color: "var(--fg-muted)", lineHeight: 1.5, margin: 0 }}>
             Werkstatt / Produktion. Erstelle eine Stückliste und weise die Arbeitsschritte den einzelnen Gewerke-Stationen zu.
@@ -104,11 +104,11 @@ export default async function NewDocumentSelectPage({
           className="grb-card-hover"
         >
           <span style={{ position: "absolute", top: 16, right: 16, color: "var(--fg-subtle)" }}>
-            <Icon name="pkg" size={24} stroke={1.25} />
+            <Icon name="truck" size={24} stroke={1.25} />
           </span>
           <span className="grb-eyebrow" style={{ color: "var(--accent)" }}>02 / Versand</span>
           <h2 className="grb-h-h2" style={{ fontSize: 28, margin: "12px 0 6px" }}>
-            Palettenbeschriftung
+            Palettenversand-Label
           </h2>
           <p style={{ fontFamily: "var(--font-sans)", fontSize: 14, color: "var(--fg-muted)", lineHeight: 1.5, margin: 0 }}>
             Versand / Packstücke. Beschriftung für den Palettentransport. Unterstützt Nummernsequenzen (z. B. 1 von 5) und Gewicht/Maße.

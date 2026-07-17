@@ -241,7 +241,7 @@ export function PaletteSheet({
           letterSpacing: "0.1em",
         }}
       >
-        <span>Schlutte · Palettenbeschriftung</span>
+        <span>Schlutte · Palettenversand-Label</span>
         <span>
           {commission.no}
           {!palette.hidePackageCount && ` · Packstück ${palette.idx} / ${palette.total}`}

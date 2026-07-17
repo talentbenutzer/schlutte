@@ -44,13 +44,13 @@ export default async function NewLaufzettelPage({
           ← Dokumenttyp wählen
         </Link>
         <span className="grb-eyebrow" style={{ display: "block", marginTop: 18 }}>
-          Laufzettel
+          Palettenlabel intern
         </span>
         <h1 className="grb-h-h1" style={{ marginTop: 6 }}>
-          Laufzettel erstellen
+          Palettenlabel intern erstellen
         </h1>
         <p className="gd-lede" style={{ marginTop: 10 }}>
-          Erstelle einen neuen Werkstatt-Laufzettel für die Kommission <strong>{commission.no}</strong>.
+          Erstelle ein neues internes Palettenlabel für die Kommission <strong>{commission.no}</strong>.
         </p>
       </div>
 

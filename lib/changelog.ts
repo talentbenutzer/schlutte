@@ -17,8 +17,8 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       "Supabase Login und Row Level Security aktiv",
       "Kommissionen können erstellt, bearbeitet und durchsucht werden",
-      "Laufzettel und Palettenbeschriftungen können erstellt, bearbeitet und gedruckt werden",
-      "Mehrere Paletten-Sets pro Kommission werden unterstützt",
+      "Palettenlabel intern und Palettenversand-Labels können erstellt, bearbeitet und gedruckt werden",
+      "Mehrere Palettenversand-Labels pro Kommission werden unterstützt",
       "Dokumente werden als Einträge in Supabase gespeichert",
       "Begrüßung nach Tageszeit auf dem Dashboard",
       "Mitarbeiterverwaltung unter /mitarbeiter",

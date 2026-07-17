@@ -54,7 +54,7 @@ export default async function EditLaufzettelPage({
           Dokument bearbeiten
         </span>
         <h1 className="grb-h-h1" style={{ marginTop: 6 }}>
-          Laufzettel bearbeiten
+          Palettenlabel intern bearbeiten
         </h1>
         <p className="gd-lede" style={{ marginTop: 10 }}>
           Aktualisiere die Gewerke-Stationen oder Notizen für Kommission <strong>{commission.no}</strong> ({commission.client}).

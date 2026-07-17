@@ -21,7 +21,7 @@ export function DeleteCommissionButton({
   const handleDelete = () => {
     const docsHint =
       documentCount > 0
-        ? `\n\nDabei werden auch ${documentCount} zugehörige${documentCount === 1 ? "s" : ""} Dokument${documentCount === 1 ? "" : "e"} (Laufzettel & Paletten) unwiderruflich gelöscht.`
+        ? `\n\nDabei werden auch ${documentCount} zugehörige${documentCount === 1 ? "s" : ""} Dokument${documentCount === 1 ? "" : "e"} (Palettenlabel intern & Palettenversand-Labels) unwiderruflich gelöscht.`
         : "";
     const confirmed = window.confirm(
       `Kommission ${commissionNo} (${client}) wirklich löschen?${docsHint}\n\nDieser Schritt kann nicht rückgängig gemacht werden.`

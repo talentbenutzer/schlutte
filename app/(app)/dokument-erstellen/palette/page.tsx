@@ -34,13 +34,13 @@ export default async function CreatePaletteSelectPage() {
             ← Dashboard
           </Link>
           <span className="grb-eyebrow" style={{ display: "block", marginTop: 18 }}>
-            Palettenbeschriftung erstellen
+            Palettenversand-Label erstellen
           </span>
           <h1 className="grb-h-h1" style={{ marginTop: 6 }}>
             Kommission auswählen
           </h1>
           <p className="gd-lede" style={{ marginTop: 10 }}>
-            Für welche Kommission soll die Palettenbeschriftung angelegt werden?
+            Für welche Kommission soll das Palettenversand-Label angelegt werden?
           </p>
         </div>
         <Link href="/kommissionen/neu" className="grb-btn grb-btn-quiet">

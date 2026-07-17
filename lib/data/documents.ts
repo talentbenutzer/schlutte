@@ -441,7 +441,7 @@ export async function getLaufzettelPrintData(
         formData = doc.form_data as unknown as LaufzettelFormData;
         await logPrintAction(
           doc.id,
-          "Laufzettel",
+          "Palettenlabel intern",
           commission.owner
         );
       }
@@ -502,7 +502,7 @@ export async function getLaufzettelPrintDataByDocId(
 
     const formData = docData.form_data as unknown as LaufzettelFormData;
 
-    await logPrintAction(docId, "Laufzettel", commission.owner);
+    await logPrintAction(docId, "Palettenlabel intern", commission.owner);
 
     return {
       commission,
@@ -556,7 +556,7 @@ export async function createLaufzettelDocument(
     .insert({
       commission_id: comm.id,
       document_type: "laufzettel",
-      title: "Laufzettel",
+      title: "Palettenlabel intern",
       form_data: formData as unknown as Record<string, unknown>,
       created_by_initials: (formData.employeeInitials || "EDL").toUpperCase()
     })
@@ -596,7 +596,7 @@ export async function createPaletteDocument(
     .insert({
       commission_id: comm.id,
       document_type: "palette",
-      title: `Palette (Anzahl: ${formData.packageCount})`,
+      title: `Palettenversand-Label (Anzahl: ${formData.packageCount})`,
       form_data: formData as unknown as Record<string, unknown>,
       created_by_initials: (formData.employeeInitials || "EDL").toUpperCase()
     })
@@ -645,7 +645,7 @@ export async function updatePaletteDocument(
   const { error } = await supabase
     .from("documents")
     .update({
-      title: `Palette (Anzahl: ${formData.packageCount})`,
+      title: `Palettenversand-Label (Anzahl: ${formData.packageCount})`,
       form_data: formData as unknown as Record<string, unknown>,
       created_by_initials: (formData.employeeInitials || "EDL").toUpperCase(),
       updated_at: new Date().toISOString()

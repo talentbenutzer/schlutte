@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Schlutte — Grabner Design",
-  description: "Interne WebApp für Kommissionen, Laufzettel und Palettenbeschriftung.",
+  description: "Interne WebApp für Kommissionen, Palettenlabel intern und Palettenversand-Label.",
 };
 
 export default function RootLayout({

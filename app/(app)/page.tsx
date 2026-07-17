@@ -156,8 +156,8 @@ export default async function DashboardPage({
             <span className="grb-index">01 / 02</span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
-            <DashTile idx="01" title="Neuer Laufzettel" hint="Gewerke-Stationen, Stückliste, Maße." icon="doc-stripe" href="/dokument-erstellen/laufzettel" />
-            <DashTile idx="02" title="Neue Palette" hint="Versand · Beschriftung 1 von n. Mehrfachdruck." icon="pallet" href="/dokument-erstellen/palette" />
+            <DashTile idx="01" title="Palettenlabel intern" hint="Gewerke-Stationen, Stückliste, Maße." icon="doc-stripe" href="/dokument-erstellen/laufzettel" />
+            <DashTile idx="02" title="Palettenversand-Label" hint="Versand · Beschriftung 1 von n. Mehrfachdruck." icon="pallet" href="/dokument-erstellen/palette" />
           </div>
         </section>
 

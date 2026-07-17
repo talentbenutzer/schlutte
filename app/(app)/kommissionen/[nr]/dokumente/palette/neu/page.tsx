@@ -44,13 +44,13 @@ export default async function NewPalettePage({
           ← Dokumenttyp wählen
         </Link>
         <span className="grb-eyebrow" style={{ display: "block", marginTop: 18 }}>
-          Palettenbeschriftung
+          Palettenversand-Label
         </span>
         <h1 className="grb-h-h1" style={{ marginTop: 6 }}>
-          Paletten erstellen
+          Palettenversand-Label erstellen
         </h1>
         <p className="gd-lede" style={{ marginTop: 10 }}>
-          Erstelle neue Paletten-Versandaufkleber für die Kommission <strong>{commission.no}</strong>.
+          Erstelle neue Palettenversand-Labels für die Kommission <strong>{commission.no}</strong>.
         </p>
       </div>
 

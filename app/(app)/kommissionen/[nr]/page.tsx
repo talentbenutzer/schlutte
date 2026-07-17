@@ -183,7 +183,7 @@ export default async function CommissionDetailPage({
             className="grb-btn grb-btn-ghost"
             href={`/kommissionen/${commission.no}/dokumente/laufzettel/neu`}
           >
-            <Icon name="doc-stripe" size={14} /> Laufzettel
+            <Icon name="doc-stripe" size={14} /> Palettenlabel intern
           </Link>
           {firstPaletteId ? (
             <Link
@@ -192,7 +192,7 @@ export default async function CommissionDetailPage({
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Icon name="print" size={14} /> Palette drucken
+              <Icon name="print" size={14} /> Palettenversand-Label drucken
             </Link>
           ) : null}
           <Link
@@ -212,8 +212,8 @@ export default async function CommissionDetailPage({
       {/* ---------- Laufzettel ---------- */}
       <section>
         <SectionHeader
-          eyebrow="Dokumente · Laufzettel"
-          title="Laufzettel zu dieser Kommission"
+          eyebrow="Dokumente · Palettenlabel intern"
+          title="Palettenlabel intern zu dieser Kommission"
           index={laufzettelDocs.length > 0 ? `${laufzettelDocs.length} Stück` : undefined}
           action={
             <Link
@@ -221,7 +221,7 @@ export default async function CommissionDetailPage({
               className="grb-btn-link"
               style={{ fontSize: 11 }}
             >
-              Neuer Laufzettel <Icon name="arrow" size={12} />
+              Neues Palettenlabel intern <Icon name="arrow" size={12} />
             </Link>
           }
         />
@@ -246,7 +246,7 @@ export default async function CommissionDetailPage({
                   fontWeight: 500,
                 }}
               >
-                Noch kein Laufzettel angelegt.
+                Noch kein Palettenlabel intern angelegt.
               </div>
               <div
                 style={{
@@ -263,7 +263,7 @@ export default async function CommissionDetailPage({
               href={`/kommissionen/${commission.no}/dokumente/laufzettel/neu`}
               className="grb-btn grb-btn-ghost"
             >
-              <Icon name="doc-stripe" size={14} /> Laufzettel erstellen
+              <Icon name="doc-stripe" size={14} /> Palettenlabel intern erstellen
             </Link>
           </div>
         ) : (
@@ -334,7 +334,7 @@ export default async function CommissionDetailPage({
                     <DeleteDocumentButton
                       commissionNo={commission.no}
                       documentId={d.id}
-                      label="Laufzettel"
+                      label="Palettenlabel intern"
                     />
                   </td>
                 </tr>
@@ -348,8 +348,8 @@ export default async function CommissionDetailPage({
       {/* ---------- Paletten ---------- */}
       <section>
         <SectionHeader
-          eyebrow="Dokumente · Palettenbeschriftung"
-          title="Paletten zu dieser Kommission"
+          eyebrow="Dokumente · Palettenversand-Label"
+          title="Palettenversand-Labels zu dieser Kommission"
           index={paletteDocs.length > 0 ? `${paletteDocs.length} Sets` : undefined}
           action={
             <Link
@@ -357,7 +357,7 @@ export default async function CommissionDetailPage({
               className="grb-btn-link"
               style={{ fontSize: 11 }}
             >
-              Neues Paletten-Set <Icon name="arrow" size={12} />
+              Neues Palettenversand-Label <Icon name="arrow" size={12} />
             </Link>
           }
         />
@@ -382,7 +382,7 @@ export default async function CommissionDetailPage({
                   fontWeight: 500,
                 }}
               >
-                Noch kein Paletten-Set angelegt.
+                Noch kein Palettenversand-Label angelegt.
               </div>
               <div
                 style={{
@@ -399,7 +399,7 @@ export default async function CommissionDetailPage({
               href={`/kommissionen/${commission.no}/dokumente/palette/neu`}
               className="grb-btn grb-btn-ghost"
             >
-              <Icon name="plus" size={14} /> Paletten-Set anlegen
+              <Icon name="plus" size={14} /> Palettenversand-Label anlegen
             </Link>
           </div>
         ) : (
@@ -460,7 +460,7 @@ export default async function CommissionDetailPage({
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{ padding: "4px 8px", color: "var(--fg)" }}
-                      title="Erste Palette drucken"
+                      title="Erstes Palettenversand-Label drucken"
                     >
                       <Icon name="print" size={14} />
                     </Link>
@@ -477,7 +477,7 @@ export default async function CommissionDetailPage({
                     <DeleteDocumentButton
                       commissionNo={commission.no}
                       documentId={d.id}
-                      label="Paletten-Set"
+                      label="Palettenversand-Label"
                     />
                   </td>
                 </tr>

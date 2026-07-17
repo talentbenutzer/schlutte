@@ -1,8 +1,8 @@
 import { Icon } from "@/components/ui/Icon";
 
 const TEMPLATES = [
-  { id: "laufzettel-v1", name: "Laufzettel · Standard", kind: "Laufzettel", status: "Aktiv", updated: "2026-05-12" },
-  { id: "palette-v1", name: "Palettenbeschriftung · Klassisch", kind: "Palette", status: "Aktiv", updated: "2026-05-12" },
+  { id: "laufzettel-v1", name: "Palettenlabel intern · Standard", kind: "Palettenlabel intern", status: "Aktiv", updated: "2026-05-12" },
+  { id: "palette-v1", name: "Palettenversand-Label · Klassisch", kind: "Palettenversand-Label", status: "Aktiv", updated: "2026-05-12" },
 ];
 
 export default function VorlagenPage() {

@@ -133,7 +133,7 @@ export function LaufzettelForm({
             fontSize: 14,
           }}
         >
-          ✓ Laufzettel erfolgreich gespeichert! Weiterleitung...
+          ✓ Palettenlabel intern erfolgreich gespeichert! Weiterleitung...
         </div>
       )}
 

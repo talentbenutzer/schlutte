@@ -32,7 +32,7 @@ export function LaufzettelSheet({
       <PrintHeader
         printedBy={printedBy}
         printedAt={printedAt}
-        tagline="High-End Interior Design · Laufzettel"
+        tagline="High-End Interior Design · Palettenlabel intern"
       />
 
       {/* TOP — Kommissionsnummer auf voller Sheet-Breite */}

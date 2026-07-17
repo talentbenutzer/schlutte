@@ -201,7 +201,7 @@ export function PaletteForm({
             fontSize: 14,
           }}
         >
-          ✓ Palettenbeschriftung erfolgreich gespeichert! Weiterleitung...
+          ✓ Palettenversand-Label erfolgreich gespeichert! Weiterleitung...
         </div>
       )}
 

@@ -34,13 +34,13 @@ export default async function CreateLaufzettelSelectPage() {
             ← Dashboard
           </Link>
           <span className="grb-eyebrow" style={{ display: "block", marginTop: 18 }}>
-            Laufzettel erstellen
+            Palettenlabel intern erstellen
           </span>
           <h1 className="grb-h-h1" style={{ marginTop: 6 }}>
             Kommission auswählen
           </h1>
           <p className="gd-lede" style={{ marginTop: 10 }}>
-            Für welche Kommission soll der Laufzettel angelegt werden?
+            Für welche Kommission soll das Palettenlabel intern angelegt werden?
           </p>
         </div>
         <Link href="/kommissionen/neu" className="grb-btn grb-btn-quiet">

@@ -183,7 +183,7 @@ export default async function CommissionDetailPage({
             className="grb-btn grb-btn-ghost"
             href={`/kommissionen/${commission.no}/dokumente/laufzettel/neu`}
           >
-            <Icon name="doc-stripe" size={14} /> Palettenlabel intern
+            <Icon name="pallet-boards" size={14} /> Palettenlabel intern
           </Link>
           {firstPaletteId ? (
             <Link
@@ -263,7 +263,7 @@ export default async function CommissionDetailPage({
               href={`/kommissionen/${commission.no}/dokumente/laufzettel/neu`}
               className="grb-btn grb-btn-ghost"
             >
-              <Icon name="doc-stripe" size={14} /> Palettenlabel intern erstellen
+              <Icon name="pallet-boards" size={14} /> Palettenlabel intern erstellen
             </Link>
           </div>
         ) : (
@@ -287,7 +287,7 @@ export default async function CommissionDetailPage({
                 <tr key={d.id}>
                   <td>
                     <Icon
-                      name="doc-stripe"
+                      name="pallet-boards"
                       size={16}
                       stroke={1.25}
                       style={{ color: "var(--fg-muted)" }}
@@ -419,7 +419,7 @@ export default async function CommissionDetailPage({
                 <tr key={d.id}>
                   <td>
                     <Icon
-                      name="box"
+                      name="truck"
                       size={16}
                       stroke={1.25}
                       style={{ color: "var(--fg-muted)" }}

@@ -3,7 +3,7 @@ type IconName =
   | "file" | "box" | "print" | "archive" | "duplicate" | "edit"
   | "check" | "chevron-right" | "chevron-down" | "more" | "filter"
   | "menu" | "x" | "eye" | "download" | "pkg" | "truck" | "star"
-  | "doc-stripe" | "settings" | "grid" | "list" | "home" | "tag" | "pallet" | "alert";
+  | "doc-stripe" | "settings" | "grid" | "list" | "home" | "tag" | "pallet" | "pallet-boards" | "alert";
 
 export function Icon({
   name,
@@ -50,6 +50,7 @@ export function Icon({
     case "download": return <svg {...p}><path d="M12 3v12M6 11l6 6 6-6M5 21h14"/></svg>;
     case "pkg":      return <svg {...p}><path d="M16 3H8L3 8v8l5 5h8l5-5V8z"/><path d="M8 8h8M8 13h8"/></svg>;
     case "pallet":   return <svg {...p}><path d="M7 4h10v9H7z"/><path d="M12 4v9"/><path d="M3 14h18M3 18h18"/><path d="M5 14v4M12 14v4M19 14v4"/></svg>;
+    case "pallet-boards": return <svg {...p}><path d="M5 6h14M5 9.5h14M5 13h14"/><path d="M3 16.5h18M3 20.5h18"/><path d="M5 16.5v4M12 16.5v4M19 16.5v4"/></svg>;
     case "alert":    return <svg {...p}><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>;
     case "truck":    return <svg {...p}><rect x="1" y="6" width="14" height="11"/><path d="M15 10h4l3 3v4h-7"/><circle cx="5.5" cy="19.5" r="2"/><circle cx="18" cy="19.5" r="2"/></svg>;
     case "star":     return <svg {...p}><path d="m12 3 2.7 6 6.3.6-4.7 4.3 1.4 6.1L12 17l-5.7 3 1.4-6.1L3 9.6 9.3 9z"/></svg>;

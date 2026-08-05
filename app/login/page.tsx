@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { BrandMark } from "@/components/ui/BrandMark";
 
 export default function LoginPage() {
-  const router = useRouter();
   const supabase = createClient();
 
   const [email, setEmail] = useState("");
@@ -35,8 +33,10 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/start");
-      router.refresh();
+      // Harte Navigation statt router.push: garantiert, dass der Server das
+      // frische Auth-Cookie sieht und direkt /start rendert (kein Bounce/Race).
+      window.location.assign("/start");
+      return;
     } catch {
       setErrorMsg("Ein unerwarteter Fehler ist aufgetreten.");
       setIsSubmitting(false);

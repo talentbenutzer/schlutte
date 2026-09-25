@@ -7,7 +7,7 @@ Im Supabase SQL-Editor für das Schlutte-Projekt diese Migrationen in der Reihen
 1. `supabase/migrations/20260925_auslagen.sql`
 2. `supabase/migrations/20260925_auslagen_employees_write_guard.sql`
 
-Die erste Migration legt Rollen, Tabellen, den privaten Storage-Bucket und Zugriffsregeln an. Die zweite schränkt bestehende Schreibrechte an der Mitarbeitertabelle auf Admins ein. Beide Dateien sind wiederholbar. Vor dem produktiven Einsatz die vorhandenen Mitarbeiter- und Rollen-Zuordnungen prüfen; `employees.is_admin = true` wird als `admin` übernommen.
+Die erste Migration legt Rollen, Tabellen, den privaten Storage-Bucket und Zugriffsregeln an. Die zweite schränkt bestehende Schreibrechte an der Mitarbeitertabelle auf Admins ein; beim ersten Login darf ein Nutzer weiterhin nur den eigenen Datensatz als aktiven Mitarbeiter ohne Adminrechte anlegen. Beide Dateien sind wiederholbar. Vor dem produktiven Einsatz die vorhandenen Mitarbeiter- und Rollen-Zuordnungen prüfen; `employees.is_admin = true` wird als `admin` übernommen.
 
 ## 2. Konfiguration
 

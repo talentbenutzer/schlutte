@@ -135,3 +135,29 @@ export async function updateCompany(id: string, input: UpdateCompanyInput): Prom
   }
   return data as Company;
 }
+
+/**
+ * Firma löschen (nur Finanz-Rolle). Scheitert, solange noch Kreditkarten
+ * oder Anträge auf die Firma verweisen (FK-Schutz in der Datenbank).
+ */
+export async function deleteCompany(id: string): Promise<void> {
+  if (!isCompanyId(id)) throw new AuslagenError("not_found", "Unbekannte Firma.");
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("expense_companies").delete().eq("id", id).select("id").maybeSingle();
+  if (error) {
+    if (error.code === "23503") {
+      throw new AuslagenError(
+        "conflict",
+        "Diese Firma wird noch von Kreditkarten oder Anträgen verwendet und kann deshalb nicht gelöscht werden."
+      );
+    }
+    throw toAuslagenError(error, "Firma konnte nicht gelöscht werden");
+  }
+  // RLS filtert fremde Löschungen stillschweigend → keine Zeile zurück.
+  if (!data) {
+    throw new AuslagenError(
+      "forbidden",
+      "Firma konnte nicht gelöscht werden: keine Berechtigung oder Firma nicht gefunden."
+    );
+  }
+}

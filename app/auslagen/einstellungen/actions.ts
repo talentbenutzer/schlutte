@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireFinance } from "@/lib/auth/roles";
-import { createCompany, updateCompany } from "@/lib/data/auslagen-settings";
+import { createCompany, deleteCompany, updateCompany } from "@/lib/data/auslagen-settings";
 import { AuslagenError, errorMessage } from "@/lib/auslagen/errors";
 import type { Company } from "@/lib/auslagen/types";
 
@@ -56,6 +56,20 @@ export async function createCompanyAction(formData: FormData): Promise<CompanyAc
     if (e instanceof AuslagenError && e.fieldErrors) {
       return { ok: false, error: e.message, fieldErrors: e.fieldErrors };
     }
+    return { ok: false, error: errorMessage(e) };
+  }
+}
+
+export type DeleteCompanyResult = { ok: boolean; error?: string };
+
+/** Firma löschen — nur CEO/Admin (serverseitig geprüft, zusätzlich per RLS). */
+export async function deleteCompanyAction(companyId: string): Promise<DeleteCompanyResult> {
+  try {
+    await requireFinance();
+    await deleteCompany(companyId);
+    revalidatePath("/auslagen/einstellungen");
+    return { ok: true };
+  } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }
 }

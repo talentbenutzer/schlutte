@@ -9,7 +9,12 @@ const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
 
 function client() {
   if (!process.env.ANTHROPIC_API_KEY) throw new Error("KI-Auslesen ist noch nicht eingerichtet. Bitte den Beleg manuell erfassen.");
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: 55_000 });
+  const workspaceId = process.env.ANTHROPIC_WORKSPACE_ID?.trim();
+  return new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+    timeout: 55_000,
+    ...(workspaceId ? { defaultHeaders: { "anthropic-workspace-id": workspaceId } } : {}),
+  });
 }
 
 function document(data: Buffer, mime: string): ContentBlockParam {
@@ -37,14 +42,22 @@ function date(value: unknown): string | null {
 }
 
 async function callTool(data: Buffer, mime: string, prompt: string, name: string, schema: Record<string, unknown>, maxTokens: number) {
-  const result = await client().messages.create({
-    model,
-    max_tokens: maxTokens,
-    temperature: 0,
-    tools: [{ name, description: "Strukturierte Daten aus dem Dokument erfassen", input_schema: schema as Anthropic.Messages.Tool.InputSchema }],
-    tool_choice: { type: "tool", name },
-    messages: [{ role: "user", content: [{ type: "text", text: prompt }, document(data, mime)] }],
-  });
+  let result: Anthropic.Messages.Message;
+  try {
+    result = await client().messages.create({
+      model,
+      max_tokens: maxTokens,
+      temperature: 0,
+      tools: [{ name, description: "Strukturierte Daten aus dem Dokument erfassen", input_schema: schema as Anthropic.Messages.Tool.InputSchema }],
+      tool_choice: { type: "tool", name },
+      messages: [{ role: "user", content: [{ type: "text", text: prompt }, document(data, mime)] }],
+    });
+  } catch (error) {
+    if (error instanceof Error && /not scoped to a workspace|must include the anthropic-workspace-id|anthropic-workspace-id is required/i.test(error.message)) {
+      throw new Error("Der Anthropic-Schlüssel benötigt eine Workspace-ID. Bitte ANTHROPIC_WORKSPACE_ID in Vercel hinterlegen.");
+    }
+    throw error;
+  }
   const block = result.content.find((part) => part.type === "tool_use" && part.name === name);
   if (!block || block.type !== "tool_use" || typeof block.input !== "object" || !block.input) throw new Error("Die KI konnte das Dokument nicht zuverlässig auslesen.");
   return block.input as Record<string, unknown>;

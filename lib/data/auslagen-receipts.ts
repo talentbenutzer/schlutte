@@ -70,9 +70,13 @@ export async function registerReceipt(input: { path: string; mime: string; fileN
     if (card) cardId = card.id;
   }
   const id = crypto.randomUUID();
+  // Zahlart nach Kontext, nicht nach Rolle: ohne konkrete Karte (z. B. normales
+  // "Beleg erfassen") ist auch für CEO/Admin "privat" der richtige Standard,
+  // sonst tauchen eigene private Belege nie im Antrag auf. Nur wenn der Upload
+  // aus dem Kartenabgleich kommt (cardId gesetzt und gültig), ist es ein Firmenbeleg.
   const { data, error } = await db.from("receipts").insert({
     id, user_id: ctx.userId, file_path: input.path, file_mime: input.mime, file_name: input.fileName.slice(0, 200),
-    payment_method: ctx.isFinance ? "kreditkarte" : "privat", credit_card_id: cardId,
+    payment_method: cardId ? "kreditkarte" : "privat", credit_card_id: cardId,
   }).select(COLUMNS).single();
   if (error) throw toAuslagenError(error, "Beleg konnte nicht gespeichert werden");
 

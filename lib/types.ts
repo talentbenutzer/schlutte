@@ -1,3 +1,5 @@
+import type { AppRole } from "@/lib/auth/app-role";
+
 export type CommissionStatus = "in-progress" | "ready" | "shipped" | "archived";
 
 /** Einheitliches Anzeige-Item für die Intranet-Kacheln (Events / Geburtstage). */
@@ -43,7 +45,9 @@ export type Employee = {
   kuerzel: string; // UI compatibility
   name: string;
   email?: string;
-  role: string;    // UI compatibility
+  role: string;    // UI compatibility (Anzeige-Label, z. B. "CEO")
+  /** Effektive App-Rolle (employees.role, Fallback aus is_admin). */
+  app_role?: AppRole;
   is_admin?: boolean;
   is_active?: boolean;
   created_at?: string;
@@ -54,6 +58,8 @@ export type CreateEmployeeInput = {
   initials: string;
   name: string;
   email?: string;
+  /** Hat Vorrang vor is_admin; gespeichert wird is_admin = (role === "admin"). */
+  role?: AppRole;
   is_admin?: boolean;
   is_active?: boolean;
 };

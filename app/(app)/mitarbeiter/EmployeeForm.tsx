@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import type { Employee } from "@/lib/types";
+import { APP_ROLES, roleLabel } from "@/lib/auth/app-role";
 import { createEmployeeAction, updateEmployeeAction } from "./actions";
 
 type State = { error?: string } | null;
@@ -161,17 +162,43 @@ export function EmployeeForm({
         </div>
       )}
 
-      {/* Admin + Aktiv */}
-      <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
-        <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 14 }}>
-          <input
-            type="checkbox"
-            name="is_admin"
-            value="true"
-            defaultChecked={employee?.is_admin ?? false}
-          />
-          Rolle: Administrator (ohne Haken: Mitarbeiter)
+      {/* Rolle */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <label
+          htmlFor="emp-role"
+          style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--fg-muted)" }}
+        >
+          Rolle
         </label>
+        <select
+          id="emp-role"
+          name="role"
+          defaultValue={employee?.app_role ?? (employee?.is_admin ? "admin" : "mitarbeiter")}
+          style={{
+            fontFamily: "var(--font-sans)",
+            fontSize: 15,
+            padding: "10px 14px",
+            border: "1px solid var(--border-strong)",
+            borderRadius: 0,
+            background: "var(--bg)",
+            color: "var(--fg)",
+            maxWidth: 400,
+          }}
+        >
+          {APP_ROLES.map((role) => (
+            <option key={role} value={role}>
+              {roleLabel(role)}
+            </option>
+          ))}
+        </select>
+        <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--fg-subtle)" }}>
+          Admin: Mitarbeiterverwaltung und alle Admin-Funktionen. CEO und Admin: zusätzlich
+          Kreditkarten-Abgleich und Einstellungen unter „Auslagen &amp; Belege“.
+        </span>
+      </div>
+
+      {/* Aktiv */}
+      <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
         <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 14 }}>
           <input
             type="checkbox"

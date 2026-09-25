@@ -78,7 +78,9 @@ export async function setClaimPdfPath(id: string, path: string): Promise<void> {
   }
   const db = await createClient();
   const { data: file, error: fileError } = await db.storage.from(AUSLAGEN_BUCKET).download(path);
-  if (fileError || !file || file.type !== "application/pdf" || file.size > 25 * 1024 * 1024) throw new AuslagenError("validation", "Antrags-PDF fehlt oder ist ungültig.");
+  if (fileError || !file || file.size > 25 * 1024 * 1024 || (await file.slice(0, 5).text()) !== "%PDF-") {
+    throw new AuslagenError("validation", "Antrags-PDF fehlt oder ist ungültig.");
+  }
   const { data, error } = await db.from("expense_claims").update({ pdf_path: path }).eq("id", id).eq("user_id", claim.user_id).select("id").maybeSingle();
   if (error || !data) throw toAuslagenError(error, "PDF konnte nicht gespeichert werden");
 }

@@ -5,14 +5,18 @@ import { errorMessage } from "@/lib/auslagen/errors";
 import { parseAmount } from "@/lib/auslagen/format";
 import { deleteReceipt, registerReceipt, saveReceipt } from "@/lib/data/auslagen-receipts";
 import { isPaymentChannel } from "@/lib/auslagen/types";
+import type { Receipt } from "@/lib/auslagen/types";
 
-export type ReceiptActionResult = { ok: boolean; id?: string; error?: string; warning?: string };
+export type UploadReceiptSummary = Pick<Receipt, "id" | "status" | "file_name" | "merchant" | "receipt_date" | "gross_amount" | "currency" | "payment_channel" | "payment_method" | "extraction_error">;
+export type ReceiptActionResult = { ok: boolean; id?: string; receipt?: UploadReceiptSummary; error?: string; warning?: string };
 
 export async function registerReceiptAction(input: { path: string; mime: string; fileName: string; cardId?: string | null }): Promise<ReceiptActionResult> {
   try {
     const receipt = await registerReceipt(input);
     revalidatePath("/auslagen");
-    return { ok: true, id: receipt.id, warning: receipt.extraction_error ?? undefined };
+    revalidatePath("/auslagen/abgleich");
+    const { id, status, file_name, merchant, receipt_date, gross_amount, currency, payment_channel, payment_method, extraction_error } = receipt;
+    return { ok: true, id, receipt: { id, status, file_name, merchant, receipt_date, gross_amount, currency, payment_channel, payment_method, extraction_error }, warning: extraction_error ?? undefined };
   } catch (e) { return { ok: false, error: errorMessage(e) }; }
 }
 
@@ -30,6 +34,8 @@ export async function saveReceiptAction(id: string, formData: FormData): Promise
     });
     revalidatePath("/auslagen");
     revalidatePath(`/auslagen/belege/${id}`);
+    revalidatePath("/auslagen/erfassen");
+    revalidatePath("/auslagen/abgleich");
     return { ok: true, id };
   } catch (e) { return { ok: false, error: errorMessage(e) }; }
 }
@@ -38,6 +44,7 @@ export async function deleteReceiptAction(id: string): Promise<ReceiptActionResu
   try {
     await deleteReceipt(id);
     revalidatePath("/auslagen");
+    revalidatePath("/auslagen/abgleich");
     return { ok: true };
   } catch (e) { return { ok: false, error: errorMessage(e) }; }
 }

@@ -3,6 +3,7 @@ import { requireFinance } from "@/lib/auth/roles";
 import { extractStatement } from "@/lib/auslagen/extract";
 import { AuslagenError, toAuslagenError } from "@/lib/auslagen/errors";
 import { autoMatches, matchScore } from "@/lib/auslagen/matching";
+import type { PaymentReceipt } from "@/lib/auslagen/reconciliation";
 import { AUSLAGEN_BUCKET, isOwnStoragePath, SIGNED_URL_TTL_SECONDS } from "@/lib/auslagen/paths";
 import { isISODate, round2 } from "@/lib/auslagen/format";
 import { isCompanyId } from "@/lib/data/auslagen-settings";
@@ -12,6 +13,7 @@ const CARD_COLS = "id, owner_id, company_id, label, payment_channel, last4, hold
 const STATEMENT_COLS = "id, uploaded_by, credit_card_id, period_start, period_end, statement_date, total_amount, currency, file_path, file_name, extraction, extraction_error, status, created_at, updated_at";
 const TX_COLS = "id, statement_id, credit_card_id, transaction_date, booking_date, merchant, description, amount, original_amount, original_currency, receipt_id, match_status, match_score, note, sort, created_at, updated_at";
 const RECEIPT_COLS = "id, user_id, status, receipt_date, merchant, description, currency, gross_amount, net_amount, vat_amount, vat_rate, gross_amount_eur, payment_method, payment_channel, payment_reviewed_at, payment_reviewed_by, credit_card_id, file_path, file_mime, file_name, extraction, extraction_error, claim_id, created_at, updated_at";
+const RECONCILIATION_COLS = "id, status, receipt_date, merchant, currency, gross_amount, gross_amount_eur, payment_method, payment_channel, reconciliation_channel, credit_card_id, payment_reviewed_at, file_path, file_mime, file_name, claim_id";
 
 function validCardChannel(value: unknown): value is Exclude<PaymentChannel, "bar"> {
   return isPaymentChannel(value) && value !== "bar";
@@ -75,6 +77,54 @@ export async function listCardReceipts(): Promise<Receipt[]> {
   const { data, error } = await db.from("receipts").select(RECEIPT_COLS).eq("payment_method", "kreditkarte").is("claim_id", null).eq("status", "erfasst");
   if (error) throw toAuslagenError(error, "Kartenbelege konnten nicht geladen werden");
   return (data ?? []) as Receipt[];
+}
+
+/** Erfasste Firmenbelege und Belege aus versendeten Mitarbeiteranträgen. */
+export async function listReconciliationReceipts(): Promise<PaymentReceipt[]> {
+  await requireFinance();
+  const db = await createClient();
+  const submitted = new Set<string>();
+  for (let offset = 0; ; offset += 500) {
+    const { data, error } = await db.from("expense_claims").select("id").eq("status", "versendet").order("id").range(offset, offset + 499);
+    if (error) throw toAuslagenError(error, "Eingereichte Anträge konnten nicht geladen werden");
+    for (const row of data ?? []) submitted.add(row.id);
+    if ((data ?? []).length < 500) break;
+  }
+  const receipts: PaymentReceipt[] = [];
+  for (let offset = 0; ; offset += 500) {
+    const { data, error } = await db.from("receipts").select(RECONCILIATION_COLS).eq("status", "erfasst")
+      .order("created_at", { ascending: false }).order("id").range(offset, offset + 499);
+    if (error) throw toAuslagenError(error, "Belege für den Zahlungsabgleich konnten nicht geladen werden");
+    receipts.push(...((data ?? []) as PaymentReceipt[]));
+    if ((data ?? []).length < 500) break;
+  }
+  return receipts.filter((receipt) => receipt.payment_method === "kreditkarte" || (receipt.claim_id && submitted.has(receipt.claim_id)));
+}
+
+/** Nur eindeutig erkennbare Firmenkarten werden automatisch zugeordnet. */
+export async function autoAssignPaymentCards(): Promise<number> {
+  await requireFinance();
+  const [cards, receipts] = await Promise.all([listCards(), listCardReceipts()]);
+  const db = await createClient();
+  let count = 0;
+  for (const receipt of receipts) {
+    if (receipt.credit_card_id || !receipt.payment_channel || receipt.payment_channel === "bar") continue;
+    const matching = cards.filter((card) => card.is_active && card.payment_channel === receipt.payment_channel);
+    if (matching.length !== 1) continue;
+    const { data, error } = await db.from("receipts").update({ credit_card_id: matching[0].id })
+      .eq("id", receipt.id).is("credit_card_id", null).select("id").maybeSingle();
+    if (error) throw toAuslagenError(error, "Karte konnte nicht zugeordnet werden");
+    if (data) count++;
+  }
+  return count;
+}
+
+export async function classifySubmittedReceipt(id: string, channel: string): Promise<void> {
+  await requireFinance();
+  if (!/^[0-9a-f-]{36}$/i.test(id) || !isPaymentChannel(channel)) throw new AuslagenError("validation", "Bitte einen gültigen Zahlungsweg wählen.");
+  const db = await createClient();
+  const { error } = await db.rpc("classify_submitted_receipt", { target_id: id, channel });
+  if (error) throw toAuslagenError(error, "Zahlungsweg konnte nicht zugeordnet werden");
 }
 
 /** Firmenzahlungen ohne Kartenbuchung können manuell geprüft werden. */

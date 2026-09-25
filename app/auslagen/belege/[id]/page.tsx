@@ -7,9 +7,11 @@ import { OriginalHint } from "@/components/auslagen/OriginalHint";
 import type { CreditCard } from "@/lib/auslagen/types";
 import { ReceiptForm } from "./ReceiptForm";
 
-export default async function BelegPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ transactionId?: string; statementId?: string }> }) {
+export default async function BelegPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ transactionId?: string; statementId?: string; batch?: string }> }) {
   const { id } = await params;
-  const { transactionId, statementId } = await searchParams;
+  const { transactionId, statementId, batch } = await searchParams;
+  const batchIds = [...new Set((batch ?? "").split(","))].filter((value) => /^[0-9a-f-]{36}$/i.test(value)).slice(0, 50);
+  const batchUrl = batchIds.includes(id) ? `/auslagen/erfassen?batch=${batchIds.join(",")}` : null;
   const ctx = await getCurrentUserContext();
   if (!ctx) notFound();
   let receipt;
@@ -23,7 +25,7 @@ export default async function BelegPage({ params, searchParams }: { params: Prom
   }
   return <>
     <header className="aus-head">
-      <Link href="/auslagen" className="aus-back">← Belege</Link>
+      <Link href={batchUrl ?? "/auslagen"} className="aus-back">← {batchUrl ? "Upload-Liste" : "Belege"}</Link>
       <span className="aus-eyebrow">Auslagen &amp; Belege</span>
       <h1 className="aus-h1">Beleg prüfen</h1>
       <p className="aus-lede">Prüfe die erkannten Angaben und ergänze den Ausgabengrund.</p>
@@ -36,7 +38,7 @@ export default async function BelegPage({ params, searchParams }: { params: Prom
           <img src={previewUrl} alt="Hochgeladener Beleg" style={{ display: "block", maxWidth: "100%", maxHeight: 520, margin: "auto" }} />}
       </div>
     </section>
-    <ReceiptForm receipt={receipt} cards={cards} finance={ctx.isFinance} editable={!receipt.claim_id && (receipt.user_id === ctx.userId || (ctx.isFinance && receipt.payment_method === "kreditkarte"))} deletable={receipt.user_id === ctx.userId && !receipt.claim_id} transactionId={transactionId} statementId={statementId} />
+    <ReceiptForm receipt={receipt} cards={cards} finance={ctx.isFinance} editable={!receipt.claim_id && (receipt.user_id === ctx.userId || (ctx.isFinance && receipt.payment_method === "kreditkarte"))} deletable={receipt.user_id === ctx.userId && !receipt.claim_id} transactionId={transactionId} statementId={statementId} batchUrl={batchUrl} />
     <section className="aus-section"><OriginalHint /></section>
   </>;
 }

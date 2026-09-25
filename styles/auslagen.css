@@ -340,6 +340,8 @@ button.aus-item { width: 100%; background: none; border: 0; border-bottom: 1px s
   text-overflow: ellipsis;
 }
 .aus-item-side { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; text-align: right; }
+.aus-reconcile-controls { display: flex; align-items: center; gap: 8px; padding: 0 4px 12px; border-bottom: 1px solid var(--border); }
+.aus-reconcile-controls .aus-select { width: auto; min-width: 180px; max-width: 100%; }
 
 .aus-amount {
   font-family: var(--font-mono);
@@ -638,6 +640,7 @@ button.aus-item { width: 100%; background: none; border: 0; border-bottom: 1px s
 /* ---------- Fortschritt & Vorschau ---------- */
 .aus-progress { height: 4px; background: var(--border); overflow: hidden; }
 .aus-progress > span { display: block; height: 100%; background: var(--fg); transition: width var(--dur-base) var(--ease-out); }
+progress.aus-progress { display: block; width: 100%; accent-color: var(--aus-success); }
 
 .aus-preview {
   display: grid;

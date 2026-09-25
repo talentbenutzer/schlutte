@@ -22,7 +22,7 @@ export async function setClaimPdfPathAction(id: string, path: string): Promise<R
 }
 
 export async function markClaimSentAction(id: string): Promise<Result> {
-  try { await markClaimSent(id); revalidatePath(`/auslagen/antraege/${id}`); revalidatePath("/auslagen/antraege"); revalidatePath("/auslagen/eingang"); revalidatePath("/start"); return { ok: true }; }
+  try { await markClaimSent(id); revalidatePath(`/auslagen/antraege/${id}`); revalidatePath("/auslagen/antraege"); revalidatePath("/auslagen/eingang"); revalidatePath("/auslagen/abgleich"); revalidatePath("/start"); return { ok: true }; }
   catch (e) { return { ok: false, error: errorMessage(e) }; }
 }
 

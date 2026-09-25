@@ -299,7 +299,9 @@ export const PAYMENT_CHANNEL_LABEL: Record<PaymentChannel, string> = {
 
 export const CLAIM_STATUS_LABEL: Record<ClaimStatus, string> = {
   erstellt: "Erstellt",
-  versendet: "Versendet",
+  // Anzeigename "Eingereicht" — der interne Datenbankwert bleibt "versendet"
+  // (Migrationen, Check-Constraints, RLS-Policies referenzieren ihn).
+  versendet: "Eingereicht",
 };
 
 export const STATEMENT_STATUS_LABEL: Record<StatementStatus, string> = {

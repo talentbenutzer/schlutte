@@ -4,7 +4,7 @@ type IconName =
   | "check" | "chevron-right" | "chevron-down" | "more" | "filter"
   | "menu" | "x" | "eye" | "download" | "pkg" | "truck" | "star"
   | "doc-stripe" | "settings" | "grid" | "list" | "home" | "tag" | "pallet" | "pallet-boards" | "alert"
-  | "receipt" | "user" | "card" | "camera" | "upload" | "share" | "trash" | "mail";
+  | "receipt" | "user" | "card" | "camera" | "upload" | "share" | "trash" | "mail" | "info";
 
 export function Icon({
   name,
@@ -69,6 +69,7 @@ export function Icon({
     case "share":    return <svg {...p}><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 11v10h14V11"/></svg>;
     case "trash":    return <svg {...p}><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg>;
     case "mail":     return <svg {...p}><rect x="3" y="5" width="18" height="14"/><path d="m3 7 9 6 9-6"/></svg>;
+    case "info":     return <svg {...p}><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg>;
     default: return null;
   }
 }

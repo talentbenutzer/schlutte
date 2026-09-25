@@ -294,6 +294,10 @@
   color: var(--fg);
 }
 
+/* Einfache Aufzählung in einer Karte (z. B. Info-Seite) — kein Listen-Widget wie .aus-list. */
+.aus-list-plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+.aus-list-plain li { font-size: 14px; line-height: 1.5; color: var(--fg); }
+
 .aus-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
 .aus-item {
   display: flex;

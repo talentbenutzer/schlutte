@@ -172,3 +172,23 @@ Die Tabellen wurden verifiziert und die Data-Schicht auf das reale Schema angepa
 
 - `supabase/migrations/20260526_add_employee_fields.sql` — manuell im Supabase SQL-Editor ausführen.
 - `supabase/migrations/20260526_create_feedback_table.sql` — manuell im Supabase SQL-Editor ausführen.
+
+## Meilenstein: Auslagen & Belege (2026-09-25)
+
+- **Bereich `/auslagen`**: Belege per Foto/Upload erfassen (KI-Auslesen via Anthropic), Antrag auf
+  Auslagenerstattung mit Firmenwahl (Grabner Design / höllental), Unterschrift und PDF-Export mit
+  angehängten Belegen, Antragseingang und Kreditkartenabgleich für CEO/Admin. Details und
+  Einrichtung: `docs/AUSLAGEN-SETUP.md`.
+- **Rollen erweitert**: Mitarbeiter, CEO, Admin (`employees.role`). CEO und Admin haben dieselben
+  Verwaltungsrechte; nur `Admin` setzt `employees.is_admin = true`.
+- **Statuslabel**: Der Antragsstatus `versendet` heißt in der Oberfläche „Eingereicht“ (der interne
+  Datenbankwert bleibt `versendet`, da Migrationen und RLS-Policies ihn referenzieren).
+- **Aufbewahrung**: Original-Belegfotos werden 30 Tage nach Zuordnung zu einer Kartenbuchung
+  automatisch aus dem Storage gelöscht (Migration `20260925_receipt_storage_retention.sql`,
+  täglicher Cron-Job `/api/cron/purge-receipts`). Die erfassten Daten bleiben erhalten.
+- **E-Mail-Versand**: Der Antrag wird aktuell über die Teilen-Funktion des iPhones an Mail
+  übergeben, kein serverseitiger Versand. Ein automatischer Versand an die hinterlegte
+  Firmen-E-Mail, je Firma von Admins ein-/ausschaltbar, ist angedacht, aber noch nicht umgesetzt.
+- **Info-Seite** (`/auslagen/info`): Funktionsübersicht für alle Rollen, für CEO/Admin zusätzlich
+  Antragseingang und Abgleich. Eigene Versionierung in `lib/auslagen/version.ts` und
+  `lib/auslagen/changelog.ts` (unabhängig von der Hauptanwendungs-Version in `lib/version.ts`).

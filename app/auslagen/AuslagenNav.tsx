@@ -7,7 +7,7 @@ import { Icon } from "@/components/ui/Icon";
 type NavItem = {
   href: string;
   label: string;
-  icon: "receipt" | "doc-stripe" | "user" | "card" | "settings";
+  icon: "receipt" | "doc-stripe" | "user" | "card" | "settings" | "info";
   /** Pfad-Präfixe, für die der Eintrag aktiv ist (Unterseiten der Phasen 2/3). */
   match: string[];
   finance?: boolean;
@@ -26,6 +26,7 @@ const ITEMS: NavItem[] = [
     match: ["/auslagen/einstellungen"],
     finance: true,
   },
+  { href: "/auslagen/info", label: "Info", icon: "info", match: ["/auslagen/info"] },
 ];
 
 function isActive(item: NavItem, pathname: string): boolean {

@@ -63,7 +63,7 @@ export function ClaimControls({ claim, company, receipts, urls, existingPdfUrl }
   }
 
   function markSent() {
-    start(async () => { const result = await markClaimSentAction(claim.id); if (result.ok) { setMessage("Als versendet markiert."); router.refresh(); } else setError(result.error || "Status konnte nicht gespeichert werden."); });
+    start(async () => { const result = await markClaimSentAction(claim.id); if (result.ok) { setMessage("Als eingereicht markiert."); router.refresh(); } else setError(result.error || "Status konnte nicht gespeichert werden."); });
   }
 
   function remove() {
@@ -82,7 +82,7 @@ export function ClaimControls({ claim, company, receipts, urls, existingPdfUrl }
         {recipient && pdfUrl && <a className="aus-btn aus-btn-quiet" href={`mailto:${encodeURIComponent(recipient)}?subject=${encodeURIComponent(subject)}`}>E-Mail öffnen</a>}
       </div>
       {recipient && <p className="aus-help">Betreff: {subject}. Beim Öffnen der E-Mail das heruntergeladene PDF anhängen.</p>}
-      {claim.status === "erstellt" && pdfUrl && <button type="button" className="aus-btn aus-btn-quiet" onClick={markSent} disabled={pending}>Als versendet markieren</button>}
+      {claim.status === "erstellt" && pdfUrl && <button type="button" className="aus-btn aus-btn-quiet" onClick={markSent} disabled={pending}>Als eingereicht markieren</button>}
       {claim.status === "erstellt" && <button type="button" className="aus-btn aus-btn-danger" onClick={remove} disabled={pending}>Antrag löschen</button>}
       {error && <div className="aus-note is-danger" role="alert"><div className="aus-note-body"><p>{error}</p></div></div>}
       {message && <p role="status" className="aus-field-ok">{message}</p>}

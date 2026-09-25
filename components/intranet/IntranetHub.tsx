@@ -9,6 +9,7 @@ import type { InboxClaim } from "@/lib/data/auslagen-inbox";
 import { formatEUR } from "@/lib/auslagen/format";
 import { formatDate } from "@/lib/utils";
 import { ListTile } from "@/components/intranet/ListTile";
+import { InstallAppButton } from "@/components/shell/InstallAppButton";
 import {
   createEventAction,
   updateEventAction,
@@ -237,6 +238,7 @@ export function IntranetHub({
         </div>
 
         <div className="sch-topbar-right">
+          <InstallAppButton />
           <button className="sch-iconbtn" onClick={toggleTheme} aria-label="Theme wechseln">
             <SIcon name={dark ? "sun" : "moon"} size={18} stroke={1.5} />
           </button>

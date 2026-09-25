@@ -24,79 +24,58 @@ function write(page: PDFPage, value: string, x: number, y: number, font: PDFFont
 
 function rule(page: PDFPage, y: number) { page.drawLine({ start: { x: M, y }, end: { x: W - M, y }, thickness: 0.5, color: muted }); }
 
-/** Eine Datei mit Gruppenübersicht und allen dazugehörigen Originalbelegen. */
-export async function buildPaymentOverviewPdf(groups: PaymentGroup[], onProgress: (done: number, total: number) => void): Promise<Uint8Array> {
+/** Eine PDF je Zahlungsmittel: vollständige Betragsliste, Summe und Originalbelege. */
+export async function buildPaymentMethodPdf(group: PaymentGroup, onProgress: (done: number, total: number) => void): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   pdf.registerFontkit(fontkit);
-  pdf.setTitle("Schlutte · Zahlungswege und Belege");
+  pdf.setTitle(`Schlutte · ${group.title} · Belege`);
   const [regular, light, medium] = await Promise.all(["1-IBMPlexSans-Regular.ttf", "1-IBMPlexSans-Light.ttf", "1-IBMPlexSans-Medium.ttf"].map((name) => loadFont(pdf, name)));
-  const total = groups.reduce((sum, group) => sum + group.receipts.length, 0);
   let cover = pdf.addPage([W, H]);
-  write(cover, "SCHLUTTE / AUSLAGEN", M, H - 42, medium, 8, brass);
-  write(cover, "Zahlungsmittel & Belege", M, H - 88, light, 24);
-  rule(cover, H - 105);
-  write(cover, `${total} erfasste Belege · ${groups.length} Zahlungsmittel-Gruppen`, M, H - 133, regular, 10);
-  let coverY = H - 178;
-  for (const group of groups) {
-    if (coverY < 65) {
-      cover = pdf.addPage([W, H]);
-      write(cover, "SCHLUTTE / ZAHLUNGSMITTEL · FORTSETZUNG", M, H - 42, medium, 8, brass);
-      rule(cover, H - 55);
-      coverY = H - 85;
-    }
-    write(cover, `${group.payer} · ${group.title}`, M, coverY, regular, 9, ink, 345);
-    write(cover, `${group.receipts.length} · ${formatEUR(group.totalEUR)}`, M + 365, coverY, regular, 9, ink, 140);
-    coverY -= 25;
-    rule(cover, coverY + 8);
+  const heading = (continued = false) => {
+    write(cover, continued ? "SCHLUTTE / ZAHLUNGSMITTEL · FORTSETZUNG" : "SCHLUTTE / ZAHLUNGSABGLEICH", M, H - 42, medium, 8, brass);
+    write(cover, `${group.payer} · ${group.title}`, M, H - 79, light, 20, ink, W - 2 * M);
+    write(cover, `${group.receipts.length} Belege`, M, H - 107, regular, 9, muted);
+    write(cover, "GESAMTSUMME", M + 360, H - 107, medium, 8, brass);
+    write(cover, formatEUR(group.totalEUR), M + 440, H - 107, medium, 10, ink, 75);
+    rule(cover, H - 121);
+    write(cover, "NR", M, H - 146, medium, 8, brass);
+    write(cover, "DATUM", M + 48, H - 146, medium, 8, brass);
+    write(cover, "HÄNDLER", M + 125, H - 146, medium, 8, brass);
+    write(cover, "BETRAG", M + 405, H - 146, medium, 8, brass);
+  };
+  heading();
+  let y = H - 173;
+  for (let index = 0; index < group.receipts.length; index++) {
+    const receipt = group.receipts[index];
+    if (y < 65) { cover = pdf.addPage([W, H]); heading(true); y = H - 173; }
+    write(cover, `B${index + 1}`, M, y, medium, 8);
+    write(cover, formatDate(receipt.receipt_date), M + 48, y, regular, 8);
+    write(cover, receipt.merchant || receipt.file_name || "Beleg", M + 125, y, regular, 8, ink, 260);
+    write(cover, formatEUR(receipt.currency === "EUR" ? receipt.gross_amount : receipt.gross_amount_eur), M + 405, y, regular, 8, ink, 100);
+    y -= 25;
+    rule(cover, y + 9);
   }
 
   const db = createClient();
-  let done = 0;
-  onProgress(done, total);
-  for (const group of groups) {
-    let page = pdf.addPage([W, H]);
-    const heading = () => {
-      write(page, "SCHLUTTE / ZAHLUNGSABGLEICH", M, H - 42, medium, 8, brass);
-      write(page, `${group.payer} · ${group.title}`, M, H - 76, light, 18, ink, W - 2 * M);
-      write(page, `${group.receipts.length} Belege · ${formatEUR(group.totalEUR)}`, M, H - 101, regular, 9, muted);
-      rule(page, H - 114);
-      write(page, "NR", M, H - 140, medium, 8, brass);
-      write(page, "DATUM", M + 48, H - 140, medium, 8, brass);
-      write(page, "HÄNDLER", M + 125, H - 140, medium, 8, brass);
-      write(page, "BETRAG", M + 405, H - 140, medium, 8, brass);
-    };
-    heading();
-    let y = H - 167;
-    for (let index = 0; index < group.receipts.length; index++) {
-      const receipt = group.receipts[index];
-      if (y < 65) { page = pdf.addPage([W, H]); heading(); y = H - 167; }
-      write(page, `B${index + 1}`, M, y, medium, 8);
-      write(page, formatDate(receipt.receipt_date), M + 48, y, regular, 8);
-      write(page, receipt.merchant || receipt.file_name || "Beleg", M + 125, y, regular, 8, ink, 260);
-      write(page, formatEUR(receipt.currency === "EUR" ? receipt.gross_amount : receipt.gross_amount_eur), M + 405, y, regular, 8, ink, 100);
-      y -= 25;
-      rule(page, y + 9);
+  onProgress(0, group.receipts.length);
+  for (let index = 0; index < group.receipts.length; index++) {
+    const receipt = group.receipts[index];
+    const { data, error } = await db.storage.from(AUSLAGEN_BUCKET).download(receipt.file_path);
+    if (error || !data) throw new Error(`Originalbeleg ${receipt.merchant || receipt.file_name || index + 1} konnte nicht geladen werden.`);
+    const bytes = new Uint8Array(await data.arrayBuffer());
+    const label = `${group.title} · B${index + 1} · ${receipt.merchant || "Beleg"}`;
+    if (receipt.file_mime === "application/pdf") {
+      const original = await PDFDocument.load(bytes);
+      for (const copy of await pdf.copyPages(original, original.getPageIndices())) pdf.addPage(copy);
+    } else {
+      const attachment = pdf.addPage([W, H]);
+      write(attachment, label, M, H - 45, regular, 8, brass, W - 2 * M);
+      rule(attachment, H - 55);
+      const image = await embedReceiptImage(pdf, bytes, receipt.file_mime);
+      const fit = image.scaleToFit(W - 2 * M, H - 150);
+      attachment.drawImage(image, { x: (W - fit.width) / 2, y: (H - fit.height) / 2 - 10, width: fit.width, height: fit.height });
     }
-    for (let index = 0; index < group.receipts.length; index++) {
-      const receipt = group.receipts[index];
-      const { data, error } = await db.storage.from(AUSLAGEN_BUCKET).download(receipt.file_path);
-      if (error || !data) throw new Error(`Originalbeleg ${receipt.merchant || receipt.file_name || index + 1} konnte nicht geladen werden.`);
-      const bytes = new Uint8Array(await data.arrayBuffer());
-      const label = `${group.title} · B${index + 1} · ${receipt.merchant || "Beleg"}`;
-      if (receipt.file_mime === "application/pdf") {
-        const original = await PDFDocument.load(bytes);
-        for (const copy of await pdf.copyPages(original, original.getPageIndices())) pdf.addPage(copy);
-      } else {
-        const attachment = pdf.addPage([W, H]);
-        write(attachment, label, M, H - 45, regular, 8, brass, W - 2 * M);
-        rule(attachment, H - 55);
-        const image = await embedReceiptImage(pdf, bytes, receipt.file_mime);
-        const fit = image.scaleToFit(W - 2 * M, H - 150);
-        attachment.drawImage(image, { x: (W - fit.width) / 2, y: (H - fit.height) / 2 - 10, width: fit.width, height: fit.height });
-      }
-      done++;
-      onProgress(done, total);
-    }
+    onProgress(index + 1, group.receipts.length);
   }
   return pdf.save();
 }

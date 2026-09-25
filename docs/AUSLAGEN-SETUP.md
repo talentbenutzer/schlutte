@@ -33,7 +33,7 @@ Für die tägliche Löschung fälliger Belegfotos zusätzlich setzen:
 ## 3. Start in der App
 
 1. Im Mitarbeiterbereich die Rollen `Mitarbeiter`, `CEO` und `Admin` zuweisen. CEO und Admin haben dieselben Verwaltungsrechte, einschließlich Mitarbeiterverwaltung, Kreditkarten und Firmeneinstellungen. Nur die Rolle `Admin` setzt `employees.is_admin = true`.
-2. Unter **Belege → Einstellungen** die Empfänger-E-Mail und Anschrift für Grabner Design und höllental hinterlegen.
+2. Unter **Belege → Einstellungen** die Empfänger-E-Mail und Anschrift für Grabner Design und höllental hinterlegen. Weitere Firmen kann die Finanz-Rolle dort selbst anlegen.
 3. Unter **Profil** die persönlichen Daten samt gültiger IBAN pflegen.
 4. Beleg fotografieren, den von der KI erkannten Zahlungsweg (AMEX, Bar, EC, Kreditkarte oder Tank- & Raststätten) prüfen oder manuell wählen und speichern. „Privat bezahlt“ beziehungsweise „Firma bezahlt“ bleibt davon getrennt. Privat bezahlte Belege lassen sich in einem Antrag sammeln; Firmenkartenbelege werden im Abgleich verwendet.
 5. Antrags-PDF erzeugen, Empfängeradresse kopieren und über die Teilen-Funktion an Mail übergeben. Die Web Share API kann keine Empfängeradresse vorausfüllen. Alternativ PDF herunterladen, „E-Mail öffnen“ wählen und die Datei anhängen. Den Antrag nach dem tatsächlichen Versand als eingereicht markieren.

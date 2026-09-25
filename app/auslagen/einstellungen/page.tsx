@@ -5,6 +5,7 @@ import { getCompanies } from "@/lib/data/auslagen-settings";
 import { errorMessage } from "@/lib/auslagen/errors";
 import type { Company } from "@/lib/auslagen/types";
 import { CompanyForm } from "./CompanyForm";
+import { CreateCompanyForm } from "./CreateCompanyForm";
 
 export const metadata: Metadata = { title: "Einstellungen" };
 
@@ -40,18 +41,18 @@ export default async function EinstellungenPage() {
             <p>{loadError}</p>
           </div>
         </div>
-      ) : companies.length === 0 ? (
-        <div className="aus-empty">
-          <p className="aus-empty-title">Keine Firmen gefunden</p>
-          <p className="aus-help">
-            Die Firmen werden mit der Migration 20260925_auslagen.sql angelegt.
-          </p>
-        </div>
       ) : (
         <div className="aus-stack">
+          {companies.length === 0 && (
+            <div className="aus-empty">
+              <p className="aus-empty-title">Noch keine Firmen</p>
+              <p className="aus-help">Lege unten die erste Firma an.</p>
+            </div>
+          )}
           {companies.map((company, i) => (
             <CompanyForm key={company.id} company={company} index={i + 1} />
           ))}
+          <CreateCompanyForm />
         </div>
       )}
     </>

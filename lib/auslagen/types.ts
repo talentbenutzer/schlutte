@@ -7,9 +7,12 @@
 
 // ─── Firmen ──────────────────────────────────────────────────────────────────
 
-export type CompanyId = "grabner" | "hoellental";
-
-export const COMPANY_IDS: readonly CompanyId[] = ["grabner", "hoellental"];
+/**
+ * Freier Slug (Primary Key von expense_companies), keine feste Auswahl mehr:
+ * Firmen legt die Finanz-Rolle unter Einstellungen selbst an. "grabner" und
+ * "hoellental" sind nur die beiden von der Migration gesäten Startfirmen.
+ */
+export type CompanyId = string;
 
 /** Tabelle expense_companies. Adresse/E-Mail pflegt die Finanz-Rolle in den Einstellungen. */
 export type Company = {

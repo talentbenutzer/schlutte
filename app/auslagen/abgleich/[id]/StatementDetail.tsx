@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatAmountInput, formatEUR } from "@/lib/auslagen/format";
@@ -8,7 +8,7 @@ import { matchScore } from "@/lib/auslagen/matching";
 import { buildBookletPdf } from "@/lib/auslagen/pdf/booklet";
 import { PAYMENT_CHANNEL_LABEL, type CardStatement, type CardTransaction, type Company, type CreditCard, type Receipt } from "@/lib/auslagen/types";
 import { formatDate } from "@/lib/utils";
-import { assignReceiptAction, autoMatchAction, clearMatchAction, deleteStatementAction, markWithoutReceiptAction, retryStatementAction, updateTransactionAction } from "../actions";
+import { assignReceiptAction, autoMatchAction, clearMatchAction, createTransactionAction, deleteStatementAction, markWithoutReceiptAction, retryStatementAction, updateTransactionAction } from "../actions";
 
 export function StatementDetail({ statement, card, company, transactions, candidates, linked, receiptUrls, statementUrl }: {
   statement: CardStatement; card: CreditCard; company: Company | null; transactions: CardTransaction[]; candidates: Receipt[]; linked: Receipt[]; receiptUrls: Record<string, string | null>; statementUrl: string;
@@ -48,9 +48,31 @@ export function StatementDetail({ statement, card, company, transactions, candid
     start(async () => { const result = await deleteStatementAction(statement.id); if (result.ok) { router.push("/auslagen/abgleich"); router.refresh(); } else setError(result.error || "Löschen fehlgeschlagen."); });
   }
 
+  function addTransaction(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault(); setError(""); setMessage("");
+    const form = e.currentTarget; const data = new FormData(form);
+    start(async () => {
+      const result = await createTransactionAction(statement.id, data);
+      if (result.ok) { form.reset(); setMessage("Buchung hinzugefügt."); router.refresh(); }
+      else setError(result.error || "Buchung konnte nicht angelegt werden.");
+    });
+  }
+
   return <div className="aus-stack">
     {statement.extraction_error && <div className={`aus-note ${statement.status === "fehler" ? "is-danger" : "is-warn"}`} role="alert"><div className="aus-note-body"><p>{statement.extraction_error}</p></div></div>}
     <section className="aus-section"><div className="aus-stats"><div className="aus-stat"><span className="aus-stat-label">Buchungen</span><strong className="aus-stat-value">{transactions.length}</strong></div><div className="aus-stat"><span className="aus-stat-label">Mit Beleg</span><strong className="aus-stat-value">{linkedCount}</strong></div><div className="aus-stat"><span className="aus-stat-label">Offen</span><strong className="aus-stat-value">{transactions.filter((tx) => tx.match_status === "offen").length}</strong></div></div><div className="aus-actions"><a href={statementUrl} target="_blank" rel="noreferrer" className="aus-btn aus-btn-secondary">Original-PDF ansehen</a><button type="button" className="aus-btn aus-btn-secondary" onClick={() => mutate(() => autoMatchAction(statement.id), "Abgleich abgeschlossen.")} disabled={pending || !transactions.length}>Erneut abgleichen</button><button type="button" className="aus-btn aus-btn-primary" onClick={exportBooklet} disabled={exporting || !transactions.length}>{exporting ? "Belegmappe wird erstellt …" : "Belegmappe als PDF"}</button></div>{statement.status === "fehler" && !transactions.length && <button type="button" className="aus-btn aus-btn-primary" onClick={() => mutate(() => retryStatementAction(statement.id), "Abrechnung ausgelesen.")} disabled={pending}>PDF erneut auslesen</button>}</section>
+    <details className="aus-card" open={statement.status === "fehler" && !transactions.length}>
+      <summary className="aus-h2" style={{ cursor: "pointer" }}>Buchung manuell hinzufügen</summary>
+      <p className="aus-help">Falls die KI die Abrechnung nicht (vollständig) lesen konnte oder eine Buchung fehlt: hier von Hand eintragen.</p>
+      <form className="aus-form" onSubmit={addTransaction}>
+        <div className="aus-grid aus-grid-2">
+          <label className="aus-field"><span className="aus-label">Datum</span><input className="aus-input" name="date" type="date" required disabled={pending} /></label>
+          <label className="aus-field"><span className="aus-label">Betrag in EUR</span><input className="aus-input is-amount" name="amount" inputMode="decimal" required disabled={pending} /></label>
+          <label className="aus-field aus-span-2"><span className="aus-label">Händler</span><input className="aus-input" name="merchant" required maxLength={200} disabled={pending} /></label>
+        </div>
+        <button type="submit" className="aus-btn aus-btn-secondary" disabled={pending}>Buchung hinzufügen</button>
+      </form>
+    </details>
     <section className="aus-section"><h2 className="aus-h2">Buchungen</h2><div className="aus-filters"><button className={`aus-filter${filter === "alle" ? " is-active" : ""}`} onClick={() => setFilter("alle")}>Alle</button><button className={`aus-filter${filter === "offen" ? " is-active" : ""}`} onClick={() => setFilter("offen")}>Offen</button><button className={`aus-filter${filter === "belegt" ? " is-active" : ""}`} onClick={() => setFilter("belegt")}>Belegt</button><button className={`aus-filter${filter === "ohne" ? " is-active" : ""}`} onClick={() => setFilter("ohne")}>Ohne Beleg</button></div>
       {visible.length ? <div className="aus-stack">{visible.map((tx) => {
         const receipt = linked.find((r) => r.id === tx.receipt_id);

@@ -259,6 +259,32 @@ export async function markWithoutReceipt(transactionId: string, note: string): P
   if (error || !data) throw toAuslagenError(error, "Status konnte nicht gespeichert werden");
 }
 
+/**
+ * Buchung von Hand anlegen — für Abrechnungen, die die KI nicht (vollständig)
+ * auslesen konnte (z. B. kein ANTHROPIC_API_KEY hinterlegt, oder ein schlecht
+ * lesbares PDF). Setzt die Abrechnung auf "verarbeitet", damit sie nicht mehr
+ * als fehlerhaft gilt.
+ */
+export async function createTransaction(statementId: string, input: { date: string; merchant: string; amount: number }): Promise<CardTransaction> {
+  await requireFinance();
+  if (!isISODate(input.date) || !input.merchant.trim() || !Number.isFinite(input.amount) || Math.abs(input.amount) > 10_000_000) {
+    throw new AuslagenError("validation", "Bitte Datum, Händler und Betrag prüfen.");
+  }
+  const statement = await getStatement(statementId);
+  const db = await createClient();
+  const { data: last } = await db.from("card_transactions").select("sort").eq("statement_id", statementId).order("sort", { ascending: false }).limit(1).maybeSingle();
+  const { data, error } = await db.from("card_transactions").insert({
+    statement_id: statementId, credit_card_id: statement.credit_card_id,
+    transaction_date: input.date, merchant: input.merchant.trim().slice(0, 200), amount: round2(input.amount),
+    sort: (last?.sort ?? -1) + 1,
+  }).select(TX_COLS).single();
+  if (error) throw toAuslagenError(error, "Buchung konnte nicht angelegt werden");
+  if (statement.status !== "verarbeitet") {
+    await db.from("card_statements").update({ status: "verarbeitet" }).eq("id", statementId);
+  }
+  return data as CardTransaction;
+}
+
 export async function updateTransaction(id: string, input: { date: string; merchant: string; amount: number }): Promise<void> {
   await requireFinance();
   if (!isISODate(input.date) || !input.merchant.trim() || !Number.isFinite(input.amount) || Math.abs(input.amount) > 10_000_000) {

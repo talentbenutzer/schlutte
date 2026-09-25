@@ -21,7 +21,7 @@ Die vorhandenen Supabase-Umgebungsvariablen bleiben erforderlich. Für das autom
 - `ANTHROPIC_WORKSPACE_ID` — erforderlich, wenn der API-Schlüssel keinem einzelnen Workspace zugeordnet ist; die ID (`wrkspc_…`) steht in der Claude Platform unter **Settings → Workspaces**. Bei einem Workspace-spezifischen Schlüssel weglassen.
 - `ANTHROPIC_MODEL` — optional; Standard `claude-sonnet-4-6`
 
-Ohne API-Schlüssel lassen sich Belege manuell erfassen. PDF-Abrechnungen können dann noch nicht ausgelesen werden. Die Belegfotos und Abrechnungen werden beim KI-Auslesen an Anthropic gesendet.
+Ohne API-Schlüssel lassen sich Belege manuell erfassen. PDF-Abrechnungen können dann noch nicht automatisch ausgelesen werden, die Buchungen lassen sich aber auf der Abrechnungs-Detailseite von Hand eintragen ("Buchung manuell hinzufügen"). Die Belegfotos und Abrechnungen werden beim KI-Auslesen an Anthropic gesendet.
 
 Für die tägliche Löschung fälliger Belegfotos zusätzlich setzen:
 

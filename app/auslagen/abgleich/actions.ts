@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { errorMessage } from "@/lib/auslagen/errors";
-import { assignReceipt, autoAssignPaymentCards, autoMatchStatement, classifySubmittedReceipt, clearMatch, createCard, deleteStatement, markCompanyPaymentReviewed, markWithoutReceipt, registerStatement, retryStatement, updateCard, updateTransaction } from "@/lib/data/auslagen-cards";
+import { assignReceipt, autoAssignPaymentCards, autoMatchStatement, classifySubmittedReceipt, clearMatch, createCard, createTransaction, deleteStatement, markCompanyPaymentReviewed, markWithoutReceipt, registerStatement, retryStatement, updateCard, updateTransaction } from "@/lib/data/auslagen-cards";
 import { parseAmount } from "@/lib/auslagen/format";
 
 type Result = { ok: boolean; id?: string; count?: number; error?: string; warning?: string };
@@ -60,6 +60,17 @@ export async function markWithoutReceiptAction(transactionId: string, statementI
 export async function deleteStatementAction(id: string): Promise<Result> {
   try { await deleteStatement(id); revalidatePath("/auslagen/abgleich"); return { ok: true }; }
   catch (e) { return { ok: false, error: errorMessage(e) }; }
+}
+
+export async function createTransactionAction(statementId: string, data: FormData): Promise<Result> {
+  try {
+    const amount = parseAmount(String(data.get("amount") || ""));
+    if (amount === null) return { ok: false, error: "Bitte einen gültigen Betrag angeben." };
+    await createTransaction(statementId, { date: String(data.get("date") || ""), merchant: String(data.get("merchant") || ""), amount });
+    revalidatePath(`/auslagen/abgleich/${statementId}`);
+    revalidatePath("/auslagen/abgleich");
+    return { ok: true };
+  } catch (e) { return { ok: false, error: errorMessage(e) }; }
 }
 
 export async function updateTransactionAction(id: string, statementId: string, data: FormData): Promise<Result> {

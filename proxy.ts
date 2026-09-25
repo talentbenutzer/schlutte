@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { loginRedirectTarget, safeNextPath } from "@/lib/auth/next-path";
 
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -48,18 +49,29 @@ export async function proxy(request: NextRequest) {
 
   const isLoginRoute = path === "/login";
 
+  // Redirects übernehmen die ggf. soeben erneuerten Session-Cookies.
+  const redirectTo = (url: URL) => {
+    const response = NextResponse.redirect(url);
+    supabaseResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie));
+    return response;
+  };
+
   if (!user && !isLoginRoute) {
     // Redirect unauthenticated user to login page
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
-    return NextResponse.redirect(loginUrl);
+    loginUrl.search = "";
+    // Rücksprung nach dem Login (z. B. Home-Bildschirm-App /auslagen).
+    // "/" bleibt ohne next → wie bisher nach /start.
+    const next = path === "/" ? null : safeNextPath(`${path}${request.nextUrl.search}`);
+    if (next) loginUrl.searchParams.set("next", next);
+    return redirectTo(loginUrl);
   }
 
   if (user && isLoginRoute) {
-    // Redirect authenticated user away from login page to home
-    const homeUrl = request.nextUrl.clone();
-    homeUrl.pathname = "/start";
-    return NextResponse.redirect(homeUrl);
+    // Redirect authenticated user away from login page (next bzw. /start)
+    const target = loginRedirectTarget(request.nextUrl.searchParams.get("next"));
+    return redirectTo(new URL(target, request.url));
   }
 
   return supabaseResponse;

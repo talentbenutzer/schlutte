@@ -2,6 +2,8 @@ import "@/styles/intranet.css";
 import { createClient } from "@/lib/supabase/server";
 import { IntranetHub } from "@/components/intranet/IntranetHub";
 import { getUpcomingEvents, getUpcomingBirthdays } from "@/lib/data/hub";
+import { getEmployeeRoleForUser } from "@/lib/data/employees";
+import { roleLabel } from "@/lib/auth/app-role";
 import type { UpcomingItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -78,17 +80,13 @@ export default async function StartPage() {
         });
       }
 
-      const { data: rows } = await supabase
-        .from("employees")
-        .select("name, initials, is_admin")
-        .or(`id.eq.${user.id},email.ilike.${user.email}`)
-        .limit(1);
-      const data = rows?.[0] ?? null;
+      // Abgleich per id oder E-Mail; robust, falls employees.role noch fehlt.
+      const { employee: data } = await getEmployeeRoleForUser(user.id, user.email);
       const local = user.email.split("@")[0];
       if (data) {
         userName = data.name ? humanizeName(data.name) : humanizeName(local);
         userInitials = data.initials || user.email.slice(0, 3).toUpperCase();
-        userRole = `${data.is_admin ? "Admin" : "Mitarbeiter"} · ${data.initials ?? ""}`.trim();
+        userRole = `${roleLabel(data.app_role)} · ${data.initials ?? ""}`.trim();
         displayName = firstNameOf(data.name || local);
         isAdmin = !!data.is_admin;
       } else {

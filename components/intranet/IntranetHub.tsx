@@ -16,7 +16,7 @@ import {
 } from "@/app/start/actions";
 
 type IconName =
-  | "workshop" | "staff" | "order" | "vacation" | "inventory" | "report" | "list"
+  | "workshop" | "staff" | "order" | "vacation" | "inventory" | "report" | "list" | "receipt"
   | "arrow" | "search" | "sun" | "moon" | "logout";
 
 function SIcon({
@@ -49,6 +49,7 @@ function SIcon({
     case "inventory": return <svg {...p}><path d="M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35a2 2 0 0 1 1.26-1.86l8-3.2a2 2 0 0 1 1.48 0l8 3.2A2 2 0 0 1 22 8.35z"/><path d="M6 18h12M6 14h12"/><rect x="6" y="10" width="12" height="12"/></svg>;
     case "report":   return <svg {...p}><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/></svg>;
     case "list":     return <svg {...p}><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>;
+    case "receipt":  return <svg {...p}><path d="M5 3h14v18l-2.33-1.5-2.34 1.5-2.33-1.5-2.33 1.5-2.34-1.5L5 21z"/><path d="M9 7.5h6M9 11h6M9 14.5h3.5"/></svg>;
     case "arrow":    return <svg {...p}><path d="M5 12h14M13 5l7 7-7 7"/></svg>;
     case "search":   return <svg {...p}><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>;
     case "sun":      return <svg {...p}><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>;
@@ -131,6 +132,15 @@ const TILES: Tile[] = [
     href: "https://ast-navy.vercel.app/list",
     live: true,
     external: true,
+  },
+  {
+    no: "08",
+    icon: "receipt",
+    title: "Auslagen & Belege",
+    hint: "Quittungen und Rechnungen fotografieren, Antrag auf Auslagenerstattung erstellen, Kreditkarten abgleichen.",
+    meta: "Belege · Auslagen",
+    href: "/auslagen",
+    live: true,
   },
 ];
 

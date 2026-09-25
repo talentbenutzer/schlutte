@@ -3,7 +3,8 @@ type IconName =
   | "file" | "box" | "print" | "archive" | "duplicate" | "edit"
   | "check" | "chevron-right" | "chevron-down" | "more" | "filter"
   | "menu" | "x" | "eye" | "download" | "pkg" | "truck" | "star"
-  | "doc-stripe" | "settings" | "grid" | "list" | "home" | "tag" | "pallet" | "pallet-boards" | "alert";
+  | "doc-stripe" | "settings" | "grid" | "list" | "home" | "tag" | "pallet" | "pallet-boards" | "alert"
+  | "receipt" | "user" | "card" | "camera" | "upload" | "share" | "trash" | "mail";
 
 export function Icon({
   name,
@@ -60,6 +61,14 @@ export function Icon({
     case "list":     return <svg {...p}><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>;
     case "home":     return <svg {...p}><path d="m3 11 9-8 9 8M5 10v10h14V10"/></svg>;
     case "tag":      return <svg {...p}><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1"/></svg>;
+    case "receipt":  return <svg {...p}><path d="M5 3h14v18l-2.33-1.5-2.34 1.5-2.33-1.5-2.33 1.5-2.34-1.5L5 21z"/><path d="M9 7.5h6M9 11h6M9 14.5h3.5"/></svg>;
+    case "user":     return <svg {...p}><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>;
+    case "card":     return <svg {...p}><rect x="2.5" y="5" width="19" height="14" rx="1.5"/><path d="M2.5 10h19M6 15h4"/></svg>;
+    case "camera":   return <svg {...p}><path d="M4 8h3l2-3h6l2 3h3v12H4z"/><circle cx="12" cy="13.5" r="3.5"/></svg>;
+    case "upload":   return <svg {...p}><path d="M12 16V4M6 10l6-6 6 6M5 20h14"/></svg>;
+    case "share":    return <svg {...p}><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 11v10h14V11"/></svg>;
+    case "trash":    return <svg {...p}><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg>;
+    case "mail":     return <svg {...p}><rect x="3" y="5" width="18" height="14"/><path d="m3 7 9 6 9-6"/></svg>;
     default: return null;
   }
 }

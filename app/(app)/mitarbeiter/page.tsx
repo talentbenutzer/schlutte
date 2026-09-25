@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getEmployees } from "@/lib/data/employees";
 import { getLoginEmails } from "@/lib/data/auth-admin";
 import { Icon } from "@/components/ui/Icon";
+import { isFinanceRole, roleLabel } from "@/lib/auth/app-role";
 import { EmployeeActions } from "./EmployeeActions";
 
 export default async function MitarbeiterPage() {
@@ -162,10 +163,10 @@ export default async function MitarbeiterPage() {
                       fontSize: 10,
                       letterSpacing: "0.12em",
                       textTransform: "uppercase",
-                      color: emp.is_admin ? "var(--accent)" : "var(--fg-muted)",
+                      color: isFinanceRole(emp.app_role) ? "var(--accent)" : "var(--fg-muted)",
                     }}
                   >
-                    {emp.is_admin ? "Admin" : "Mitarbeiter"}
+                    {roleLabel(emp.app_role)}
                   </span>
                 </td>
                 <td className="mono" style={{ color: "var(--fg-muted)" }}>

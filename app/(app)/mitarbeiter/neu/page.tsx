@@ -41,7 +41,7 @@ export default function NeuMitarbeiterPage() {
       >
         Lege einen neuen Mitarbeiter an. Mit E-Mail und Passwort wird direkt ein
         Login erstellt — ohne Passwort entsteht nur der Datensatz (Login später
-        über „Bearbeiten").
+        über „Bearbeiten“).
       </p>
       <EmployeeForm />
     </div>

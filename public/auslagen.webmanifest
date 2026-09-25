@@ -1,0 +1,33 @@
+{
+  "id": "/auslagen",
+  "name": "Schlutte Belege",
+  "short_name": "Belege",
+  "description": "Quittungen und Rechnungen erfassen, Auslagen erstatten lassen, Kreditkarten abgleichen.",
+  "lang": "de",
+  "dir": "ltr",
+  "start_url": "/auslagen",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F6F2EA",
+  "theme_color": "#FBF9F4",
+  "icons": [
+    {
+      "src": "/icons/belege-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/belege-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/belege-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

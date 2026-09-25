@@ -8,6 +8,7 @@ import { BrandMark } from "@/components/ui/BrandMark";
 import { UserChip } from "@/components/ui/UserChip";
 import { Icon } from "@/components/ui/Icon";
 import { createClient } from "@/lib/supabase/client";
+import { isMissingRoleColumnError, resolveAppRole, roleLabel } from "@/lib/auth/app-role";
 
 const NAV = [
   { label: "Dashboard", href: "/" },
@@ -16,6 +17,8 @@ const NAV = [
   { label: "Vorlagen", href: "/vorlagen" },
   { label: "Mitarbeiter", href: "/mitarbeiter", adminOnly: true },
 ];
+
+type EmployeeRow = { initials?: string; name?: string; is_admin?: boolean; role?: string | null };
 
 function isActive(href: string, pathname: string): boolean {
   if (href === "/") return pathname === "/";
@@ -27,7 +30,7 @@ export function Topbar() {
   const router = useRouter();
   const supabase = createClient();
   const [user, setUser] = useState<User | null>(null);
-  const [employee, setEmployee] = useState<{ initials?: string; name?: string; is_admin?: boolean } | null>(null);
+  const [employee, setEmployee] = useState<EmployeeRow | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -36,11 +39,22 @@ export function Topbar() {
       if (!active) return;
       setUser(currentUser);
       if (currentUser) {
-        const { data: rows } = await supabase
+        const orFilter = `id.eq.${currentUser.id},email.ilike.${currentUser.email ?? ""}`;
+        const withRole = await supabase
           .from("employees")
-          .select("initials, name, is_admin")
-          .or(`id.eq.${currentUser.id},email.ilike.${currentUser.email ?? ""}`)
+          .select("initials, name, is_admin, role")
+          .or(orFilter)
           .limit(1);
+        let rows = withRole.data as EmployeeRow[] | null;
+        if (withRole.error && isMissingRoleColumnError(withRole.error)) {
+          // Migration noch nicht ausgeführt → ohne role, Rolle aus is_admin.
+          const fallback = await supabase
+            .from("employees")
+            .select("initials, name, is_admin")
+            .or(orFilter)
+            .limit(1);
+          rows = fallback.data as EmployeeRow[] | null;
+        }
         if (!active) return;
         setEmployee(rows?.[0] ?? null);
       }
@@ -133,7 +147,7 @@ export function Topbar() {
           <UserChip
             kuerzel={employee?.initials || (user.email ? user.email.slice(0, 3).toUpperCase() : "USR")}
             name={employee?.name || user.email || "Benutzer"}
-            role={employee ? (employee.is_admin ? "Admin" : "Mitarbeiter") : "Mitarbeiter"}
+            role={roleLabel(resolveAppRole(employee?.role, employee?.is_admin))}
             onLogout={handleLogout}
           />
         </>

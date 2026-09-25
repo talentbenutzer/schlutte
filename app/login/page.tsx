@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { BrandMark } from "@/components/ui/BrandMark";
+import { loginRedirectTarget } from "@/lib/auth/next-path";
 
 export default function LoginPage() {
   const supabase = createClient();
@@ -34,8 +35,10 @@ export default function LoginPage() {
       }
 
       // Harte Navigation statt router.push: garantiert, dass der Server das
-      // frische Auth-Cookie sieht und direkt /start rendert (kein Bounce/Race).
-      window.location.assign("/start");
+      // frische Auth-Cookie sieht und direkt das Ziel rendert (kein Bounce/Race).
+      // Ziel: ?next=… (nur interne Pfade), sonst /start.
+      const next = new URLSearchParams(window.location.search).get("next");
+      window.location.assign(loginRedirectTarget(next));
       return;
     } catch {
       setErrorMsg("Ein unerwarteter Fehler ist aufgetreten.");

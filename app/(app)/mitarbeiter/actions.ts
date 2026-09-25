@@ -15,6 +15,7 @@ import {
   MIN_PASSWORD_LENGTH,
 } from "@/lib/data/auth-admin";
 import { requireAdmin } from "@/lib/auth/admin-guard";
+import { parseAppRole } from "@/lib/auth/app-role";
 import type { CreateEmployeeInput, UpdateEmployeeInput } from "@/lib/types";
 
 export async function createEmployeeAction(
@@ -25,8 +26,10 @@ export async function createEmployeeAction(
     initials: (formData.get("initials") as string) ?? "",
     name: (formData.get("name") as string) ?? "",
     email: (formData.get("email") as string) || undefined,
-    is_admin: formData.get("is_admin") === "true",
-    is_active: formData.get("is_active") !== "false",
+    // is_admin wird im Data-Layer aus der Rolle abgeleitet (role === "admin").
+    role: parseAppRole(formData.get("role")),
+    // Nicht angehakte Checkboxen fehlen im FormData → inaktiv.
+    is_active: formData.get("is_active") === "true",
   };
   const password = ((formData.get("password") as string) ?? "").trim();
 
@@ -66,8 +69,8 @@ export async function updateEmployeeAction(
     initials: (formData.get("initials") as string) ?? undefined,
     name: (formData.get("name") as string) ?? undefined,
     email: (formData.get("email") as string) || undefined,
-    is_admin: formData.get("is_admin") === "true",
-    is_active: formData.get("is_active") !== "false",
+    role: parseAppRole(formData.get("role")),
+    is_active: formData.get("is_active") === "true",
   };
 
   try {

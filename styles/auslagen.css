@@ -487,6 +487,7 @@ button.aus-item { width: 100%; background: none; border: 0; border-bottom: 1px s
 .aus-btn[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
 .aus-btn-primary { background: var(--fg); color: var(--fg-inverse); border-color: var(--fg); }
 .aus-btn-primary:hover { opacity: 0.86; }
+.aus-btn-success { background: var(--aus-success); color: var(--fg-inverse); border-color: var(--aus-success); cursor: default; }
 .aus-btn-secondary { border-color: var(--fg); }
 .aus-btn-secondary:hover { background: var(--bg-alt); }
 .aus-btn-quiet { border-color: var(--border-strong); }

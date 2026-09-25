@@ -376,7 +376,7 @@ export function PaletteForm({
             onChange={(e) => setHidePackageCount(e.target.checked)}
           />
           <span style={{ fontFamily: "var(--font-sans)", fontSize: 14, color: "var(--fg)" }}>
-            Packstück-Nummerierung ausblenden (ein einzelnes Etikett ohne „X von Y")
+            Packstück-Nummerierung ausblenden (ein einzelnes Etikett ohne „X von Y“)
           </span>
         </label>
 

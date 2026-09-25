@@ -157,7 +157,7 @@ export function EmployeeForm({
           />
           <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--fg-subtle)" }}>
             Wird ein Passwort gesetzt, wird zusammen mit der E-Mail direkt ein Login angelegt.
-            Ohne Passwort entsteht nur ein Datensatz (Login später über „Bearbeiten").
+            Ohne Passwort entsteht nur ein Datensatz (Login später über „Bearbeiten“).
           </span>
         </div>
       )}

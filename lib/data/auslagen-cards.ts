@@ -12,8 +12,8 @@ import { isPaymentChannel, type CardStatement, type CardTransaction, type Credit
 const CARD_COLS = "id, owner_id, company_id, label, payment_channel, last4, holder_name, is_active, created_at, updated_at";
 const STATEMENT_COLS = "id, uploaded_by, credit_card_id, period_start, period_end, statement_date, total_amount, currency, file_path, file_name, extraction, extraction_error, status, created_at, updated_at";
 const TX_COLS = "id, statement_id, credit_card_id, transaction_date, booking_date, merchant, description, amount, original_amount, original_currency, receipt_id, match_status, match_score, note, sort, created_at, updated_at";
-const RECEIPT_COLS = "id, user_id, status, receipt_date, merchant, description, currency, gross_amount, net_amount, vat_amount, vat_rate, gross_amount_eur, payment_method, payment_channel, payment_reviewed_at, payment_reviewed_by, credit_card_id, file_path, file_mime, file_name, extraction, extraction_error, claim_id, created_at, updated_at";
-const RECONCILIATION_COLS = "id, status, receipt_date, merchant, currency, gross_amount, gross_amount_eur, payment_method, payment_channel, reconciliation_channel, credit_card_id, payment_reviewed_at, file_path, file_mime, file_name, claim_id";
+const RECEIPT_COLS = "id, user_id, status, receipt_date, merchant, description, currency, gross_amount, net_amount, vat_amount, vat_rate, gross_amount_eur, payment_method, payment_channel, payment_reviewed_at, payment_reviewed_by, credit_card_id, file_path, file_mime, file_name, storage_delete_after, storage_purge_claimed_at, file_deleted_at, extraction, extraction_error, claim_id, created_at, updated_at";
+const RECONCILIATION_COLS = "id, status, receipt_date, merchant, currency, gross_amount, gross_amount_eur, payment_method, payment_channel, reconciliation_channel, credit_card_id, payment_reviewed_at, file_path, file_mime, file_name, storage_delete_after, storage_purge_claimed_at, file_deleted_at, claim_id";
 
 function validCardChannel(value: unknown): value is Exclude<PaymentChannel, "bar"> {
   return isPaymentChannel(value) && value !== "bar";
@@ -74,7 +74,7 @@ export async function listTransactions(statementId: string): Promise<CardTransac
 
 export async function listCardReceipts(): Promise<Receipt[]> {
   await requireFinance(); const db = await createClient();
-  const { data, error } = await db.from("receipts").select(RECEIPT_COLS).eq("payment_method", "kreditkarte").is("claim_id", null).eq("status", "erfasst");
+  const { data, error } = await db.from("receipts").select(RECEIPT_COLS).eq("payment_method", "kreditkarte").is("claim_id", null).eq("status", "erfasst").is("file_deleted_at", null);
   if (error) throw toAuslagenError(error, "Kartenbelege konnten nicht geladen werden");
   return (data ?? []) as Receipt[];
 }

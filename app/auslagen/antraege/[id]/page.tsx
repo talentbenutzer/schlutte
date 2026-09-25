@@ -13,7 +13,9 @@ export default async function AntragPage({ params }: { params: Promise<{ id: str
   try { claim = await getClaim(id); } catch { notFound(); }
   const [company, receipts, pdfUrl] = await Promise.all([getCompany(claim.company_id), getClaimReceipts(id), signedClaimUrl(claim)]);
   if (!company) notFound();
-  const urls = Object.fromEntries(await Promise.all(receipts.map(async (r) => [r.id, await signedReceiptUrl(r)])));
+  const urlEntries = await Promise.all(receipts.map(async (r) => [r.id, await signedReceiptUrl(r)] as const));
+  if (urlEntries.some(([, url]) => !url)) notFound();
+  const urls = Object.fromEntries(urlEntries) as Record<string, string>;
   return <>
     <header className="aus-head"><Link className="aus-back" href="/auslagen/antraege">← Anträge</Link><span className="aus-eyebrow">Auslagen &amp; Belege</span><h1 className="aus-h1">Antrag</h1><p className="aus-lede">{company.name} · {formatDate(claim.claim_date)} · {claim.receipt_count} Belege</p></header>
     <section className="aus-section"><div className="aus-stats"><div className="aus-stat"><span className="aus-stat-label">Gesamtbetrag</span><strong className="aus-stat-value">{formatEUR(claim.total_gross)}</strong></div><div className="aus-stat"><span className="aus-stat-label">Status</span><strong className="aus-stat-value">{claim.status === "versendet" ? "Versendet" : "Erstellt"}</strong></div></div></section>

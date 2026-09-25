@@ -60,10 +60,19 @@ export async function buildPaymentMethodPdf(group: PaymentGroup, onProgress: (do
   onProgress(0, group.receipts.length);
   for (let index = 0; index < group.receipts.length; index++) {
     const receipt = group.receipts[index];
+    const label = `${group.title} · B${index + 1} · ${receipt.merchant || "Beleg"}`;
+    if (receipt.file_deleted_at) {
+      const placeholder = pdf.addPage([W, H]);
+      write(placeholder, label, M, H - 45, regular, 8, brass, W - 2 * M);
+      rule(placeholder, H - 55);
+      write(placeholder, "Originaldatei nach 30 Tagen automatisch gelöscht", M, H - 105, medium, 13, ink, W - 2 * M);
+      write(placeholder, "Betrag und Belegdaten bleiben auf dem Deckblatt dokumentiert.", M, H - 130, regular, 9, muted, W - 2 * M);
+      onProgress(index + 1, group.receipts.length);
+      continue;
+    }
     const { data, error } = await db.storage.from(AUSLAGEN_BUCKET).download(receipt.file_path);
     if (error || !data) throw new Error(`Originalbeleg ${receipt.merchant || receipt.file_name || index + 1} konnte nicht geladen werden.`);
     const bytes = new Uint8Array(await data.arrayBuffer());
-    const label = `${group.title} · B${index + 1} · ${receipt.merchant || "Beleg"}`;
     if (receipt.file_mime === "application/pdf") {
       const original = await PDFDocument.load(bytes);
       for (const copy of await pdf.copyPages(original, original.getPageIndices())) pdf.addPage(copy);

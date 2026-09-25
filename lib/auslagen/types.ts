@@ -126,6 +126,10 @@ export type Receipt = {
   file_path: string;
   file_mime: string;
   file_name: string | null;
+  /** Originaldatei wird 30 Tage nach Zuordnung zu einer Abrechnung gelöscht. */
+  storage_delete_after: string | null;
+  storage_purge_claimed_at: string | null;
+  file_deleted_at: string | null;
   extraction: ReceiptExtraction | null;
   extraction_error: string | null;
   claim_id: string | null;

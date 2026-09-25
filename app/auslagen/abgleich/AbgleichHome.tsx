@@ -6,13 +6,15 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { AUSLAGEN_BUCKET } from "@/lib/auslagen/paths";
 import { PAYMENT_CHANNEL_LABEL, PAYMENT_CHANNELS, type CardStatement, type Company, type CreditCard, type Receipt } from "@/lib/auslagen/types";
+import type { PaymentReceipt } from "@/lib/auslagen/reconciliation";
 import { formatEUR } from "@/lib/auslagen/format";
 import { formatDate } from "@/lib/utils";
 import { createCardAction, markCompanyPaymentReviewedAction, registerStatementAction, updateCardAction } from "./actions";
+import { PaymentOverview } from "./PaymentOverview";
 
 const CARD_CHANNELS = PAYMENT_CHANNELS.filter((channel) => channel !== "bar");
 
-export function AbgleichHome({ cards, statements, companies, payments }: { cards: CreditCard[]; statements: CardStatement[]; companies: Company[]; payments: Receipt[] }) {
+export function AbgleichHome({ cards, statements, companies, payments, receipts }: { cards: CreditCard[]; statements: CardStatement[]; companies: Company[]; payments: Receipt[]; receipts: PaymentReceipt[] }) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const [cardId, setCardId] = useState(cards.find((c) => c.is_active)?.id || "");
@@ -72,6 +74,7 @@ export function AbgleichHome({ cards, statements, companies, payments }: { cards
   }
 
   return <div className="aus-stack">
+    <PaymentOverview cards={cards} receipts={receipts} />
     <section className="aus-section"><h2 className="aus-h2">Abrechnung hochladen</h2><div className="aus-card aus-stack"><label className="aus-field"><span className="aus-label">Kreditkarte</span><select className="aus-select" value={cardId} onChange={(e) => setCardId(e.target.value)} disabled={busy}>{cards.filter((c) => c.is_active).map((c) => <option key={c.id} value={c.id}>{c.label} ·•••• {c.last4}</option>)}</select></label><input ref={input} type="file" accept="application/pdf" className="aus-sr-only" onChange={(e) => upload(e.target.files?.[0])} disabled={busy} aria-label="Kreditkartenabrechnung auswählen" /><button type="button" className="aus-btn aus-btn-primary" disabled={busy || !cardId} onClick={() => input.current?.click()}>{busy ? "Abrechnung wird ausgelesen …" : "PDF-Abrechnung wählen"}</button><p className="aus-help">Die KI liest Buchungen aus. Prüfe Beträge, Datum und Kartenende anschließend in der Übersicht.</p></div></section>
     <section className="aus-section"><h2 className="aus-h2">Abrechnungen</h2>{statements.length ? <div className="aus-list">{statements.map((s) => { const card = cards.find((c) => c.id === s.credit_card_id); return <Link className="aus-item" href={`/auslagen/abgleich/${s.id}`} key={s.id}><span className="aus-item-main"><strong className="aus-item-title">{card?.label || "Karte"} ·•••• {card?.last4}</strong><span className="aus-item-meta">{card?.payment_channel ? `${PAYMENT_CHANNEL_LABEL[card.payment_channel]} · ` : ""}{s.period_start ? `${formatDate(s.period_start)} – ${formatDate(s.period_end)}` : s.file_name || formatDate(s.created_at)}</span></span><span className={`aus-chip ${s.status === "fehler" ? "is-danger" : s.status === "verarbeitet" ? "is-done" : "is-draft"}`}>{s.status === "fehler" ? "Prüfen" : s.status === "verarbeitet" ? "Verarbeitet" : "Neu"}</span></Link>; })}</div> : <div className="aus-empty"><p className="aus-empty-title">Noch keine Abrechnungen</p></div>}</section>
     <section className="aus-section">

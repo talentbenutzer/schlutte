@@ -2,10 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import { errorMessage } from "@/lib/auslagen/errors";
-import { assignReceipt, autoMatchStatement, clearMatch, createCard, deleteStatement, markCompanyPaymentReviewed, markWithoutReceipt, registerStatement, retryStatement, updateCard, updateTransaction } from "@/lib/data/auslagen-cards";
+import { assignReceipt, autoAssignPaymentCards, autoMatchStatement, classifySubmittedReceipt, clearMatch, createCard, deleteStatement, markCompanyPaymentReviewed, markWithoutReceipt, registerStatement, retryStatement, updateCard, updateTransaction } from "@/lib/data/auslagen-cards";
 import { parseAmount } from "@/lib/auslagen/format";
 
 type Result = { ok: boolean; id?: string; count?: number; error?: string; warning?: string };
+
+export async function autoAssignPaymentCardsAction(): Promise<Result> {
+  try { const count = await autoAssignPaymentCards(); revalidatePath("/auslagen/abgleich"); return { ok: true, count }; }
+  catch (e) { return { ok: false, error: errorMessage(e) }; }
+}
+
+export async function classifySubmittedReceiptAction(id: string, channel: string): Promise<Result> {
+  try { await classifySubmittedReceipt(id, channel); revalidatePath("/auslagen/abgleich"); return { ok: true }; }
+  catch (e) { return { ok: false, error: errorMessage(e) }; }
+}
 
 export async function createCardAction(input: { label: string; last4: string; companyId: string; holderName: string; paymentChannel: string }): Promise<Result> {
   try { const card = await createCard(input); revalidatePath("/auslagen/abgleich"); return { ok: true, id: card.id }; }

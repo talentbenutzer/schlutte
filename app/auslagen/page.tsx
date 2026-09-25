@@ -13,7 +13,7 @@ export default async function AuslagenPage({ searchParams }: { searchParams: Pro
   let error: string | null = null;
   try { receipts = await listOwnReceipts(); } catch (cause) { error = errorMessage(cause); }
   const filtered = receipts.filter((r) => filter === "entwurf" ? r.status === "entwurf" : filter === "antrag" ? !!r.claim_id : r.status === "erfasst" && !r.claim_id);
-  const tabs = [{ key: "offen", label: "Offen" }, { key: "entwurf", label: "Entwürfe" }, { key: "antrag", label: "Im Antrag" }];
+  const tabs = [{ key: "offen", label: "Erfasst" }, { key: "entwurf", label: "Zu überprüfen" }, { key: "antrag", label: "Im Antrag" }];
   return (
     <>
       <header className="aus-head">
@@ -26,7 +26,7 @@ export default async function AuslagenPage({ searchParams }: { searchParams: Pro
         <div className="aus-actions aus-head-actions">
           <Link href="/auslagen/erfassen" className="aus-btn aus-btn-primary">
             <Icon name="camera" size={16} />
-            Beleg erfassen
+            Belege erfassen
           </Link>
           <Link href="/auslagen/antrag/neu" className="aus-btn aus-btn-secondary">
             <Icon name="doc-stripe" size={16} />
@@ -48,8 +48,8 @@ export default async function AuslagenPage({ searchParams }: { searchParams: Pro
         {filtered.length ? <div className="aus-list">{filtered.map((r) => <Link key={r.id} href={`/auslagen/belege/${r.id}`} className="aus-item">
           <span className="aus-item-thumb"><Icon name="receipt" size={24} /></span>
           <span className="aus-item-main"><strong className="aus-item-title">{r.merchant || r.file_name || "Beleg ohne Händler"}</strong><span className="aus-item-meta">{formatDate(r.receipt_date)} · {r.payment_channel ? PAYMENT_CHANNEL_LABEL[r.payment_channel] : "Zahlungsweg offen"} · {r.payment_method === "kreditkarte" ? "Firma bezahlt" : "Privat bezahlt"}</span></span>
-          <span className="aus-item-side"><strong className="aus-amount">{formatEUR(r.gross_amount, r.currency)}</strong><span className={`aus-chip ${r.status === "entwurf" ? "is-draft" : r.claim_id ? "is-claim" : "is-done"}`}>{r.claim_id ? "Im Antrag" : r.status === "entwurf" ? "Entwurf" : "Erfasst"}</span></span>
-        </Link>)}</div> : <div className="aus-empty"><Icon name="receipt" size={28} stroke={1.3} /><p className="aus-empty-title">Keine Belege in dieser Ansicht</p><p className="aus-help">Mit „Beleg erfassen“ kannst du eine Quittung fotografieren.</p></div>}
+          <span className="aus-item-side"><strong className="aus-amount">{formatEUR(r.gross_amount, r.currency)}</strong><span className={`aus-chip ${r.status === "entwurf" ? "is-draft" : r.claim_id ? "is-claim" : "is-done"}`}>{r.claim_id ? "Im Antrag" : r.status === "entwurf" ? "Zu überprüfen" : "Erfasst"}</span></span>
+        </Link>)}</div> : <div className="aus-empty"><Icon name="receipt" size={28} stroke={1.3} /><p className="aus-empty-title">Keine Belege in dieser Ansicht</p><p className="aus-help">Mit „Belege erfassen“ kannst du Quittungen fotografieren oder mehrere Dateien hochladen.</p></div>}
       </section>
 
       <section className="aus-section">

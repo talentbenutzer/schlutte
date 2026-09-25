@@ -8,8 +8,8 @@ import { PAYMENT_CHANNEL_LABEL, PAYMENT_CHANNELS, type CreditCard, type PaymentC
 import { deleteReceiptAction, saveReceiptAction } from "../actions";
 import { assignReceiptAction } from "../../abgleich/actions";
 
-export function ReceiptForm({ receipt, cards, finance, editable, deletable, transactionId, statementId }: {
-  receipt: Receipt; cards: Pick<CreditCard, "id" | "label" | "last4">[]; finance: boolean; editable: boolean; deletable: boolean; transactionId?: string; statementId?: string;
+export function ReceiptForm({ receipt, cards, finance, editable, deletable, transactionId, statementId, batchUrl }: {
+  receipt: Receipt; cards: Pick<CreditCard, "id" | "label" | "last4">[]; finance: boolean; editable: boolean; deletable: boolean; transactionId?: string; statementId?: string; batchUrl?: string | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -85,6 +85,7 @@ export function ReceiptForm({ receipt, cards, finance, editable, deletable, tran
         {saved ? <button type="button" className="aus-btn aus-btn-success" aria-label="Beleg gespeichert"><span aria-hidden="true">✓</span> Beleg gespeichert</button> :
           <button type="submit" className="aus-btn aus-btn-primary" disabled={pending}>Beleg speichern</button>}
         {saved && <Link href="/auslagen/erfassen" className="aus-btn aus-btn-secondary">Weiteren Beleg einreichen</Link>}
+        {batchUrl && <Link href={batchUrl} className="aus-btn aus-btn-quiet">Zur Upload-Liste</Link>}
         {deletable && <button type="button" className="aus-btn aus-btn-danger" onClick={remove} disabled={pending}>Beleg löschen</button>}
       </div>}
       {!editable && <p className="aus-help">Brutto: {formatEUR(receipt.gross_amount, receipt.currency)}</p>}

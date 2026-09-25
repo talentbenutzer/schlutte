@@ -16,12 +16,21 @@ export async function listOwnReceipts(): Promise<Receipt[]> {
   return (data ?? []) as Receipt[];
 }
 
+export async function listOwnReceiptsByIds(ids: string[]): Promise<Receipt[]> {
+  if (!ids.length) return [];
+  const { userId } = await requireUser();
+  const db = await createClient();
+  const { data, error } = await db.from("receipts").select(COLUMNS).eq("user_id", userId).in("id", ids.slice(0, 50));
+  if (error) throw toAuslagenError(error, "Upload-Liste konnte nicht geladen werden");
+  return (data ?? []) as Receipt[];
+}
+
 export async function getReceipt(id: string): Promise<Receipt> {
   const { userId, isFinance } = await requireUser();
   const db = await createClient();
   const { data, error } = await db.from("receipts").select(COLUMNS).eq("id", id).maybeSingle();
   if (error) throw toAuslagenError(error, "Beleg konnte nicht geladen werden");
-  if (!data || (data.user_id !== userId && !(isFinance && data.payment_method === "kreditkarte"))) {
+  if (!data || (data.user_id !== userId && !(isFinance && (data.payment_method === "kreditkarte" || data.claim_id)))) {
     throw new AuslagenError("not_found", "Beleg nicht gefunden.");
   }
   return data as Receipt;

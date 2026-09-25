@@ -8,7 +8,7 @@ import { BrandMark } from "@/components/ui/BrandMark";
 import { UserChip } from "@/components/ui/UserChip";
 import { Icon } from "@/components/ui/Icon";
 import { createClient } from "@/lib/supabase/client";
-import { isMissingRoleColumnError, resolveAppRole, roleLabel } from "@/lib/auth/app-role";
+import { hasAdminRights, isMissingRoleColumnError, resolveAppRole, roleLabel } from "@/lib/auth/app-role";
 
 const NAV = [
   { label: "Dashboard", href: "/" },
@@ -18,7 +18,7 @@ const NAV = [
   { label: "Mitarbeiter", href: "/mitarbeiter", adminOnly: true },
 ];
 
-type EmployeeRow = { initials?: string; name?: string; is_admin?: boolean; role?: string | null };
+type EmployeeRow = { initials?: string; name?: string; is_admin?: boolean; is_active?: boolean; role?: string | null };
 
 function isActive(href: string, pathname: string): boolean {
   if (href === "/") return pathname === "/";
@@ -42,7 +42,7 @@ export function Topbar() {
         const orFilter = `id.eq.${currentUser.id},email.ilike.${currentUser.email ?? ""}`;
         const withRole = await supabase
           .from("employees")
-          .select("initials, name, is_admin, role")
+          .select("initials, name, is_admin, is_active, role")
           .or(orFilter)
           .limit(1);
         let rows = withRole.data as EmployeeRow[] | null;
@@ -50,7 +50,7 @@ export function Topbar() {
           // Migration noch nicht ausgeführt → ohne role, Rolle aus is_admin.
           const fallback = await supabase
             .from("employees")
-            .select("initials, name, is_admin")
+            .select("initials, name, is_admin, is_active")
             .or(orFilter)
             .limit(1);
           rows = fallback.data as EmployeeRow[] | null;
@@ -77,7 +77,7 @@ export function Topbar() {
         <BrandMark />
       </Link>
       <nav className="grb-nav" style={{ marginLeft: 16 }}>
-        {NAV.filter((item) => !item.adminOnly || employee?.is_admin).map((item) => {
+        {NAV.filter((item) => !item.adminOnly || (!!employee && employee.is_active !== false && hasAdminRights(resolveAppRole(employee.role, employee.is_admin)))).map((item) => {
           const isTemplates = item.label === "Vorlagen";
           if (isTemplates) {
             return (

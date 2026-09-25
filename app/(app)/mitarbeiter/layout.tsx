@@ -1,18 +1,19 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
-import { getCurrentEmployee } from "@/lib/data/employees";
+import { hasAdminRights } from "@/lib/auth/app-role";
+import { getCurrentUserContext } from "@/lib/auth/roles";
 
 /**
- * Mitarbeiterverwaltung ist ausschließlich für Administratoren.
- * Nicht-Admins werden auf die Startseite umgeleitet.
+ * Mitarbeiterverwaltung ist für CEO und Administratoren zugänglich.
+ * Andere Nutzer werden auf die Startseite umgeleitet.
  */
 export default async function MitarbeiterLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  const me = await getCurrentEmployee();
-  if (!me?.is_admin) {
+  const ctx = await getCurrentUserContext();
+  if (!ctx || !hasAdminRights(ctx.role)) {
     redirect("/start");
   }
   return <>{children}</>;

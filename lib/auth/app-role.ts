@@ -43,6 +43,11 @@ export function isFinanceRole(role: AppRole | null | undefined): boolean {
   return role === "ceo" || role === "admin";
 }
 
+/** CEO und Admin haben dieselben Verwaltungsrechte; die Rollen bleiben getrennt. */
+export function hasAdminRights(role: AppRole | null | undefined): boolean {
+  return role === "ceo" || role === "admin";
+}
+
 /** Anzeige-Label: "Mitarbeiter" | "CEO" | "Admin". */
 export function roleLabel(role: AppRole | null | undefined): string {
   return ROLE_LABEL[role ?? "mitarbeiter"] ?? ROLE_LABEL.mitarbeiter;

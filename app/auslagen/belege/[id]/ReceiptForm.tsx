@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatAmountInput, formatEUR, parseAmount, round2 } from "@/lib/auslagen/format";
 import { PAYMENT_CHANNEL_LABEL, PAYMENT_CHANNELS, type CreditCard, type PaymentChannel, type Receipt } from "@/lib/auslagen/types";
@@ -13,7 +14,7 @@ export function ReceiptForm({ receipt, cards, finance, editable, deletable, tran
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(receipt.status === "erfasst");
   const [gross, setGross] = useState(formatAmountInput(receipt.gross_amount));
   const [net, setNet] = useState(formatAmountInput(receipt.net_amount));
   const [vat, setVat] = useState(formatAmountInput(receipt.vat_amount));
@@ -28,6 +29,7 @@ export function ReceiptForm({ receipt, cards, finance, editable, deletable, tran
     const percentage = parseAmount(rate);
     if (amount === null || percentage === null || percentage < 0 || percentage > 100) return;
     const n = round2(amount / (1 + percentage / 100));
+    setSaved(false);
     setNet(formatAmountInput(n));
     setVat(formatAmountInput(round2(amount - n)));
   }
@@ -61,7 +63,7 @@ export function ReceiptForm({ receipt, cards, finance, editable, deletable, tran
   return <section className="aus-section">
     {receipt.claim_id && <div className="aus-note"><div className="aus-note-body"><p>Dieser Beleg gehört zu einem Antrag und ist gesperrt.</p></div></div>}
     {over250 && <div className="aus-note is-warn"><div className="aus-note-body"><p>Über 250 €: Bitte eine vollständige Rechnung mit Anschrift des Unternehmens aufbewahren.</p></div></div>}
-    <form className="aus-form" onSubmit={save}>
+    <form className="aus-form" onSubmit={save} onChangeCapture={() => setSaved(false)}>
       <div className="aus-grid aus-grid-2">
         <label className="aus-field"><span className="aus-label">Belegdatum *</span><input className="aus-input" type="date" name="receipt_date" defaultValue={receipt.receipt_date ?? ""} required disabled={!editable || pending} /></label>
         <label className="aus-field"><span className="aus-label">Händler *</span><input className="aus-input" name="merchant" defaultValue={receipt.merchant ?? ""} maxLength={200} required disabled={!editable || pending} /></label>
@@ -79,8 +81,12 @@ export function ReceiptForm({ receipt, cards, finance, editable, deletable, tran
       </div>
       {receipt.extraction && <p className="aus-help">Zahlungsweg {receipt.payment_channel ? "aus dem Beleg erkannt. Bitte prüfen." : "nicht sicher erkannt. Bitte manuell wählen."}</p>}
       {error && <div className="aus-note is-danger" role="alert"><div className="aus-note-body"><p>{error}</p></div></div>}
-      {saved && <p role="status" className="aus-field-ok">Beleg gespeichert.</p>}
-      {editable && <div className="aus-actions"><button type="submit" className="aus-btn aus-btn-primary" disabled={pending}>Beleg speichern</button>{deletable && <button type="button" className="aus-btn aus-btn-danger" onClick={remove} disabled={pending}>Beleg löschen</button>}</div>}
+      {editable && <div className="aus-actions">
+        {saved ? <button type="button" className="aus-btn aus-btn-success" aria-label="Beleg gespeichert"><span aria-hidden="true">✓</span> Beleg gespeichert</button> :
+          <button type="submit" className="aus-btn aus-btn-primary" disabled={pending}>Beleg speichern</button>}
+        {saved && <Link href="/auslagen/erfassen" className="aus-btn aus-btn-secondary">Weiteren Beleg einreichen</Link>}
+        {deletable && <button type="button" className="aus-btn aus-btn-danger" onClick={remove} disabled={pending}>Beleg löschen</button>}
+      </div>}
       {!editable && <p className="aus-help">Brutto: {formatEUR(receipt.gross_amount, receipt.currency)}</p>}
     </form>
   </section>;

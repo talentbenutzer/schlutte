@@ -131,6 +131,7 @@ export function Topbar() {
         <>
           <Link
             href="/feedback"
+            className="grb-feedback-link"
             style={{
               fontFamily: "var(--font-mono)",
               fontSize: 10,

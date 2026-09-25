@@ -48,6 +48,7 @@ begin
 end;
 $$;
 revoke all on function public.classify_submitted_receipt(uuid, text) from public;
+revoke execute on function public.classify_submitted_receipt(uuid, text) from anon;
 grant execute on function public.classify_submitted_receipt(uuid, text) to authenticated;
 
 create or replace function public.receipts_guard_reconciliation_channel()

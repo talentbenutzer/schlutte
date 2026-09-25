@@ -24,6 +24,10 @@ export default async function BelegPage({ params, searchParams }: { params: Prom
     const { data } = await db.from("credit_cards").select("id, label, last4").eq("is_active", true).order("label");
     cards = data ?? [];
   }
+  // Endziffern vom Beleg (falls die KI sie erkannt hat) gegen die hinterlegten
+  // Karten abgleichen — nur als Hinweis, unabhängig von der gewählten Zahlart.
+  const cardLast4 = receipt.extraction?.card_last4 ?? null;
+  const cardHint = cardLast4 ? { last4: cardLast4, candidates: cards.filter((c) => c.last4 === cardLast4) } : null;
   return <>
     <header className="aus-head">
       <Link href={batchUrl ?? "/auslagen"} className="aus-back">← {batchUrl ? "Upload-Liste" : "Belege"}</Link>
@@ -41,7 +45,7 @@ export default async function BelegPage({ params, searchParams }: { params: Prom
           <img src={previewUrl} alt="Hochgeladener Beleg" style={{ display: "block", maxWidth: "100%", maxHeight: 520, margin: "auto" }} />}
       </div>
     </section>
-    <ReceiptForm receipt={receipt} cards={cards} finance={ctx.isFinance} editable={!receipt.claim_id && (receipt.user_id === ctx.userId || (ctx.isFinance && receipt.payment_method === "kreditkarte"))} deletable={receipt.user_id === ctx.userId && !receipt.claim_id} transactionId={transactionId} statementId={statementId} batchUrl={batchUrl} />
+    <ReceiptForm receipt={receipt} cards={cards} cardHint={cardHint} finance={ctx.isFinance} editable={!receipt.claim_id && (receipt.user_id === ctx.userId || (ctx.isFinance && receipt.payment_method === "kreditkarte"))} deletable={receipt.user_id === ctx.userId && !receipt.claim_id} transactionId={transactionId} statementId={statementId} batchUrl={batchUrl} />
     <section className="aus-section"><OriginalHint /></section>
   </>;
 }

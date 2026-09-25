@@ -8,8 +8,10 @@ import { PAYMENT_CHANNEL_LABEL, PAYMENT_CHANNELS, type CreditCard, type PaymentC
 import { deleteReceiptAction, saveReceiptAction } from "../actions";
 import { assignReceiptAction } from "../../abgleich/actions";
 
-export function ReceiptForm({ receipt, cards, finance, editable, deletable, transactionId, statementId, batchUrl }: {
-  receipt: Receipt; cards: Pick<CreditCard, "id" | "label" | "last4">[]; finance: boolean; editable: boolean; deletable: boolean; transactionId?: string; statementId?: string; batchUrl?: string | null;
+type CardHint = { last4: string; candidates: Pick<CreditCard, "id" | "label" | "last4">[] };
+
+export function ReceiptForm({ receipt, cards, cardHint, finance, editable, deletable, transactionId, statementId, batchUrl }: {
+  receipt: Receipt; cards: Pick<CreditCard, "id" | "label" | "last4">[]; cardHint: CardHint | null; finance: boolean; editable: boolean; deletable: boolean; transactionId?: string; statementId?: string; batchUrl?: string | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -60,9 +62,18 @@ export function ReceiptForm({ receipt, cards, finance, editable, deletable, tran
     });
   }
 
+  const cardHintText = cardHint && (
+    cardHint.candidates.length === 1
+      ? `Wahrscheinlich Karte: ${cardHint.candidates[0].label} ·•••• ${cardHint.candidates[0].last4} (Endziffern auf dem Beleg erkannt).`
+      : cardHint.candidates.length > 1
+        ? `Endziffern •••• ${cardHint.last4} auf dem Beleg erkannt. Mögliche Karten: ${cardHint.candidates.map((c) => c.label).join(", ")}.`
+        : `Endziffern •••• ${cardHint.last4} auf dem Beleg erkannt, aber keine passende Karte hinterlegt.`
+  );
+
   return <section className="aus-section">
     {receipt.claim_id && <div className="aus-note"><div className="aus-note-body"><p>Dieser Beleg gehört zu einem Antrag und ist gesperrt.</p></div></div>}
     {over250 && <div className="aus-note is-warn"><div className="aus-note-body"><p>Über 250 €: Bitte eine vollständige Rechnung mit Anschrift des Unternehmens aufbewahren.</p></div></div>}
+    {finance && cardHintText && <div className="aus-note"><div className="aus-note-body"><p className="aus-note-title">Kartenerkennung</p><p>{cardHintText} Der endgültige Abgleich mit Datum, Betrag und Händler erfolgt beim Import der Monatsabrechnung.</p></div></div>}
     <form className="aus-form" onSubmit={save} onChangeCapture={() => setSaved(false)}>
       <div className="aus-grid aus-grid-2">
         <label className="aus-field"><span className="aus-label">Belegdatum *</span><input className="aus-input" type="date" name="receipt_date" defaultValue={receipt.receipt_date ?? ""} required disabled={!editable || pending} /></label>

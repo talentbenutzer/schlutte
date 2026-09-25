@@ -7,6 +7,7 @@ import type { User } from "@supabase/supabase-js";
 import { BrandMark } from "@/components/ui/BrandMark";
 import { UserChip } from "@/components/ui/UserChip";
 import { Icon } from "@/components/ui/Icon";
+import { InstallAppButton } from "@/components/shell/InstallAppButton";
 import { createClient } from "@/lib/supabase/client";
 import { hasAdminRights, isMissingRoleColumnError, resolveAppRole, roleLabel } from "@/lib/auth/app-role";
 
@@ -144,6 +145,7 @@ export function Topbar() {
           >
             Feedback
           </Link>
+          <InstallAppButton />
           <UserChip
             kuerzel={employee?.initials || (user.email ? user.email.slice(0, 3).toUpperCase() : "USR")}
             name={employee?.name || user.email || "Benutzer"}

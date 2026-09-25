@@ -4,16 +4,16 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import "@/styles/auslagen.css";
 import { getCurrentUserContext, roleLabel } from "@/lib/auth/roles";
+import { InstallAppButton } from "@/components/shell/InstallAppButton";
 import { AuslagenNav } from "./AuslagenNav";
 
 export const dynamic = "force-dynamic";
 
-// Manifest & Apple-Tags nur hier: Nur /auslagen wird als Home-Bildschirm-App "Belege" installiert.
 export const metadata: Metadata = {
   title: { default: "Belege — Schlutte", template: "%s — Belege" },
   description: "Quittungen und Rechnungen erfassen, Auslagen erstatten lassen, Kreditkarten abgleichen.",
-  manifest: "/auslagen.webmanifest",
-  appleWebApp: { capable: true, title: "Belege", statusBarStyle: "default" },
+  manifest: "/schlutte.webmanifest",
+  appleWebApp: { capable: true, title: "Schlutte", statusBarStyle: "default" },
   icons: {
     apple: [{ url: "/icons/belege-180.png", sizes: "180x180", type: "image/png" }],
   },
@@ -50,6 +50,7 @@ export default async function AuslagenLayout({ children }: { children: ReactNode
           Belege
         </Link>
         <AuslagenNav variant="top" finance={ctx.isFinance} />
+        <InstallAppButton />
         <div className="aus-user" title={`${who} · ${roleLabel(ctx.role)}`}>
           <span className="aus-user-role">{roleLabel(ctx.role)}</span>
           <span className="aus-user-initials">{initials}</span>

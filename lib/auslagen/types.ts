@@ -89,7 +89,15 @@ export type ApplicantSnapshot = { [K in ProfileFieldKey]: string };
 
 export type ReceiptStatus = "entwurf" | "erfasst";
 
+/** Kostenträger; der historische DB-Wert „kreditkarte“ bedeutet „Firma bezahlt“. */
 export type PaymentMethod = "privat" | "kreditkarte";
+
+/** Tatsächlicher Zahlungsweg; unabhängig davon, wer die Ausgabe getragen hat. */
+export const PAYMENT_CHANNELS = ["amex", "bar", "ec", "kreditkarte", "tank_raststaetten"] as const;
+export type PaymentChannel = (typeof PAYMENT_CHANNELS)[number];
+export function isPaymentChannel(value: unknown): value is PaymentChannel {
+  return typeof value === "string" && (PAYMENT_CHANNELS as readonly string[]).includes(value);
+}
 
 /** Tabelle receipts. */
 export type Receipt = {
@@ -110,6 +118,9 @@ export type Receipt = {
   /** Nur bei Fremdwährung: Bruttobetrag in EUR. */
   gross_amount_eur: number | null;
   payment_method: PaymentMethod;
+  payment_channel: PaymentChannel | null;
+  payment_reviewed_at: string | null;
+  payment_reviewed_by: string | null;
   credit_card_id: string | null;
   /** Storage-Pfad im Bucket "auslagen": {uid}/belege/{uuid}.jpg|pdf */
   file_path: string;
@@ -156,6 +167,7 @@ export type CreditCard = {
   owner_id: string | null;
   company_id: CompanyId | null;
   label: string;
+  payment_channel: Exclude<PaymentChannel, "bar"> | null;
   /** Letzte 4 Ziffern. */
   last4: string | null;
   holder_name: string | null;
@@ -235,6 +247,7 @@ export type ReceiptExtraction = {
   vat_lines: VatLine[];
   card_last4: string | null;
   payment_hint: PaymentHint;
+  payment_channel: PaymentChannel | null;
 };
 
 export type StatementTransactionExtraction = {
@@ -269,7 +282,15 @@ export const RECEIPT_STATUS_LABEL: Record<ReceiptStatus, string> = {
 
 export const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
   privat: "Privat bezahlt",
-  kreditkarte: "Firmen-Kreditkarte",
+  kreditkarte: "Firma bezahlt",
+};
+
+export const PAYMENT_CHANNEL_LABEL: Record<PaymentChannel, string> = {
+  amex: "AMEX",
+  bar: "Bar",
+  ec: "EC",
+  kreditkarte: "Kreditkarte",
+  tank_raststaetten: "Tank- & Raststätten",
 };
 
 export const CLAIM_STATUS_LABEL: Record<ClaimStatus, string> = {

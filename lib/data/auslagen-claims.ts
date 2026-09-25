@@ -8,7 +8,7 @@ import { getCompany, isCompanyId } from "@/lib/data/auslagen-settings";
 import type { ApplicantSnapshot, ExpenseClaim, Receipt } from "@/lib/auslagen/types";
 
 const CLAIM_COLUMNS = "id, user_id, company_id, recipient_email, applicant, place, claim_date, signature_png, total_gross, receipt_count, pdf_path, status, sent_at, created_at, updated_at";
-const RECEIPT_COLUMNS = "id, user_id, status, receipt_date, merchant, description, currency, gross_amount, net_amount, vat_amount, vat_rate, gross_amount_eur, payment_method, credit_card_id, file_path, file_mime, file_name, extraction, extraction_error, claim_id, created_at, updated_at";
+const RECEIPT_COLUMNS = "id, user_id, status, receipt_date, merchant, description, currency, gross_amount, net_amount, vat_amount, vat_rate, gross_amount_eur, payment_method, payment_channel, payment_reviewed_at, payment_reviewed_by, credit_card_id, file_path, file_mime, file_name, extraction, extraction_error, claim_id, created_at, updated_at";
 
 export async function listOwnClaims(): Promise<ExpenseClaim[]> {
   const { userId } = await requireUser();

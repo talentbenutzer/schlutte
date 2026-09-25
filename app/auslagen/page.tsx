@@ -5,6 +5,7 @@ import { listOwnReceipts } from "@/lib/data/auslagen-receipts";
 import { formatEUR } from "@/lib/auslagen/format";
 import { formatDate } from "@/lib/utils";
 import { errorMessage } from "@/lib/auslagen/errors";
+import { PAYMENT_CHANNEL_LABEL } from "@/lib/auslagen/types";
 
 export default async function AuslagenPage({ searchParams }: { searchParams: Promise<{ filter?: string }> }) {
   const filter = (await searchParams).filter || "offen";
@@ -46,7 +47,7 @@ export default async function AuslagenPage({ searchParams }: { searchParams: Pro
         </div>
         {filtered.length ? <div className="aus-list">{filtered.map((r) => <Link key={r.id} href={`/auslagen/belege/${r.id}`} className="aus-item">
           <span className="aus-item-thumb"><Icon name="receipt" size={24} /></span>
-          <span className="aus-item-main"><strong className="aus-item-title">{r.merchant || r.file_name || "Beleg ohne Händler"}</strong><span className="aus-item-meta">{formatDate(r.receipt_date)} · {r.description || (r.payment_method === "kreditkarte" ? "Firmenkarte" : "Privat bezahlt")}</span></span>
+          <span className="aus-item-main"><strong className="aus-item-title">{r.merchant || r.file_name || "Beleg ohne Händler"}</strong><span className="aus-item-meta">{formatDate(r.receipt_date)} · {r.payment_channel ? PAYMENT_CHANNEL_LABEL[r.payment_channel] : "Zahlungsweg offen"} · {r.payment_method === "kreditkarte" ? "Firma bezahlt" : "Privat bezahlt"}</span></span>
           <span className="aus-item-side"><strong className="aus-amount">{formatEUR(r.gross_amount, r.currency)}</strong><span className={`aus-chip ${r.status === "entwurf" ? "is-draft" : r.claim_id ? "is-claim" : "is-done"}`}>{r.claim_id ? "Im Antrag" : r.status === "entwurf" ? "Entwurf" : "Erfasst"}</span></span>
         </Link>)}</div> : <div className="aus-empty"><Icon name="receipt" size={28} stroke={1.3} /><p className="aus-empty-title">Keine Belege in dieser Ansicht</p><p className="aus-help">Mit „Beleg erfassen“ kannst du eine Quittung fotografieren.</p></div>}
       </section>

@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { UpcomingItem } from "@/lib/types";
+import type { InboxClaim } from "@/lib/data/auslagen-inbox";
+import { formatEUR } from "@/lib/auslagen/format";
+import { formatDate } from "@/lib/utils";
 import { ListTile } from "@/components/intranet/ListTile";
 import {
   createEventAction,
@@ -144,13 +147,14 @@ const TILES: Tile[] = [
   },
 ];
 
-function TileInner({ tile }: { tile: Tile }) {
+function TileInner({ tile, unreadCount = 0 }: { tile: Tile; unreadCount?: number }) {
   const disabled = !tile.live;
   return (
     <>
       <div className="sch-tile-top">
         <span className="sch-tile-icon">
           <SIcon name={tile.icon} size={34} stroke={1.3} />
+          {tile.no === "08" && unreadCount > 0 && <span className="sch-notification-dot" aria-label={`${unreadCount} ungelesene Anträge`} />}
         </span>
         <span className="sch-tile-no">{tile.no}</span>
       </div>
@@ -180,6 +184,7 @@ export function IntranetHub({
   userInitials,
   userRole,
   isAdmin,
+  inbox,
   events,
   birthdays,
 }: {
@@ -190,11 +195,13 @@ export function IntranetHub({
   userInitials: string;
   userRole: string;
   isAdmin: boolean;
+  inbox: InboxClaim[];
   events: UpcomingItem[];
   birthdays: UpcomingItem[];
 }) {
   const router = useRouter();
   const [dark, setDark] = useState(false);
+  const unreadCount = inbox.filter((claim) => claim.unread).length;
 
   const toggleTheme = () => {
     const next = !dark;
@@ -289,6 +296,11 @@ export function IntranetHub({
             />
           </section>
 
+          {isAdmin && <section className="sch-claims" aria-label="Eingereichte Auslagenanträge">
+            <div className="sch-claims-head"><div><span className="sch-eyebrow">Auslagen &amp; Belege</span><h2>Eingereichte Anträge {unreadCount > 0 && <span className="sch-notification-dot is-inline" aria-label={`${unreadCount} ungelesen`} />}</h2></div><Link href="/auslagen/eingang">Alle Anträge ansehen →</Link></div>
+            {inbox.length ? <div className="sch-claims-list">{inbox.slice(0, 5).map((claim) => <Link href={`/auslagen/eingang/${claim.id}`} key={claim.id} className="sch-claim-row"><span className="sch-claim-name">{claim.unread && <span className="sch-notification-dot is-inline" aria-label="Ungelesen" />} {claim.applicantName}</span><span>{formatDate(claim.sentAt)}</span><strong>{formatEUR(claim.totalGross)}</strong></Link>)}</div> : <p>Noch keine Anträge eingereicht.</p>}
+          </section>}
+
           <section className="sch-grid" aria-label="Bereiche">
             {TILES.map((tile) =>
               tile.live && tile.href ? (
@@ -300,11 +312,11 @@ export function IntranetHub({
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <TileInner tile={tile} />
+                    <TileInner tile={tile} unreadCount={unreadCount} />
                   </a>
                 ) : (
                   <Link key={tile.no} href={tile.href} className="sch-tile is-live">
-                    <TileInner tile={tile} />
+                    <TileInner tile={tile} unreadCount={unreadCount} />
                   </Link>
                 )
               ) : (
@@ -314,7 +326,7 @@ export function IntranetHub({
                   aria-disabled="true"
                   title="In Vorbereitung"
                 >
-                  <TileInner tile={tile} />
+                  <TileInner tile={tile} unreadCount={unreadCount} />
                 </div>
               )
             )}

@@ -4,6 +4,7 @@ import { IntranetHub } from "@/components/intranet/IntranetHub";
 import { getUpcomingEvents, getUpcomingBirthdays } from "@/lib/data/hub";
 import { getEmployeeRoleForUser } from "@/lib/data/employees";
 import { hasAdminRights, roleLabel } from "@/lib/auth/app-role";
+import { listSubmittedClaims, type InboxClaim } from "@/lib/data/auslagen-inbox";
 import type { UpcomingItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -47,6 +48,7 @@ export default async function StartPage() {
   let userInitials = "USR";
   let userRole = "Mitarbeiter";
   let isAdmin = false;
+  let inbox: InboxClaim[] = [];
 
   try {
     const supabase = await createClient();
@@ -99,6 +101,11 @@ export default async function StartPage() {
     console.error("Error loading user for intranet hub:", e);
   }
 
+  if (isAdmin) {
+    try { inbox = await listSubmittedClaims(); }
+    catch (error) { console.error("Antragseingang konnte nicht geladen werden:", error); }
+  }
+
   const [events, birthdays]: [UpcomingItem[], UpcomingItem[]] = await Promise.all([
     getUpcomingEvents(),
     getUpcomingBirthdays(),
@@ -114,6 +121,7 @@ export default async function StartPage() {
       userInitials={userInitials}
       userRole={userRole}
       isAdmin={isAdmin}
+      inbox={inbox}
       events={events}
       birthdays={birthdays}
     />

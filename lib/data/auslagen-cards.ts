@@ -6,12 +6,16 @@ import { autoMatches, matchScore } from "@/lib/auslagen/matching";
 import { AUSLAGEN_BUCKET, isOwnStoragePath, SIGNED_URL_TTL_SECONDS } from "@/lib/auslagen/paths";
 import { isISODate, round2 } from "@/lib/auslagen/format";
 import { isCompanyId } from "@/lib/data/auslagen-settings";
-import type { CardStatement, CardTransaction, CreditCard, Receipt } from "@/lib/auslagen/types";
+import { isPaymentChannel, type CardStatement, type CardTransaction, type CreditCard, type PaymentChannel, type Receipt } from "@/lib/auslagen/types";
 
-const CARD_COLS = "id, owner_id, company_id, label, last4, holder_name, is_active, created_at, updated_at";
+const CARD_COLS = "id, owner_id, company_id, label, payment_channel, last4, holder_name, is_active, created_at, updated_at";
 const STATEMENT_COLS = "id, uploaded_by, credit_card_id, period_start, period_end, statement_date, total_amount, currency, file_path, file_name, extraction, extraction_error, status, created_at, updated_at";
 const TX_COLS = "id, statement_id, credit_card_id, transaction_date, booking_date, merchant, description, amount, original_amount, original_currency, receipt_id, match_status, match_score, note, sort, created_at, updated_at";
-const RECEIPT_COLS = "id, user_id, status, receipt_date, merchant, description, currency, gross_amount, net_amount, vat_amount, vat_rate, gross_amount_eur, payment_method, credit_card_id, file_path, file_mime, file_name, extraction, extraction_error, claim_id, created_at, updated_at";
+const RECEIPT_COLS = "id, user_id, status, receipt_date, merchant, description, currency, gross_amount, net_amount, vat_amount, vat_rate, gross_amount_eur, payment_method, payment_channel, payment_reviewed_at, payment_reviewed_by, credit_card_id, file_path, file_mime, file_name, extraction, extraction_error, claim_id, created_at, updated_at";
+
+function validCardChannel(value: unknown): value is Exclude<PaymentChannel, "bar"> {
+  return isPaymentChannel(value) && value !== "bar";
+}
 
 export async function listCards(): Promise<CreditCard[]> {
   await requireFinance(); const db = await createClient();
@@ -20,24 +24,26 @@ export async function listCards(): Promise<CreditCard[]> {
   return (data ?? []) as CreditCard[];
 }
 
-export async function createCard(input: { label: string; last4: string; companyId: string; holderName: string }): Promise<CreditCard> {
+export async function createCard(input: { label: string; last4: string; companyId: string; holderName: string; paymentChannel: string }): Promise<CreditCard> {
   const { userId } = await requireFinance();
   const label = input.label.trim(), last4 = input.last4.trim();
   if (!label || label.length > 100 || !/^\d{4}$/.test(last4)) throw new AuslagenError("validation", "Bitte Kartenname und die letzten 4 Ziffern angeben.");
+  if (!validCardChannel(input.paymentChannel)) throw new AuslagenError("validation", "Bitte eine Kartenart wählen.");
   if (input.companyId && !isCompanyId(input.companyId)) throw new AuslagenError("validation", "Unbekannte Firma.");
   const db = await createClient();
-  const { data, error } = await db.from("credit_cards").insert({ owner_id: userId, label, last4, company_id: input.companyId || null, holder_name: input.holderName.trim().slice(0, 120) || null }).select(CARD_COLS).single();
+  const { data, error } = await db.from("credit_cards").insert({ owner_id: userId, label, payment_channel: input.paymentChannel, last4, company_id: input.companyId || null, holder_name: input.holderName.trim().slice(0, 120) || null }).select(CARD_COLS).single();
   if (error) throw toAuslagenError(error, "Kreditkarte konnte nicht gespeichert werden");
   return data as CreditCard;
 }
 
-export async function updateCard(id: string, input: { label: string; last4: string; companyId: string; holderName: string; active: boolean }): Promise<CreditCard> {
+export async function updateCard(id: string, input: { label: string; last4: string; companyId: string; holderName: string; active: boolean; paymentChannel: string }): Promise<CreditCard> {
   await requireFinance();
   const label = input.label.trim(), last4 = input.last4.trim();
   if (!label || label.length > 100 || !/^\d{4}$/.test(last4)) throw new AuslagenError("validation", "Bitte Kartenname und die letzten 4 Ziffern angeben.");
+  if (input.paymentChannel && !validCardChannel(input.paymentChannel)) throw new AuslagenError("validation", "Bitte eine gültige Kartenart wählen.");
   if (input.companyId && !isCompanyId(input.companyId)) throw new AuslagenError("validation", "Unbekannte Firma.");
   const db = await createClient();
-  const { data, error } = await db.from("credit_cards").update({ label, last4, company_id: input.companyId || null, holder_name: input.holderName.trim().slice(0, 120) || null, is_active: input.active }).eq("id", id).select(CARD_COLS).maybeSingle();
+  const { data, error } = await db.from("credit_cards").update({ label, payment_channel: input.paymentChannel || null, last4, company_id: input.companyId || null, holder_name: input.holderName.trim().slice(0, 120) || null, is_active: input.active }).eq("id", id).select(CARD_COLS).maybeSingle();
   if (error || !data) throw toAuslagenError(error, "Kreditkarte konnte nicht gespeichert werden");
   return data as CreditCard;
 }
@@ -69,6 +75,32 @@ export async function listCardReceipts(): Promise<Receipt[]> {
   const { data, error } = await db.from("receipts").select(RECEIPT_COLS).eq("payment_method", "kreditkarte").is("claim_id", null).eq("status", "erfasst");
   if (error) throw toAuslagenError(error, "Kartenbelege konnten nicht geladen werden");
   return (data ?? []) as Receipt[];
+}
+
+/** Firmenzahlungen ohne Kartenbuchung können manuell geprüft werden. */
+export async function listUnmatchedCompanyPayments(): Promise<Receipt[]> {
+  const receipts = await listCardReceipts();
+  const db = await createClient();
+  const { data, error } = await db.from("card_transactions").select("receipt_id").not("receipt_id", "is", null);
+  if (error) throw toAuslagenError(error, "Abgleich konnte nicht geladen werden");
+  const linked = new Set((data ?? []).map((row) => row.receipt_id));
+  return receipts.filter((receipt) => !linked.has(receipt.id)).sort((a, b) => (b.receipt_date ?? "").localeCompare(a.receipt_date ?? ""));
+}
+
+export async function markCompanyPaymentReviewed(id: string, reviewed: boolean): Promise<void> {
+  const { userId } = await requireFinance();
+  if (!/^[0-9a-f-]{36}$/i.test(id)) throw new AuslagenError("validation", "Ungültiger Beleg.");
+  const db = await createClient();
+  const { data: receipt, error: readError } = await db.from("receipts").select("id, payment_method, status, claim_id").eq("id", id).maybeSingle();
+  if (readError || !receipt || receipt.payment_method !== "kreditkarte" || receipt.status !== "erfasst" || receipt.claim_id) {
+    throw new AuslagenError("validation", "Nur erfasste Firmenzahlungen können geprüft werden.");
+  }
+  const { data: linked, error: linkedError } = await db.from("card_transactions").select("id").eq("receipt_id", id).maybeSingle();
+  if (linkedError) throw toAuslagenError(linkedError, "Zuordnung konnte nicht geprüft werden");
+  if (linked) throw new AuslagenError("conflict", "Der Beleg ist bereits mit einer Kartenbuchung abgeglichen.");
+  const { data, error } = await db.from("receipts").update({ payment_reviewed_at: reviewed ? new Date().toISOString() : null, payment_reviewed_by: reviewed ? userId : null })
+    .eq("id", id).eq("payment_method", "kreditkarte").eq("status", "erfasst").is("claim_id", null).select("id").maybeSingle();
+  if (error || !data) throw toAuslagenError(error, "Prüfstatus konnte nicht gespeichert werden");
 }
 
 export async function signedStatementUrl(statement: CardStatement): Promise<string> {
@@ -134,7 +166,8 @@ export async function autoMatchStatement(id: string): Promise<number> {
   const db = await createClient();
   const { data: linked } = await db.from("card_transactions").select("receipt_id").not("receipt_id", "is", null);
   const linkedIds = new Set((linked ?? []).map((row) => row.receipt_id));
-  const candidates = receipts.filter((r) => !linkedIds.has(r.id) && (!r.credit_card_id || r.credit_card_id === statement.credit_card_id));
+  const { data: card } = await db.from("credit_cards").select("payment_channel").eq("id", statement.credit_card_id).maybeSingle();
+  const candidates = receipts.filter((r) => !linkedIds.has(r.id) && !r.payment_reviewed_at && r.payment_channel !== "bar" && (!card?.payment_channel || !r.payment_channel || r.payment_channel === card.payment_channel) && (!r.credit_card_id || r.credit_card_id === statement.credit_card_id));
   const matches = autoMatches(transactions.filter((t) => t.match_status === "offen" && !t.receipt_id), candidates);
   let count = 0;
   for (const match of matches) {
@@ -152,7 +185,8 @@ export async function assignReceipt(transactionId: string, receiptId: string): P
   const { data: tx, error: txError } = await db.from("card_transactions").select(TX_COLS).eq("id", transactionId).maybeSingle();
   if (txError || !tx) throw new AuslagenError("not_found", "Buchung nicht gefunden.");
   const { data: receipt, error: receiptError } = await db.from("receipts").select(RECEIPT_COLS).eq("id", receiptId).maybeSingle();
-  if (receiptError || !receipt || receipt.payment_method !== "kreditkarte" || receipt.claim_id || receipt.status !== "erfasst" || (receipt.credit_card_id && receipt.credit_card_id !== tx.credit_card_id)) throw new AuslagenError("validation", "Beleg kann dieser Buchung nicht zugeordnet werden.");
+  const { data: card } = await db.from("credit_cards").select("payment_channel").eq("id", tx.credit_card_id).maybeSingle();
+  if (receiptError || !receipt || receipt.payment_method !== "kreditkarte" || receipt.payment_channel === "bar" || receipt.payment_reviewed_at || (card?.payment_channel && receipt.payment_channel && card.payment_channel !== receipt.payment_channel) || receipt.claim_id || receipt.status !== "erfasst" || (receipt.credit_card_id && receipt.credit_card_id !== tx.credit_card_id)) throw new AuslagenError("validation", "Zahlungsweg oder Beleg passt nicht zu dieser Buchung. Manuell geprüfte Zahlungen zuerst wieder öffnen.");
   const { data: occupied } = await db.from("card_transactions").select("id").eq("receipt_id", receiptId).neq("id", transactionId).maybeSingle();
   if (occupied) throw new AuslagenError("conflict", "Der Beleg ist bereits einer Buchung zugeordnet.");
   const score = matchScore(tx as CardTransaction, receipt as Receipt);

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { errorMessage } from "@/lib/auslagen/errors";
 import { parseAmount } from "@/lib/auslagen/format";
 import { deleteReceipt, registerReceipt, saveReceipt } from "@/lib/data/auslagen-receipts";
+import { isPaymentChannel } from "@/lib/auslagen/types";
 
 export type ReceiptActionResult = { ok: boolean; id?: string; error?: string; warning?: string };
 
@@ -18,11 +19,13 @@ export async function registerReceiptAction(input: { path: string; mime: string;
 export async function saveReceiptAction(id: string, formData: FormData): Promise<ReceiptActionResult> {
   const get = (key: string) => String(formData.get(key) ?? "");
   try {
+    const paymentChannel = get("payment_channel");
     await saveReceipt(id, {
       receipt_date: get("receipt_date"), merchant: get("merchant"), description: get("description"), currency: get("currency"),
       gross_amount: parseAmount(get("gross_amount")), net_amount: parseAmount(get("net_amount")),
       vat_amount: parseAmount(get("vat_amount")), vat_rate: parseAmount(get("vat_rate")),
       gross_amount_eur: parseAmount(get("gross_amount_eur")), payment_method: get("payment_method") === "kreditkarte" ? "kreditkarte" : "privat",
+      payment_channel: isPaymentChannel(paymentChannel) ? paymentChannel : null,
       credit_card_id: get("credit_card_id") || null,
     });
     revalidatePath("/auslagen");

@@ -6,7 +6,7 @@ import { isISODate, normalizeCurrency, round2 } from "@/lib/auslagen/format";
 import { AUSLAGEN_BUCKET, isAllowedReceiptMime, isOwnStoragePath, SIGNED_URL_TTL_SECONDS } from "@/lib/auslagen/paths";
 import { isPaymentChannel, type PaymentChannel, type PaymentMethod, type Receipt } from "@/lib/auslagen/types";
 
-const COLUMNS = "id, user_id, status, receipt_date, merchant, description, currency, gross_amount, net_amount, vat_amount, vat_rate, gross_amount_eur, payment_method, payment_channel, payment_reviewed_at, payment_reviewed_by, credit_card_id, file_path, file_mime, file_name, extraction, extraction_error, claim_id, created_at, updated_at";
+const COLUMNS = "id, user_id, status, receipt_date, merchant, description, currency, gross_amount, net_amount, vat_amount, vat_rate, gross_amount_eur, payment_method, payment_channel, payment_reviewed_at, payment_reviewed_by, credit_card_id, file_path, file_mime, file_name, storage_delete_after, storage_purge_claimed_at, file_deleted_at, extraction, extraction_error, claim_id, created_at, updated_at";
 
 export async function listOwnReceipts(): Promise<Receipt[]> {
   const { userId } = await requireUser();
@@ -36,7 +36,8 @@ export async function getReceipt(id: string): Promise<Receipt> {
   return data as Receipt;
 }
 
-export async function signedReceiptUrl(receipt: Receipt): Promise<string> {
+export async function signedReceiptUrl(receipt: Receipt): Promise<string | null> {
+  if (receipt.file_deleted_at) return null;
   const db = await createClient();
   const { data, error } = await db.storage.from(AUSLAGEN_BUCKET).createSignedUrl(receipt.file_path, SIGNED_URL_TTL_SECONDS);
   if (error || !data) throw toAuslagenError(error, "Belegdatei konnte nicht geladen werden");
@@ -169,5 +170,5 @@ export async function deleteReceipt(id: string): Promise<void> {
   const { data, error } = await db.from("receipts").delete().eq("id", id).eq("user_id", ctx.userId).is("claim_id", null).select("id").maybeSingle();
   if (error) throw toAuslagenError(error, "Beleg konnte nicht gelöscht werden");
   if (!data) throw new AuslagenError("conflict", "Der Beleg wurde zwischenzeitlich geändert.");
-  await db.storage.from(AUSLAGEN_BUCKET).remove([receipt.file_path]);
+  if (!receipt.file_deleted_at) await db.storage.from(AUSLAGEN_BUCKET).remove([receipt.file_path]);
 }

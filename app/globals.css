@@ -168,7 +168,7 @@ a { color: inherit; text-decoration: none; }
   .sch-brand { gap: 0; min-width: 0; }
   .sch-brand-div,
   .sch-brand-sub,
-  .sch-user { display: none; }
+  .sch-user { display: none !important; }
   .sch-topbar-right { gap: 6px; }
   .sch-iconbtn { width: 34px; height: 34px; }
   .sch-info > * { min-width: 0; }

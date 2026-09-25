@@ -57,6 +57,14 @@ create table if not exists public.expense_claim_reads (
 create index if not exists expense_claim_reads_user_idx on public.expense_claim_reads (user_id);
 create index if not exists expense_claims_submitted_idx on public.expense_claims (sent_at desc)
   where status = 'versendet';
+-- Die PDF-Freigabe darf ausschließlich die Datei des jeweiligen Antrags treffen.
+-- Auch direkte Änderungen über die Supabase-API müssen diese Zuordnung wahren.
+alter table public.expense_claims drop constraint if exists expense_claims_pdf_path_owner;
+alter table public.expense_claims add constraint expense_claims_pdf_path_owner
+  check (pdf_path is null or pdf_path = user_id::text || '/antraege/' || id::text || '.pdf');
+alter table public.expense_claims drop constraint if exists expense_claims_submitted_pdf;
+alter table public.expense_claims add constraint expense_claims_submitted_pdf
+  check (status <> 'versendet' or (pdf_path is not null and sent_at is not null));
 grant select, insert, update on public.expense_claim_reads to authenticated;
 alter table public.expense_claim_reads enable row level security;
 

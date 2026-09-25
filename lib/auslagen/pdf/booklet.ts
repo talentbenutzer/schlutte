@@ -22,7 +22,7 @@ function write(page: PDFPage, value: string, x: number, y: number, font: PDFFont
 
 function rule(page: PDFPage, y: number) { page.drawLine({ start: { x: M, y }, end: { x: W - M, y }, thickness: 0.5, color: muted }); }
 
-export async function buildBookletPdf(input: { statement: CardStatement; card: CreditCard; company: Company | null; transactions: CardTransaction[]; receipts: Receipt[]; receiptUrls: Record<string, string>; statementUrl: string }): Promise<Uint8Array> {
+export async function buildBookletPdf(input: { statement: CardStatement; card: CreditCard; company: Company | null; transactions: CardTransaction[]; receipts: Receipt[]; receiptUrls: Record<string, string | null>; statementUrl: string }): Promise<Uint8Array> {
   const { statement, card, company, transactions, receipts, receiptUrls, statementUrl } = input;
   const pdf = await PDFDocument.create(); pdf.registerFontkit(fontkit);
   pdf.setTitle(`Belegnachweis ${card.label} ${formatDate(statement.statement_date)}`);
@@ -57,7 +57,14 @@ export async function buildBookletPdf(input: { statement: CardStatement; card: C
     const receipt = tx.receipt_id ? receiptById.get(tx.receipt_id) : null;
     if (!receipt) continue;
     const url = receiptUrls[receipt.id];
-    if (!url) throw new Error(`Beleg für Buchung ${index + 1} fehlt.`);
+    if (!url) {
+      const placeholder = pdf.addPage([W, H]);
+      write(placeholder, `BELEG B${index + 1} · ${receipt.merchant ?? ""}`, M, H - 45, mono, 8, brass);
+      rule(placeholder, H - 55);
+      write(placeholder, "Originaldatei nach 30 Tagen automatisch gelöscht", M, H - 105, medium, 13, ink, W - 2 * M);
+      write(placeholder, "Belegdaten und Zuordnung sind auf dem Deckblatt weiterhin dokumentiert.", M, H - 130, regular, 9, muted, W - 2 * M);
+      continue;
+    }
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Beleg für Buchung ${index + 1} konnte nicht geladen werden.`);
     const bytes = new Uint8Array(await response.arrayBuffer());

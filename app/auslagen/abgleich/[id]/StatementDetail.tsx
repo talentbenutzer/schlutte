@@ -11,7 +11,7 @@ import { formatDate } from "@/lib/utils";
 import { assignReceiptAction, autoMatchAction, clearMatchAction, deleteStatementAction, markWithoutReceiptAction, retryStatementAction, updateTransactionAction } from "../actions";
 
 export function StatementDetail({ statement, card, company, transactions, candidates, linked, receiptUrls, statementUrl }: {
-  statement: CardStatement; card: CreditCard; company: Company | null; transactions: CardTransaction[]; candidates: Receipt[]; linked: Receipt[]; receiptUrls: Record<string, string>; statementUrl: string;
+  statement: CardStatement; card: CreditCard; company: Company | null; transactions: CardTransaction[]; candidates: Receipt[]; linked: Receipt[]; receiptUrls: Record<string, string | null>; statementUrl: string;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -58,7 +58,7 @@ export function StatementDetail({ statement, card, company, transactions, candid
         return <article className="aus-card aus-stack" key={tx.id}>
           <div className="aus-card-head"><div><span className="aus-eyebrow">{formatDate(tx.transaction_date || tx.booking_date)}</span><h3 className="aus-card-title">{tx.merchant || tx.description || "Buchung"}</h3></div><strong className="aus-amount">{formatEUR(tx.amount)}</strong></div>
           <p className="aus-help">{tx.match_status === "auto" ? "Automatisch zugeordnet" : tx.match_status === "manuell" ? "Manuell zugeordnet" : tx.match_status === "ohne_beleg" ? `Ohne Beleg: ${tx.note || ""}` : "Beleg fehlt"}</p>
-          {receipt && <Link href={`/auslagen/belege/${receipt.id}`} className="aus-btn aus-btn-link">Beleg: {receipt.merchant || "öffnen"} · {receipt.payment_channel ? PAYMENT_CHANNEL_LABEL[receipt.payment_channel] : "Zahlungsweg offen"} · {formatEUR(receipt.gross_amount, receipt.currency)}</Link>}
+          {receipt && <><Link href={`/auslagen/belege/${receipt.id}`} className="aus-btn aus-btn-link">Beleg: {receipt.merchant || "öffnen"} · {receipt.payment_channel ? PAYMENT_CHANNEL_LABEL[receipt.payment_channel] : "Zahlungsweg offen"} · {formatEUR(receipt.gross_amount, receipt.currency)}</Link>{receipt.file_deleted_at ? <p className="aus-help">Originaldatei nach 30 Tagen gelöscht.</p> : receipt.storage_delete_after ? <p className="aus-help">Originaldatei verfügbar bis {formatDate(receipt.storage_delete_after)}.</p> : null}</>}
           <div className="aus-actions">
             <select className="aus-select" aria-label={`Beleg für ${tx.merchant || "Buchung"} wählen`} value={chosen[tx.id] || ""} onChange={(e) => setChosen((prev) => ({ ...prev, [tx.id]: e.target.value }))} disabled={pending}><option value="">Beleg wählen …</option>{options.map(({ receipt: r, score }) => <option value={r.id} key={r.id}>{formatDate(r.receipt_date)} · {r.merchant || "Beleg"} · {r.payment_channel ? PAYMENT_CHANNEL_LABEL[r.payment_channel] : "unbekannt"} · {formatEUR(r.currency === "EUR" ? r.gross_amount : r.gross_amount_eur)}{score ? ` · Treffer ${score}` : ""}</option>)}</select>
             <button type="button" className="aus-btn aus-btn-secondary" disabled={pending || !chosen[tx.id]} onClick={() => mutate(() => assignReceiptAction(tx.id, chosen[tx.id], statement.id), "Beleg zugeordnet.")}>Zuordnen</button>

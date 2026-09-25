@@ -44,7 +44,12 @@ Originalbelege aufbewahren und bei Bedarf im Original vorlegen. Bei Beträgen ü
 
 ## iPhone ohne App Store
 
-Die Schlutte-Webadresse in **Safari** unter `/auslagen` öffnen. Über **Teilen → Zum Home-Bildschirm** wird „Belege“ installiert und startet direkt in diesem Bereich. Beim ersten Start kann eine erneute Anmeldung nötig sein.
+Es gibt zwei getrennte Home-Bildschirm-Icons, je nachdem, von welcher Seite aus installiert wird — beide über **Teilen → Zum Home-Bildschirm** in Safari:
+
+- Von `/start` (oder irgendeiner anderen Seite) aus installiert entsteht „Schlutte“, die allgemeine App für Kommissionen, Bestellliste, Werkstatt usw. Sie startet immer beim Dashboard.
+- Von `/auslagen/erfassen` aus installiert entsteht ein eigenes Icon „Belege“, das direkt zum Fotografieren eines Belegs startet — unabhängig von der allgemeinen App. Beide Icons können parallel installiert sein.
+
+Beim ersten Start kann eine erneute Anmeldung nötig sein.
 
 ## Prüfung vor Freigabe
 

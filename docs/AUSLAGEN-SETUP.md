@@ -7,8 +7,9 @@ Im Supabase SQL-Editor für das Schlutte-Projekt diese Migrationen in der Reihen
 1. `supabase/migrations/20260925_auslagen.sql`
 2. `supabase/migrations/20260925_auslagen_employees_write_guard.sql`
 3. `supabase/migrations/20260925_auslagen_company_addresses.sql`
+4. `supabase/migrations/20260925_ceo_admin_rights.sql`
 
-Die erste Migration legt Rollen, Tabellen, den privaten Storage-Bucket und Zugriffsregeln an. Die zweite schränkt bestehende Schreibrechte an der Mitarbeitertabelle auf Admins ein; beim ersten Login darf ein Nutzer weiterhin nur den eigenen Datensatz als aktiven Mitarbeiter ohne Adminrechte anlegen. Die dritte trägt die Firmenanschriften ein. Alle drei Dateien sind wiederholbar. Vor dem produktiven Einsatz die vorhandenen Mitarbeiter- und Rollen-Zuordnungen prüfen; `employees.is_admin = true` wird als `admin` übernommen.
+Die erste Migration legt Rollen, Tabellen, den privaten Storage-Bucket und Zugriffsregeln an. Die zweite schützt bestehende Schreibrechte an der Mitarbeitertabelle; beim ersten Login darf ein Nutzer weiterhin nur den eigenen Datensatz als aktiven Mitarbeiter ohne Adminrechte anlegen. Die dritte trägt die Firmenanschriften ein. Die vierte gibt dem CEO dieselben Verwaltungsrechte wie dem Admin. Alle vier Dateien sind wiederholbar. Vor dem produktiven Einsatz die vorhandenen Mitarbeiter- und Rollen-Zuordnungen prüfen; `employees.is_admin = true` wird als `admin` übernommen.
 
 ## 2. Konfiguration
 
@@ -22,7 +23,7 @@ Ohne API-Schlüssel lassen sich Belege manuell erfassen. PDF-Abrechnungen könne
 
 ## 3. Start in der App
 
-1. Im Mitarbeiterbereich die Rollen `Mitarbeiter`, `CEO` und `Admin` zuweisen. CEO und Admin sehen Kreditkarten und Firmeneinstellungen.
+1. Im Mitarbeiterbereich die Rollen `Mitarbeiter`, `CEO` und `Admin` zuweisen. CEO und Admin haben dieselben Verwaltungsrechte, einschließlich Mitarbeiterverwaltung, Kreditkarten und Firmeneinstellungen. Nur die Rolle `Admin` setzt `employees.is_admin = true`.
 2. Unter **Belege → Einstellungen** die Empfänger-E-Mail und Anschrift für Grabner Design und höllental hinterlegen.
 3. Unter **Profil** die persönlichen Daten samt gültiger IBAN pflegen.
 4. Beleg fotografieren, erkannte Angaben prüfen und speichern. Privat bezahlte Belege lassen sich in einem Antrag sammeln; Firmenkartenbelege werden im Abgleich verwendet.

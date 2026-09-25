@@ -4,9 +4,9 @@ import { extractReceipt } from "@/lib/auslagen/extract";
 import { AuslagenError, toAuslagenError } from "@/lib/auslagen/errors";
 import { isISODate, normalizeCurrency, round2 } from "@/lib/auslagen/format";
 import { AUSLAGEN_BUCKET, isAllowedReceiptMime, isOwnStoragePath, SIGNED_URL_TTL_SECONDS } from "@/lib/auslagen/paths";
-import type { PaymentMethod, Receipt } from "@/lib/auslagen/types";
+import { isPaymentChannel, type PaymentChannel, type PaymentMethod, type Receipt } from "@/lib/auslagen/types";
 
-const COLUMNS = "id, user_id, status, receipt_date, merchant, description, currency, gross_amount, net_amount, vat_amount, vat_rate, gross_amount_eur, payment_method, credit_card_id, file_path, file_mime, file_name, extraction, extraction_error, claim_id, created_at, updated_at";
+const COLUMNS = "id, user_id, status, receipt_date, merchant, description, currency, gross_amount, net_amount, vat_amount, vat_rate, gross_amount_eur, payment_method, payment_channel, payment_reviewed_at, payment_reviewed_by, credit_card_id, file_path, file_mime, file_name, extraction, extraction_error, claim_id, created_at, updated_at";
 
 export async function listOwnReceipts(): Promise<Receipt[]> {
   const { userId } = await requireUser();
@@ -78,7 +78,7 @@ export async function registerReceipt(input: { path: string; mime: string; fileN
       receipt_date: extraction.date, merchant: extraction.merchant, description: extraction.description_suggestion,
       currency: extraction.currency ?? "EUR", gross_amount: extraction.gross, net_amount: extraction.net,
       vat_amount: extraction.vat_total, vat_rate: extraction.vat_lines.length === 1 ? extraction.vat_lines[0].rate : null,
-      credit_card_id: matchedCard, extraction, extraction_error: null,
+      credit_card_id: matchedCard, payment_channel: extraction.payment_channel, extraction, extraction_error: null,
     }).eq("id", id).eq("user_id", ctx.userId).select(COLUMNS).single();
     if (updateError) throw updateError;
     return updated as Receipt;
@@ -93,13 +93,19 @@ export type ReceiptInput = {
   receipt_date: string; merchant: string; description: string; currency: string;
   gross_amount: number | null; net_amount: number | null; vat_amount: number | null;
   vat_rate: number | null; gross_amount_eur: number | null;
-  payment_method: PaymentMethod; credit_card_id: string | null;
+  payment_method: PaymentMethod; payment_channel: PaymentChannel | null; credit_card_id: string | null;
 };
 
 export async function saveReceipt(id: string, input: ReceiptInput): Promise<Receipt> {
   const ctx = await requireUser();
   const existing = await getReceipt(id);
-  if (existing.user_id !== ctx.userId || existing.claim_id) throw new AuslagenError("forbidden", "Dieser Beleg kann nicht geändert werden.");
+  const own = existing.user_id === ctx.userId;
+  if ((!own && !(ctx.isFinance && existing.payment_method === "kreditkarte")) || existing.claim_id) {
+    throw new AuslagenError("forbidden", "Dieser Beleg kann nicht geändert werden.");
+  }
+  if (!own && input.payment_method !== "kreditkarte") {
+    throw new AuslagenError("forbidden", "Ein fremder Firmenbeleg kann nicht in einen Privatbeleg geändert werden.");
+  }
   const merchant = input.merchant.trim().slice(0, 200);
   const description = input.description.trim().slice(0, 500) || null;
   const currency = normalizeCurrency(input.currency);
@@ -116,17 +122,21 @@ export async function saveReceipt(id: string, input: ReceiptInput): Promise<Rece
     }
   }
   if (input.vat_rate !== null && input.vat_rate > 100) throw new AuslagenError("validation", "Der MwSt-Satz darf höchstens 100 % betragen.");
+  if (!isPaymentChannel(input.payment_channel)) throw new AuslagenError("validation", "Bitte einen Zahlungsweg wählen.");
   if (input.net_amount !== null && input.vat_amount !== null && Math.abs(input.net_amount + input.vat_amount - gross) > 0.03) {
     throw new AuslagenError("validation", "Netto und MwSt ergeben nicht den Bruttobetrag.");
   }
   if (input.payment_method === "kreditkarte" && !ctx.isFinance) {
-    throw new AuslagenError("forbidden", "Nur CEO und Admin können Firmenkartenbelege erfassen.");
+    throw new AuslagenError("forbidden", "Nur CEO und Admin können Firmenzahlungen erfassen.");
   }
   const db = await createClient();
   let cardId: string | null = null;
   if (input.payment_method === "kreditkarte" && input.credit_card_id) {
-    const { data: card } = await db.from("credit_cards").select("id").eq("id", input.credit_card_id).maybeSingle();
-    if (!card) throw new AuslagenError("validation", "Kreditkarte nicht gefunden.");
+    if (input.payment_channel === "bar") throw new AuslagenError("validation", "Eine Barzahlung kann keiner Karte zugeordnet werden.");
+    const { data: card } = await db.from("credit_cards").select("id, payment_channel").eq("id", input.credit_card_id).maybeSingle();
+    if (!card || (card.payment_channel && card.payment_channel !== input.payment_channel)) {
+      throw new AuslagenError("validation", "Zahlungsweg und Firmenkarte passen nicht zusammen.");
+    }
     cardId = card.id;
   }
   const { data, error } = await db.from("receipts").update({
@@ -134,8 +144,9 @@ export async function saveReceipt(id: string, input: ReceiptInput): Promise<Rece
     gross_amount: round2(gross), net_amount: input.net_amount === null ? null : round2(input.net_amount),
     vat_amount: input.vat_amount === null ? null : round2(input.vat_amount), vat_rate: input.vat_rate,
     gross_amount_eur: currency === "EUR" ? null : round2(input.gross_amount_eur!),
-    payment_method: input.payment_method, credit_card_id: cardId,
-  }).eq("id", id).eq("user_id", ctx.userId).is("claim_id", null).select(COLUMNS).maybeSingle();
+    payment_method: input.payment_method, payment_channel: input.payment_channel, credit_card_id: cardId,
+    payment_reviewed_at: null, payment_reviewed_by: null,
+  }).eq("id", id).eq("user_id", existing.user_id).is("claim_id", null).select(COLUMNS).maybeSingle();
   if (error) throw toAuslagenError(error, "Beleg konnte nicht gespeichert werden");
   if (!data) throw new AuslagenError("conflict", "Der Beleg wurde zwischenzeitlich geändert.");
   return data as Receipt;

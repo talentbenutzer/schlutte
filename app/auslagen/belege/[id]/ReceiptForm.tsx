@@ -3,12 +3,12 @@
 import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { formatAmountInput, formatEUR, parseAmount, round2 } from "@/lib/auslagen/format";
-import type { CreditCard, Receipt } from "@/lib/auslagen/types";
+import { PAYMENT_CHANNEL_LABEL, PAYMENT_CHANNELS, type CreditCard, type PaymentChannel, type Receipt } from "@/lib/auslagen/types";
 import { deleteReceiptAction, saveReceiptAction } from "../actions";
 import { assignReceiptAction } from "../../abgleich/actions";
 
-export function ReceiptForm({ receipt, cards, finance, editable, transactionId, statementId }: {
-  receipt: Receipt; cards: Pick<CreditCard, "id" | "label" | "last4">[]; finance: boolean; editable: boolean; transactionId?: string; statementId?: string;
+export function ReceiptForm({ receipt, cards, finance, editable, deletable, transactionId, statementId }: {
+  receipt: Receipt; cards: Pick<CreditCard, "id" | "label" | "last4">[]; finance: boolean; editable: boolean; deletable: boolean; transactionId?: string; statementId?: string;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -20,6 +20,7 @@ export function ReceiptForm({ receipt, cards, finance, editable, transactionId, 
   const [rate, setRate] = useState(receipt.vat_rate === null ? "" : String(receipt.vat_rate).replace(".", ","));
   const [currency, setCurrency] = useState(receipt.currency);
   const [payment, setPayment] = useState(receipt.payment_method);
+  const [channel, setChannel] = useState<PaymentChannel | "">(receipt.payment_channel ?? "");
   const over250 = (parseAmount(gross) ?? 0) > 250;
 
   function calculate() {
@@ -72,12 +73,14 @@ export function ReceiptForm({ receipt, cards, finance, editable, transactionId, 
         <label className="aus-field"><span className="aus-label">Netto</span><input className="aus-input is-amount" name="net_amount" value={net} onChange={(e) => setNet(e.target.value)} inputMode="decimal" disabled={!editable || pending} /></label>
         <label className="aus-field"><span className="aus-label">MwSt</span><input className="aus-input is-amount" name="vat_amount" value={vat} onChange={(e) => setVat(e.target.value)} inputMode="decimal" disabled={!editable || pending} /></label>
         {currency !== "EUR" && <label className="aus-field"><span className="aus-label">Betrag in EUR *</span><input className="aus-input is-amount" name="gross_amount_eur" defaultValue={formatAmountInput(receipt.gross_amount_eur)} inputMode="decimal" required disabled={!editable || pending} /></label>}
-        <label className="aus-field"><span className="aus-label">Zahlart</span><select className="aus-select" name="payment_method" value={payment} onChange={(e) => setPayment(e.target.value as Receipt["payment_method"])} disabled={!editable || pending}><option value="privat">Privat bezahlt</option>{finance && <option value="kreditkarte">Firmen-Kreditkarte</option>}</select></label>
-        {finance && payment === "kreditkarte" && <label className="aus-field"><span className="aus-label">Kreditkarte</span><select className="aus-select" name="credit_card_id" defaultValue={receipt.credit_card_id ?? ""} disabled={!editable || pending}><option value="">Noch nicht zugeordnet</option>{cards.map((card) => <option key={card.id} value={card.id}>{card.label} ·•••• {card.last4 ?? ""}</option>)}</select></label>}
+        <label className="aus-field"><span className="aus-label">Zahlungsweg *</span><select className="aus-select" name="payment_channel" value={channel} onChange={(e) => setChannel(e.target.value as PaymentChannel | "")} required disabled={!editable || pending}><option value="">Bitte wählen</option>{PAYMENT_CHANNELS.map((value) => <option value={value} key={value}>{PAYMENT_CHANNEL_LABEL[value]}</option>)}</select></label>
+        <label className="aus-field"><span className="aus-label">Bezahlt von</span><select className="aus-select" name="payment_method" value={payment} onChange={(e) => setPayment(e.target.value as Receipt["payment_method"])} disabled={!editable || pending}><option value="privat" disabled={editable && !deletable}>Privat bezahlt</option>{finance && <option value="kreditkarte">Firma bezahlt</option>}</select></label>
+        {finance && payment === "kreditkarte" && channel !== "bar" && <label className="aus-field"><span className="aus-label">Firmenkarte</span><select className="aus-select" name="credit_card_id" defaultValue={receipt.credit_card_id ?? ""} disabled={!editable || pending}><option value="">Noch nicht zugeordnet</option>{cards.map((card) => <option key={card.id} value={card.id}>{card.label} ·•••• {card.last4 ?? ""}</option>)}</select></label>}
       </div>
+      {receipt.extraction && <p className="aus-help">Zahlungsweg {receipt.payment_channel ? "aus dem Beleg erkannt. Bitte prüfen." : "nicht sicher erkannt. Bitte manuell wählen."}</p>}
       {error && <div className="aus-note is-danger" role="alert"><div className="aus-note-body"><p>{error}</p></div></div>}
       {saved && <p role="status" className="aus-field-ok">Beleg gespeichert.</p>}
-      {editable && <div className="aus-actions"><button type="submit" className="aus-btn aus-btn-primary" disabled={pending}>Beleg speichern</button><button type="button" className="aus-btn aus-btn-danger" onClick={remove} disabled={pending}>Beleg löschen</button></div>}
+      {editable && <div className="aus-actions"><button type="submit" className="aus-btn aus-btn-primary" disabled={pending}>Beleg speichern</button>{deletable && <button type="button" className="aus-btn aus-btn-danger" onClick={remove} disabled={pending}>Beleg löschen</button>}</div>}
       {!editable && <p className="aus-help">Brutto: {formatEUR(receipt.gross_amount, receipt.currency)}</p>}
     </form>
   </section>;

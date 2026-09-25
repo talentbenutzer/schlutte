@@ -166,6 +166,22 @@
   margin-bottom: var(--sp-8);
 }
 
+.sch-claims {
+  padding: var(--sp-6);
+  border: 1px solid var(--border);
+  background: var(--bg-raised);
+}
+.sch-claims-head { display: flex; align-items: end; justify-content: space-between; gap: var(--sp-5); }
+.sch-claims-head h2 { margin: 8px 0 0; font-family: var(--font-display); font-size: 28px; font-weight: 400; }
+.sch-claims-head a { color: var(--accent); font-size: 13px; text-decoration: none; }
+.sch-claims-list { margin-top: var(--sp-5); border-top: 1px solid var(--border); }
+.sch-claim-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: var(--sp-5); align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); color: var(--fg); text-decoration: none; font-size: 13px; }
+.sch-claim-row:hover { color: var(--accent); }
+.sch-claim-name { font-weight: 600; }
+.sch-notification-dot { display: inline-block; flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; background: #d22b2b; box-shadow: 0 0 0 3px var(--bg-raised); }
+.sch-tile-icon .sch-notification-dot { position: absolute; top: 19px; left: 55px; }
+.sch-notification-dot.is-inline { position: static; vertical-align: middle; margin-left: 5px; }
+
 /* ---------- Tile grid ---------- */
 .sch-grid {
   display: grid;
@@ -337,6 +353,9 @@
   .sch-grid { grid-template-columns: 1fr; }
   .sch-info { grid-template-columns: 1fr; }
   .sch-user-text { display: none; }
+  .sch-claims-head { align-items: start; flex-direction: column; }
+  .sch-claim-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .sch-claim-row > span:nth-child(2) { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

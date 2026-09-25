@@ -3,7 +3,7 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import type { ContentBlockParam } from "@anthropic-ai/sdk/resources/messages";
 import { isISODate, normalizeCurrency, round2 } from "./format";
-import type { ReceiptExtraction, StatementExtraction, StatementTransactionExtraction } from "./types";
+import { isPaymentChannel, type ReceiptExtraction, type StatementExtraction, type StatementTransactionExtraction } from "./types";
 
 const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
 
@@ -71,13 +71,14 @@ const receiptSchema = {
     gross: { type: ["number", "null"] }, net: { type: ["number", "null"] }, vat_total: { type: ["number", "null"] },
     vat_lines: { type: "array", items: { type: "object", properties: { rate: { type: ["number", "null"] }, net: { type: ["number", "null"] }, vat: { type: ["number", "null"] }, gross: { type: ["number", "null"] } } } },
     card_last4: { type: ["string", "null"] }, payment_hint: { type: "string", enum: ["karte", "bar", "unbekannt"] },
+    payment_channel: { type: ["string", "null"], enum: ["amex", "bar", "ec", "kreditkarte", "tank_raststaetten", null] },
   },
-  required: ["date", "merchant", "description_suggestion", "currency", "gross", "net", "vat_total", "vat_lines", "card_last4", "payment_hint"],
+  required: ["date", "merchant", "description_suggestion", "currency", "gross", "net", "vat_total", "vat_lines", "card_last4", "payment_hint", "payment_channel"],
 };
 
 export async function extractReceipt(data: Buffer, mime: string): Promise<ReceiptExtraction> {
   const raw = await callTool(data, mime,
-    "Lies diesen Beleg. Gib nur sicher erkennbare Angaben zurück; sonst null. Datum YYYY-MM-DD, ISO-Währung, Beträge als Dezimalzahlen. Keine Daten erfinden. Falls mehrere MwSt-Sätze vorkommen, gib jede Zeile getrennt an.",
+    "Lies diesen Beleg. Gib nur sicher erkennbare Angaben zurück; sonst null. Datum YYYY-MM-DD, ISO-Währung, Beträge als Dezimalzahlen. Keine Daten erfinden. Falls mehrere MwSt-Sätze vorkommen, gib jede Zeile getrennt an. Erkenne den Zahlungsweg nur aus einem ausdrücklichen Hinweis auf dem Beleg: AMEX, Bar, EC/Girocard, Kreditkarte oder Tank- & Raststätten-Karte. Ein Händlername allein beweist den Zahlungsweg nicht. Bei bloßem 'Karte' oder Unsicherheit payment_channel=null.",
     "receipt", receiptSchema, 1200);
   const lines = Array.isArray(raw.vat_lines) ? raw.vat_lines.slice(0, 10) : [];
   return {
@@ -87,6 +88,7 @@ export async function extractReceipt(data: Buffer, mime: string): Promise<Receip
     vat_lines: lines.map((line) => { const x = (line && typeof line === "object" ? line : {}) as Record<string, unknown>; return { rate: money(x.rate), net: money(x.net), vat: money(x.vat), gross: money(x.gross) }; }),
     card_last4: /^\d{4}$/.test(String(raw.card_last4 ?? "")) ? String(raw.card_last4) : null,
     payment_hint: raw.payment_hint === "karte" || raw.payment_hint === "bar" ? raw.payment_hint : "unbekannt",
+    payment_channel: isPaymentChannel(raw.payment_channel) ? raw.payment_channel : null,
   };
 }
 

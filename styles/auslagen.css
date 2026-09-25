@@ -537,6 +537,7 @@ button.aus-item { width: 100%; background: none; border: 0; border-bottom: 1px s
 .aus-chip.is-claim::before { background: var(--accent); }
 .aus-chip.is-danger { color: var(--aus-danger); }
 .aus-chip.is-danger::before { background: var(--aus-danger); }
+.aus-unread-dot { display: inline-block; width: 9px; height: 9px; margin-right: 5px; border-radius: 50%; background: var(--aus-danger); vertical-align: middle; }
 
 /* ---------- Filter (Segmente) ---------- */
 .aus-filters {
@@ -675,7 +676,7 @@ button.aus-item { width: 100%; background: none; border: 0; border-bottom: 1px s
   .aus-card { padding: var(--sp-5); }
 }
 
-@media (min-width: 760px) {
+@media (min-width: 1020px) {
   .aus { --aus-top-h: 72px; }
   .aus-top { gap: var(--sp-4); padding-left: max(var(--sp-7), env(safe-area-inset-left, 0px)); padding-right: max(var(--sp-7), env(safe-area-inset-right, 0px)); }
   .aus-brand .grb-logo { height: 24px; }

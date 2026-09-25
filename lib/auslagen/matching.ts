@@ -13,7 +13,7 @@ function days(a: string | null, b: string | null): number | null {
 }
 
 export function matchScore(transaction: CardTransaction, receipt: Receipt): number {
-  if (transaction.amount <= 0 || receipt.payment_method !== "kreditkarte" || receipt.claim_id) return 0;
+  if (transaction.amount <= 0 || receipt.payment_method !== "kreditkarte" || receipt.payment_channel === "bar" || receipt.claim_id) return 0;
   if (receipt.credit_card_id && receipt.credit_card_id !== transaction.credit_card_id) return 0;
   const amount = receipt.currency === "EUR" ? receipt.gross_amount : receipt.gross_amount_eur;
   const originalExact = transaction.original_amount !== null && receipt.gross_amount !== null && transaction.original_currency === receipt.currency && Math.abs(transaction.original_amount - receipt.gross_amount) < 0.005;

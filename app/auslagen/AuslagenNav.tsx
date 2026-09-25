@@ -16,6 +16,7 @@ type NavItem = {
 const ITEMS: NavItem[] = [
   { href: "/auslagen", label: "Belege", icon: "receipt", match: ["/auslagen/erfassen", "/auslagen/belege"] },
   { href: "/auslagen/antraege", label: "Anträge", icon: "doc-stripe", match: ["/auslagen/antraege", "/auslagen/antrag"] },
+  { href: "/auslagen/eingang", label: "Eingang", icon: "doc-stripe", match: ["/auslagen/eingang"], finance: true },
   { href: "/auslagen/profil", label: "Profil", icon: "user", match: ["/auslagen/profil"] },
   { href: "/auslagen/abgleich", label: "Abgleich", icon: "card", match: ["/auslagen/abgleich"], finance: true },
   {

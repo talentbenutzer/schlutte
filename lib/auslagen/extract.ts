@@ -41,6 +41,11 @@ function date(value: unknown): string | null {
   return typeof value === "string" && isISODate(value) ? value : null;
 }
 
+function cardLast4(value: unknown): string | null {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  return digits.length >= 4 ? digits.slice(-4) : null;
+}
+
 async function callTool(data: Buffer, mime: string, prompt: string, name: string, schema: Record<string, unknown>, maxTokens: number) {
   let result: Anthropic.Messages.Message;
   try {
@@ -86,7 +91,7 @@ export async function extractReceipt(data: Buffer, mime: string): Promise<Receip
     currency: str(raw.currency, 3) ? normalizeCurrency(String(raw.currency)) : null,
     gross: money(raw.gross), net: money(raw.net), vat_total: money(raw.vat_total),
     vat_lines: lines.map((line) => { const x = (line && typeof line === "object" ? line : {}) as Record<string, unknown>; return { rate: money(x.rate), net: money(x.net), vat: money(x.vat), gross: money(x.gross) }; }),
-    card_last4: /^\d{4}$/.test(String(raw.card_last4 ?? "")) ? String(raw.card_last4) : null,
+    card_last4: cardLast4(raw.card_last4),
     payment_hint: raw.payment_hint === "karte" || raw.payment_hint === "bar" ? raw.payment_hint : "unbekannt",
     payment_channel: isPaymentChannel(raw.payment_channel) ? raw.payment_channel : null,
   };
@@ -117,7 +122,7 @@ export async function extractStatement(data: Buffer): Promise<StatementExtractio
     if (amount === null) return [];
     return [{ transaction_date: date(x.transaction_date), booking_date: date(x.booking_date), merchant: str(x.merchant), description: str(x.description, 300), amount, original_amount: money(x.original_amount), original_currency: str(x.original_currency, 3) ? normalizeCurrency(String(x.original_currency)) : null }];
   });
-  return { card_last4: /^\d{4}$/.test(String(raw.card_last4 ?? "")) ? String(raw.card_last4) : null,
+  return { card_last4: cardLast4(raw.card_last4),
     holder: str(raw.holder), period_start: date(raw.period_start), period_end: date(raw.period_end), statement_date: date(raw.statement_date),
     total: money(raw.total), currency: str(raw.currency, 3) ? normalizeCurrency(String(raw.currency)) : null, transactions };
 }

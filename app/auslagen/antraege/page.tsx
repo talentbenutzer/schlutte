@@ -21,7 +21,7 @@ export default async function AntraegePage() {
       const included = receipts.filter((receipt) => receipt.claim_id === claim.id);
       return <article className="aus-claim-card" key={claim.id}>
         <div className="aus-card-head"><div><span className="aus-eyebrow">{formatDate(claim.claim_date)}</span><h2 className="aus-card-title">{names[claim.company_id] || claim.company_id}</h2></div><strong className="aus-amount">{formatEUR(claim.total_gross)}</strong></div>
-        <div className="aus-row"><span className={`aus-chip ${claim.status === "versendet" ? "is-done" : "is-draft"}`}>{claim.status === "versendet" ? "Eingereicht" : "Erstellt"}</span>{claim.email_sent_at && <span className="aus-chip is-plain">Per E-Mail versendet</span>}<span className="aus-chip is-plain">{claim.receipt_count} {claim.receipt_count === 1 ? "Beleg" : "Belege"}</span></div>
+        <div className="aus-row"><span className={`aus-chip ${claim.status === "versendet" ? "is-done" : "is-draft"}`}>{claim.status === "versendet" ? "Eingereicht" : "Erstellt"}</span><span className="aus-chip is-plain">{claim.receipt_count} {claim.receipt_count === 1 ? "Beleg" : "Belege"}</span></div>
         <ul className="aus-claim-receipts">{included.map((receipt) => <li key={receipt.id}><span><strong>{receipt.merchant || "Beleg"}</strong><small>{formatDate(receipt.receipt_date)}</small></span><span className="aus-num">{formatEUR(receipt.currency === "EUR" ? receipt.gross_amount : receipt.gross_amount_eur)}</span></li>)}</ul>
         <Link className="aus-btn aus-btn-secondary" href={`/auslagen/antraege/${claim.id}`}>Antrag öffnen</Link>
       </article>;

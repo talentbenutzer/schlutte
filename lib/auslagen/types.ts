@@ -159,8 +159,6 @@ export type ExpenseClaim = {
   pdf_path: string | null;
   status: ClaimStatus;
   sent_at: string | null;
-  email_sent_at: string | null;
-  email_message_id: string | null;
   created_at: string;
   updated_at: string;
 };

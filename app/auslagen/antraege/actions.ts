@@ -6,7 +6,7 @@ import { applicantFromProfile } from "@/lib/auslagen/profile";
 import { createClaim, deleteClaim, markClaimSent, setClaimPdfPath } from "@/lib/data/auslagen-claims";
 import type { ApplicantSnapshot } from "@/lib/auslagen/types";
 
-type Result = { ok: boolean; id?: string; recipient?: string; error?: string };
+type Result = { ok: boolean; id?: string; error?: string };
 
 export async function createClaimAction(input: { companyId: string; receiptIds: string[]; applicant: ApplicantSnapshot; place: string; claimDate: string; signaturePng: string | null }): Promise<Result> {
   try {
@@ -22,7 +22,7 @@ export async function setClaimPdfPathAction(id: string, path: string): Promise<R
 }
 
 export async function markClaimSentAction(id: string): Promise<Result> {
-  try { const recipient = await markClaimSent(id); revalidatePath(`/auslagen/antraege/${id}`); revalidatePath("/auslagen/antraege"); revalidatePath("/auslagen/eingang"); revalidatePath("/auslagen/abgleich"); revalidatePath("/start"); return { ok: true, recipient }; }
+  try { await markClaimSent(id); revalidatePath(`/auslagen/antraege/${id}`); revalidatePath("/auslagen/antraege"); revalidatePath("/auslagen/eingang"); revalidatePath("/auslagen/abgleich"); revalidatePath("/start"); return { ok: true }; }
   catch (e) { return { ok: false, error: errorMessage(e) }; }
 }
 

@@ -5,10 +5,9 @@ import { isISODate, isValidIban, round2 } from "@/lib/auslagen/format";
 import { getMissingProfileFields } from "@/lib/auslagen/profile";
 import { AUSLAGEN_BUCKET, claimPdfPath, isOwnStoragePath, SIGNED_URL_TTL_SECONDS } from "@/lib/auslagen/paths";
 import { getCompany, isCompanyId } from "@/lib/data/auslagen-settings";
-import { sendClaimEmail } from "@/lib/auslagen/email";
 import type { ApplicantSnapshot, ExpenseClaim, Receipt } from "@/lib/auslagen/types";
 
-const CLAIM_COLUMNS = "id, user_id, company_id, recipient_email, applicant, place, claim_date, signature_png, total_gross, receipt_count, pdf_path, status, sent_at, email_sent_at, email_message_id, created_at, updated_at";
+const CLAIM_COLUMNS = "id, user_id, company_id, recipient_email, applicant, place, claim_date, signature_png, total_gross, receipt_count, pdf_path, status, sent_at, created_at, updated_at";
 const RECEIPT_COLUMNS = "id, user_id, status, receipt_date, merchant, description, currency, gross_amount, net_amount, vat_amount, vat_rate, gross_amount_eur, payment_method, payment_channel, payment_reviewed_at, payment_reviewed_by, credit_card_id, file_path, file_mime, file_name, storage_delete_after, storage_purge_claimed_at, file_deleted_at, extraction, extraction_error, claim_id, created_at, updated_at";
 
 export async function listOwnClaims(): Promise<ExpenseClaim[]> {
@@ -107,18 +106,12 @@ export async function signedClaimUrl(claim: ExpenseClaim): Promise<string | null
   return data.signedUrl;
 }
 
-export async function markClaimSent(id: string): Promise<string> {
+export async function markClaimSent(id: string): Promise<void> {
   const claim = await getClaim(id);
   if (!claim.pdf_path) throw new AuslagenError("validation", "Bitte zuerst das PDF erzeugen.");
-  if (!claim.recipient_email) throw new AuslagenError("validation", "Für diese Firma ist noch keine Empfänger-E-Mail hinterlegt.");
   const db = await createClient();
-  const { data: file, error: fileError } = await db.storage.from(AUSLAGEN_BUCKET).download(claim.pdf_path);
-  if (fileError || !file || (await file.slice(0, 5).text()) !== "%PDF-") throw new AuslagenError("validation", "Das Antrags-PDF konnte nicht geladen werden.");
-  const messageId = claim.email_message_id || await sendClaimEmail(claim, file);
-  const now = new Date().toISOString();
-  const { data, error } = await db.from("expense_claims").update({ status: "versendet", sent_at: now, email_sent_at: claim.email_sent_at || now, email_message_id: messageId }).eq("id", id).eq("user_id", claim.user_id).eq("status", "erstellt").select("id").maybeSingle();
+  const { data, error } = await db.from("expense_claims").update({ status: "versendet", sent_at: new Date().toISOString() }).eq("id", id).eq("user_id", claim.user_id).eq("status", "erstellt").select("id").maybeSingle();
   if (error || !data) throw toAuslagenError(error, "Status konnte nicht gespeichert werden");
-  return claim.recipient_email;
 }
 
 export async function deleteClaim(id: string): Promise<void> {

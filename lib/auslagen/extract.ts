@@ -46,6 +46,13 @@ function cardLast4(value: unknown): string | null {
   return digits.length >= 4 ? digits.slice(-4) : null;
 }
 
+function isStatementSettlement(row: Record<string, unknown>): boolean {
+  const text = `${String(row.merchant ?? "")} ${String(row.description ?? "")}`
+    .toLocaleUpperCase("de-DE")
+    .replace(/Ü/g, "UE");
+  return text.includes("ZAHLUNG/UEBERWEISUNG ERHALTEN") || text.includes("PAYMENT RECEIVED");
+}
+
 async function callTool(data: Buffer, mime: string, prompt: string, name: string, schema: Record<string, unknown>, maxTokens: number) {
   let result: Anthropic.Messages.Message;
   try {
@@ -113,11 +120,12 @@ const statementSchema = {
 
 export async function extractStatement(data: Buffer): Promise<StatementExtraction> {
   const raw = await callTool(data, "application/pdf",
-    "Lies jede einzelne Buchung dieser Kreditkartenabrechnung. Beträge in EUR: Belastungen positiv, Gutschriften negativ. Kein Saldo und keine Summenzeile als Buchung. Datum YYYY-MM-DD. Wenn ein Wert unklar ist, null. Erfinde keine Buchungen.",
+    "Lies jede einzelne Einkaufs- und Erstattungsbuchung dieser Kreditkartenabrechnung. Beträge in EUR: Belastungen positiv, Gutschriften negativ. Lasse Zahlungsausgleiche wie 'Zahlung/Überweisung erhalten' oder 'Payment received' vollständig weg. Kein Saldo und keine Summenzeile als Buchung. Datum YYYY-MM-DD. Wenn ein Wert unklar ist, null. Erfinde keine Buchungen.",
     "statement", statementSchema, 6000);
   const rows = Array.isArray(raw.transactions) ? raw.transactions.slice(0, 500) : [];
   const transactions: StatementTransactionExtraction[] = rows.flatMap((row) => {
     const x = (row && typeof row === "object" ? row : {}) as Record<string, unknown>;
+    if (isStatementSettlement(x)) return [];
     const amount = money(x.amount);
     if (amount === null) return [];
     return [{ transaction_date: date(x.transaction_date), booking_date: date(x.booking_date), merchant: str(x.merchant), description: str(x.description, 300), amount, original_amount: money(x.original_amount), original_currency: str(x.original_currency, 3) ? normalizeCurrency(String(x.original_currency)) : null }];

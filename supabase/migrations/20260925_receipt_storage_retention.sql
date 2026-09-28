@@ -1,5 +1,5 @@
--- Original receipt files are retained for 30 days after they are linked to a
--- card statement. The structured receipt data remains in public.receipts.
+-- Original receipt files are retained for 30 days after an expense claim is
+-- submitted or after they are linked to a card statement. Structured data remains.
 
 alter table public.receipts
   add column if not exists storage_delete_after timestamptz,
@@ -52,12 +52,45 @@ create trigger sync_receipt_storage_retention
 after insert or update of receipt_id or delete on public.card_transactions
 for each row execute function public.sync_receipt_storage_retention();
 
+create or replace function public.sync_claim_receipt_storage_retention()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.status = 'versendet' and old.status is distinct from new.status then
+    update public.receipts
+       set storage_delete_after = now() + interval '30 days',
+           storage_purge_claimed_at = null
+     where claim_id = new.id
+       and file_deleted_at is null;
+  elsif old.status = 'versendet' and new.status is distinct from old.status then
+    update public.receipts r
+       set storage_delete_after = null,
+           storage_purge_claimed_at = null
+     where r.claim_id = new.id
+       and r.file_deleted_at is null
+       and not exists (select 1 from public.card_transactions tx where tx.receipt_id = r.id);
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists sync_claim_receipt_storage_retention on public.expense_claims;
+create trigger sync_claim_receipt_storage_retention
+after update of status on public.expense_claims
+for each row execute function public.sync_claim_receipt_storage_retention();
+
 -- Give already-linked originals a full 30 days from this rollout.
 update public.receipts r
    set storage_delete_after = now() + interval '30 days',
        storage_purge_claimed_at = null
  where r.file_deleted_at is null
-   and exists (select 1 from public.card_transactions tx where tx.receipt_id = r.id);
+   and (
+     exists (select 1 from public.card_transactions tx where tx.receipt_id = r.id)
+     or exists (select 1 from public.expense_claims c where c.id = r.claim_id and c.status = 'versendet')
+   );
 
 create or replace function public.protect_receipt_storage_retention()
 returns trigger
@@ -94,7 +127,10 @@ as $$
      where r.storage_delete_after <= now()
        and r.file_deleted_at is null
        and (r.storage_purge_claimed_at is null or r.storage_purge_claimed_at < now() - interval '15 minutes')
-       and exists (select 1 from public.card_transactions tx where tx.receipt_id = r.id)
+       and (
+         exists (select 1 from public.card_transactions tx where tx.receipt_id = r.id)
+         or exists (select 1 from public.expense_claims c where c.id = r.claim_id and c.status = 'versendet')
+       )
      order by r.storage_delete_after, r.id
      for update skip locked
      limit least(greatest(coalesce(batch_size, 100), 1), 500)

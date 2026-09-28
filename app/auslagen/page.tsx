@@ -6,9 +6,11 @@ import { formatEUR } from "@/lib/auslagen/format";
 import { formatDate } from "@/lib/utils";
 import { errorMessage } from "@/lib/auslagen/errors";
 import { PAYMENT_CHANNEL_LABEL } from "@/lib/auslagen/types";
+import { getCurrentUserContext } from "@/lib/auth/roles";
 
 export default async function AuslagenPage({ searchParams }: { searchParams: Promise<{ filter?: string }> }) {
   const filter = (await searchParams).filter || "offen";
+  const ctx = await getCurrentUserContext();
   let receipts = [] as Awaited<ReturnType<typeof listOwnReceipts>>;
   let error: string | null = null;
   try { receipts = await listOwnReceipts(); } catch (cause) { error = errorMessage(cause); }
@@ -36,6 +38,17 @@ export default async function AuslagenPage({ searchParams }: { searchParams: Pro
       </header>
 
       {error && <div className="aus-note is-danger" role="alert"><div className="aus-note-body"><p>{error}</p></div></div>}
+      {ctx?.role === "ceo" && <section className="aus-section" aria-labelledby="ceo-uebersicht">
+        <div className="aus-section-head"><h2 id="ceo-uebersicht" className="aus-h2">Das kann Schlutte Belege</h2><span className="aus-chip is-plain">CEO-Übersicht</span></div>
+        <div className="aus-grid aus-grid-2">
+          <article className="aus-card"><div className="aus-row"><Icon name="camera" size={20} /><h3 className="aus-card-title">Belege erfassen</h3></div><p className="aus-help">Einzelne oder mehrere Fotos und PDFs hochladen. Die KI erkennt Händler, Datum, Beträge, Mehrwertsteuer und Zahlungsart.</p></article>
+          <article className="aus-card"><div className="aus-row"><Icon name="doc-stripe" size={20} /><h3 className="aus-card-title">Anträge einreichen</h3></div><p className="aus-help">Mitarbeiter wählen ihre Belege aus, unterschreiben digital und reichen ein vollständiges PDF ein. Der Versand an die Firmenadresse erfolgt automatisch per E-Mail.</p></article>
+          <article className="aus-card"><div className="aus-row"><Icon name="mail" size={20} /><h3 className="aus-card-title">Eingang überwachen</h3></div><p className="aus-help">Neue Mitarbeiteranträge erscheinen beim CEO mit rotem Punkt. Einzelne PDFs oder alle neuen Anträge können gemeinsam heruntergeladen werden.</p></article>
+          <article className="aus-card"><div className="aus-row"><Icon name="card" size={20} /><h3 className="aus-card-title">Zahlungen abgleichen</h3></div><p className="aus-help">AMEX, Bar, EC, Kreditkarten sowie Tank- und Raststätten-Zahlungen automatisch oder manuell den passenden Belegen zuordnen.</p></article>
+          <article className="aus-card"><div className="aus-row"><Icon name="download" size={20} /><h3 className="aus-card-title">PDF-Mappen erstellen</h3></div><p className="aus-help">Für jedes Zahlungsmittel entsteht eine geordnete PDF mit Deckblatt, Einzelbeträgen, Gesamtsumme und den zugehörigen Belegen.</p></article>
+          <article className="aus-card"><div className="aus-row"><Icon name="archive" size={20} /><h3 className="aus-card-title">Dateien automatisch bereinigen</h3></div><p className="aus-help">Originalbilder werden 30 Tage nach der Einreichung eines Antrags oder der Zuordnung zu einer Monatsabrechnung aus Supabase gelöscht. Belegdaten, Beträge und Zuordnungen bleiben erhalten.</p></article>
+        </div>
+      </section>}
       <section className="aus-section" aria-labelledby="aus-belege-titel">
         <div className="aus-section-head">
           <h2 id="aus-belege-titel" className="aus-h2">

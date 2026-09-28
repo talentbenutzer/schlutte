@@ -159,6 +159,8 @@ export type ExpenseClaim = {
   pdf_path: string | null;
   status: ClaimStatus;
   sent_at: string | null;
+  email_sent_at: string | null;
+  email_message_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -299,7 +301,7 @@ export const PAYMENT_CHANNEL_LABEL: Record<PaymentChannel, string> = {
 
 export const CLAIM_STATUS_LABEL: Record<ClaimStatus, string> = {
   erstellt: "Erstellt",
-  versendet: "Versendet",
+  versendet: "Eingereicht",
 };
 
 export const STATEMENT_STATUS_LABEL: Record<StatementStatus, string> = {

@@ -32,7 +32,7 @@ export default async function BelegPage({ params, searchParams }: { params: Prom
       <p className="aus-lede">Prüfe die erkannten Angaben und ergänze den Ausgabengrund.</p>
     </header>
     {receipt.extraction_error && <div className="aus-note is-warn"><div className="aus-note-body"><p className="aus-note-title">Automatisches Auslesen nicht verfügbar</p><p>{receipt.extraction_error}</p></div></div>}
-    {receipt.storage_delete_after && !receipt.file_deleted_at && <div className="aus-note"><div className="aus-note-body"><p className="aus-note-title">Originaldatei noch 30 Tage verfügbar</p><p>Nach der Zuordnung zur Monatsabrechnung wird die Datei am {formatDate(receipt.storage_delete_after)} automatisch gelöscht. Die erfassten Daten und die Zuordnung bleiben erhalten.</p></div></div>}
+    {receipt.storage_delete_after && !receipt.file_deleted_at && <div className="aus-note"><div className="aus-note-body"><p className="aus-note-title">Originaldatei noch 30 Tage verfügbar</p><p>Nach der Einreichung oder Zuordnung wird die Datei am {formatDate(receipt.storage_delete_after)} automatisch gelöscht. Die erfassten Daten und die Zuordnung bleiben erhalten.</p></div></div>}
     {receipt.file_deleted_at && <div className="aus-note"><div className="aus-note-body"><p className="aus-note-title">Originaldatei automatisch gelöscht</p><p>Die 30-tägige Aufbewahrungsfrist ist abgelaufen. Die erfassten Daten und die Zuordnung zur Monatsabrechnung bleiben erhalten.</p></div></div>}
     <section className="aus-section">
       <div className="aus-preview">

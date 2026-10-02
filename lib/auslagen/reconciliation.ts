@@ -1,6 +1,6 @@
 import { PAYMENT_CHANNEL_LABEL, PAYMENT_CHANNELS, type CreditCard, type PaymentChannel, type Receipt } from "./types";
 
-export type PaymentReceipt = Pick<Receipt, "id" | "status" | "receipt_date" | "merchant" | "currency" | "gross_amount" | "gross_amount_eur" | "payment_method" | "payment_channel" | "credit_card_id" | "payment_reviewed_at" | "file_path" | "file_mime" | "file_name" | "claim_id"> & { reconciliation_channel: PaymentChannel | null };
+export type PaymentReceipt = Pick<Receipt, "id" | "status" | "receipt_date" | "merchant" | "currency" | "gross_amount" | "gross_amount_eur" | "payment_method" | "payment_channel" | "credit_card_id" | "payment_reviewed_at" | "file_path" | "file_mime" | "file_name" | "storage_delete_after" | "file_deleted_at" | "claim_id"> & { reconciliation_channel: PaymentChannel | null };
 
 export type PaymentGroup = {
   key: string;

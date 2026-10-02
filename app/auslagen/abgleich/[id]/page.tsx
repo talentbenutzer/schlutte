@@ -23,7 +23,7 @@ export default async function StatementPage({ params }: { params: Promise<{ id: 
   const company = card.company_id ? await getCompany(card.company_id) : null;
   const linkedIds = [...new Set(transactions.map((t) => t.receipt_id).filter((value): value is string => !!value))];
   const db = await createClient();
-  const { data: linkedRows } = linkedIds.length ? await db.from("receipts").select("id, user_id, status, receipt_date, merchant, description, currency, gross_amount, net_amount, vat_amount, vat_rate, gross_amount_eur, payment_method, payment_channel, payment_reviewed_at, payment_reviewed_by, credit_card_id, file_path, file_mime, file_name, extraction, extraction_error, claim_id, created_at, updated_at").in("id", linkedIds) : { data: [] };
+  const { data: linkedRows } = linkedIds.length ? await db.from("receipts").select("id, user_id, status, receipt_date, merchant, description, currency, gross_amount, net_amount, vat_amount, vat_rate, gross_amount_eur, payment_method, payment_channel, payment_reviewed_at, payment_reviewed_by, credit_card_id, file_path, file_mime, file_name, storage_delete_after, storage_purge_claimed_at, file_deleted_at, extraction, extraction_error, claim_id, created_at, updated_at").in("id", linkedIds) : { data: [] };
   const linked = (linkedRows ?? []) as Receipt[];
   const urls = Object.fromEntries(await Promise.all(linked.map(async (receipt) => [receipt.id, await signedReceiptUrl(receipt)])));
   return <>

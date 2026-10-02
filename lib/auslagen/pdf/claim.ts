@@ -48,7 +48,7 @@ function label(page: PDFPage, value: string, x: number, y: number, font: PDFFont
 
 function tableHead(page: PDFPage, y: number, f: Fonts) {
   line(page, y + 10);
-  const cols: [number, string][] = [[M, "NR"], [M + 27, "DATUM"], [M + 98, "HÄNDLER / ZWECK"], [M + 345, "NETTO"], [M + 412, "MWST"], [M + 468, "BRUTTO"]];
+  const cols: [number, string][] = [[M, "NR"], [M + 27, "DATUM"], [M + 98, "HÄNDLER / ZWECK"], [M + 293, "NETTO"], [M + 353, "SATZ"], [M + 396, "MWST"], [M + 451, "BRUTTO"]];
   cols.forEach(([x, title]) => label(page, title, x, y - 2, f.mono));
   line(page, y - 11);
   return y - 29;
@@ -94,11 +94,12 @@ export async function buildClaimPdf(claim: ExpenseClaim, company: Company, recei
     netSum += net; vatSum += vat;
     text(page, String(i + 1).padStart(2, "0"), M, y, f.mono, 9);
     text(page, formatDate(receipt.receipt_date), M + 27, y, f.regular, 9);
-    text(page, receipt.merchant ?? "—", M + 98, y, f.medium, 9, ink, 230);
-    if (receipt.description) text(page, receipt.description, M + 98, y - 12, f.regular, 8, muted, 230);
-    text(page, formatEUR(net), M + 345, y, f.regular, 8, ink, 65);
-    text(page, formatEUR(vat), M + 412, y, f.regular, 8, ink, 55);
-    text(page, formatEUR(receipt.currency === "EUR" ? receipt.gross_amount : receipt.gross_amount_eur), M + 468, y, f.medium, 8, ink, 48);
+    text(page, receipt.merchant ?? "—", M + 98, y, f.medium, 9, ink, 180);
+    if (receipt.description) text(page, receipt.description, M + 98, y - 12, f.regular, 8, muted, 180);
+    text(page, formatEUR(net), M + 293, y, f.regular, 8, ink, 55);
+    text(page, receipt.vat_rate === null ? "—" : `${receipt.vat_rate.toLocaleString("de-DE", { maximumFractionDigits: 2 })} %`, M + 353, y, f.regular, 8, ink, 38);
+    text(page, formatEUR(vat), M + 396, y, f.regular, 8, ink, 50);
+    text(page, formatEUR(receipt.currency === "EUR" ? receipt.gross_amount : receipt.gross_amount_eur), M + 451, y, f.medium, 8, ink, 60);
     y -= receipt.description ? 38 : 28;
     line(page, y + 8);
   });

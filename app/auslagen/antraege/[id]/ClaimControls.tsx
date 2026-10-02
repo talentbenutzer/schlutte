@@ -49,7 +49,7 @@ export function ClaimControls({ claim, company, receipts, urls, existingPdfUrl }
     if (!file) return;
     setError("");
     if (navigator.share && navigator.canShare?.({ files: [file] })) {
-      try { await navigator.share({ files: [file], title: fileName }); setMessage("PDF wurde an die Teilen-Funktion übergeben. Bitte den Versand anschließend bestätigen."); }
+      try { await navigator.share({ files: [file], title: fileName }); setMessage("PDF wurde an die Teilen-Funktion übergeben."); }
       catch (cause) { if ((cause as Error).name !== "AbortError") setError("Teilen fehlgeschlagen. Bitte PDF herunterladen."); }
     } else {
       setError("Dateien teilen ist hier nicht verfügbar. Bitte PDF herunterladen und an die angezeigte Adresse senden.");
@@ -63,7 +63,8 @@ export function ClaimControls({ claim, company, receipts, urls, existingPdfUrl }
   }
 
   function markSent() {
-    start(async () => { const result = await markClaimSentAction(claim.id); if (result.ok) { setMessage("Als versendet markiert."); router.refresh(); } else setError(result.error || "Status konnte nicht gespeichert werden."); });
+    setError(""); setMessage("");
+    start(async () => { const result = await markClaimSentAction(claim.id); if (result.ok) { setMessage("Als eingereicht markiert."); router.refresh(); } else setError(result.error || "Antrag konnte nicht eingereicht werden."); });
   }
 
   function remove() {
@@ -72,17 +73,16 @@ export function ClaimControls({ claim, company, receipts, urls, existingPdfUrl }
   }
 
   return <section className="aus-section aus-stack">
-    <div className="aus-card"><h2 className="aus-h2">PDF und Versand</h2><p>Empfänger: {recipient || "Noch keine Empfänger-E-Mail hinterlegt"}</p>
+    <div className="aus-card"><h2 className="aus-h2">PDF und Einreichung</h2><p>Empfänger: {recipient || "Noch keine Empfänger-E-Mail hinterlegt"}</p>
       {recipient && <button type="button" className="aus-btn aus-btn-quiet" onClick={copyEmail}>E-Mail-Adresse kopieren</button>}
-      <p className="aus-help">Das PDF enthält den Antrag und alle Belege. Es wird über die Teilen-Funktion deines Geräts versendet.</p>
+      <p className="aus-help">Das PDF enthält den Antrag und alle Belege. Lade es herunter oder teile es über dein Gerät und markiere den Antrag anschließend als eingereicht.</p>
       <div className="aus-actions">
         {claim.status === "erstellt" && <button type="button" className="aus-btn aus-btn-primary" onClick={generate} disabled={pending}>{pending ? "PDF wird erstellt …" : pdfUrl ? "PDF neu erzeugen" : "PDF erzeugen"}</button>}
         {pdfUrl && <a className="aus-btn aus-btn-secondary" href={pdfUrl} download={fileName}>PDF herunterladen</a>}
-        {file && <button type="button" className="aus-btn aus-btn-secondary" onClick={share}>Per E-Mail teilen</button>}
+        {file && <button type="button" className="aus-btn aus-btn-secondary" onClick={share}>PDF teilen</button>}
         {recipient && pdfUrl && <a className="aus-btn aus-btn-quiet" href={`mailto:${encodeURIComponent(recipient)}?subject=${encodeURIComponent(subject)}`}>E-Mail öffnen</a>}
       </div>
-      {recipient && <p className="aus-help">Betreff: {subject}. Beim Öffnen der E-Mail das heruntergeladene PDF anhängen.</p>}
-      {claim.status === "erstellt" && pdfUrl && <button type="button" className="aus-btn aus-btn-quiet" onClick={markSent} disabled={pending}>Als versendet markieren</button>}
+      {claim.status === "erstellt" && pdfUrl && <button type="button" className="aus-btn aus-btn-primary" onClick={markSent} disabled={pending}>{pending ? "Wird eingereicht …" : "Als eingereicht markieren"}</button>}
       {claim.status === "erstellt" && <button type="button" className="aus-btn aus-btn-danger" onClick={remove} disabled={pending}>Antrag löschen</button>}
       {error && <div className="aus-note is-danger" role="alert"><div className="aus-note-body"><p>{error}</p></div></div>}
       {message && <p role="status" className="aus-field-ok">{message}</p>}

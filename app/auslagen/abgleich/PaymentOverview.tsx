@@ -63,10 +63,10 @@ export function PaymentOverview({ cards, receipts }: { cards: CreditCard[]; rece
     <p className="aus-help">Erfasste Firmenbelege und Belege aus eingereichten Anträgen. Für jedes Zahlungsmittel entsteht eine eigene PDF mit vollständiger Betragsliste, Gesamtsumme und den chronologisch angehängten Originalbelegen.</p>
     {open > 0 && <p className="aus-field-error">Bei {open} Belegen ist der Zahlungsweg noch offen. Bitte im Beleg oder hier prüfen.</p>}
     <div className="aus-actions"><button type="button" className="aus-btn aus-btn-secondary" onClick={assignCards} disabled={pending || !!exportingKey || !receipts.length}>Firmenkarten automatisch zuordnen</button></div>
-    {groups.length ? groups.map((group) => <div className="aus-card aus-stack" key={group.key}>
+    {groups.length ? <div className="aus-payment-groups">{groups.map((group) => <article className="aus-payment-group" key={group.key}>
       <div className="aus-card-head"><div><span className="aus-eyebrow">{group.payer} bezahlt</span><h3 className="aus-card-title">{group.title}</h3><p className="aus-help">{group.receipts.length} Belege</p></div><strong className="aus-amount">{formatEUR(group.totalEUR)}</strong></div>
       <div className="aus-actions">
-        <button type="button" className="aus-btn aus-btn-primary" onClick={() => exportPdf(group)} disabled={pending || !!exportingKey || !group.channel}>{exportingKey === group.key ? `PDF wird erstellt · ${progress} %` : "PDF für dieses Zahlungsmittel"}</button>
+        <button type="button" className="aus-btn aus-btn-sm aus-btn-primary" onClick={() => exportPdf(group)} disabled={pending || !!exportingKey || !group.channel}>{exportingKey === group.key ? `PDF wird erstellt · ${progress} %` : "PDF erstellen"}</button>
       </div>
       {exportingKey === group.key && <progress className="aus-progress" value={progress} max="100" aria-label={`Fortschritt PDF ${group.title}`} />}
       {!group.channel && <p className="aus-help">PDF verfügbar, sobald der Zahlungsweg aller Belege dieser Gruppe geprüft ist.</p>}
@@ -74,7 +74,7 @@ export function PaymentOverview({ cards, receipts }: { cards: CreditCard[]; rece
         const receiptChannel = effectiveChannel(receipt);
         const selected = channels[receipt.id] ?? receiptChannel ?? "";
         return <div key={receipt.id}>
-          <Link href={`/auslagen/belege/${receipt.id}`} className="aus-item">
+          <Link href={`/auslagen/belege/${receipt.id}`} className="aus-item aus-item-compact">
             <span className="aus-item-main"><strong className="aus-item-title">{receipt.merchant || receipt.file_name || "Beleg"}</strong><span className="aus-item-meta">{formatDate(receipt.receipt_date)} · {receipt.payment_method === "kreditkarte" ? receipt.credit_card_id ? "Firmenkarte zugeordnet" : "Firmenkarte offen" : "Eingereichter Antrag"}</span></span>
             <span className="aus-item-side"><strong className="aus-amount">{formatEUR(receipt.currency === "EUR" ? receipt.gross_amount : receipt.gross_amount_eur)}</strong><span className={`aus-chip ${receiptChannel ? "is-done" : "is-draft"}`}>{receiptChannel ? PAYMENT_CHANNEL_LABEL[receiptChannel] : "Prüfen"}</span></span>
           </Link>
@@ -86,7 +86,7 @@ export function PaymentOverview({ cards, receipts }: { cards: CreditCard[]; rece
           </div>}
         </div>;
       })}</div>
-    </div>) : <div className="aus-empty"><p className="aus-empty-title">Noch keine erfassten Belege</p></div>}
+    </article>)}</div> : <div className="aus-empty"><p className="aus-empty-title">Noch keine erfassten Belege</p></div>}
     {error && <div className="aus-note is-danger" role="alert"><div className="aus-note-body"><p>{error}</p></div></div>}
     {message && <p className="aus-field-ok" role="status">{message}</p>}
   </section>;

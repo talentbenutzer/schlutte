@@ -41,6 +41,18 @@ function date(value: unknown): string | null {
   return typeof value === "string" && isISODate(value) ? value : null;
 }
 
+function cardLast4(value: unknown): string | null {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  return digits.length >= 4 ? digits.slice(-4) : null;
+}
+
+function isStatementSettlement(row: Record<string, unknown>): boolean {
+  const text = `${String(row.merchant ?? "")} ${String(row.description ?? "")}`
+    .toLocaleUpperCase("de-DE")
+    .replace(/Ü/g, "UE");
+  return text.includes("ZAHLUNG/UEBERWEISUNG ERHALTEN") || text.includes("PAYMENT RECEIVED");
+}
+
 async function callTool(data: Buffer, mime: string, prompt: string, name: string, schema: Record<string, unknown>, maxTokens: number) {
   let result: Anthropic.Messages.Message;
   try {
@@ -86,7 +98,7 @@ export async function extractReceipt(data: Buffer, mime: string): Promise<Receip
     currency: str(raw.currency, 3) ? normalizeCurrency(String(raw.currency)) : null,
     gross: money(raw.gross), net: money(raw.net), vat_total: money(raw.vat_total),
     vat_lines: lines.map((line) => { const x = (line && typeof line === "object" ? line : {}) as Record<string, unknown>; return { rate: money(x.rate), net: money(x.net), vat: money(x.vat), gross: money(x.gross) }; }),
-    card_last4: /^\d{4}$/.test(String(raw.card_last4 ?? "")) ? String(raw.card_last4) : null,
+    card_last4: cardLast4(raw.card_last4),
     payment_hint: raw.payment_hint === "karte" || raw.payment_hint === "bar" ? raw.payment_hint : "unbekannt",
     payment_channel: isPaymentChannel(raw.payment_channel) ? raw.payment_channel : null,
   };
@@ -108,16 +120,17 @@ const statementSchema = {
 
 export async function extractStatement(data: Buffer): Promise<StatementExtraction> {
   const raw = await callTool(data, "application/pdf",
-    "Lies jede einzelne Buchung dieser Kreditkartenabrechnung. Beträge in EUR: Belastungen positiv, Gutschriften negativ. Kein Saldo und keine Summenzeile als Buchung. Datum YYYY-MM-DD. Wenn ein Wert unklar ist, null. Erfinde keine Buchungen.",
+    "Lies jede einzelne Einkaufs- und Erstattungsbuchung dieser Kreditkartenabrechnung. Beträge in EUR: Belastungen positiv, Gutschriften negativ. Lasse Zahlungsausgleiche wie 'Zahlung/Überweisung erhalten' oder 'Payment received' vollständig weg. Kein Saldo und keine Summenzeile als Buchung. Datum YYYY-MM-DD. Wenn ein Wert unklar ist, null. Erfinde keine Buchungen.",
     "statement", statementSchema, 6000);
   const rows = Array.isArray(raw.transactions) ? raw.transactions.slice(0, 500) : [];
   const transactions: StatementTransactionExtraction[] = rows.flatMap((row) => {
     const x = (row && typeof row === "object" ? row : {}) as Record<string, unknown>;
+    if (isStatementSettlement(x)) return [];
     const amount = money(x.amount);
     if (amount === null) return [];
     return [{ transaction_date: date(x.transaction_date), booking_date: date(x.booking_date), merchant: str(x.merchant), description: str(x.description, 300), amount, original_amount: money(x.original_amount), original_currency: str(x.original_currency, 3) ? normalizeCurrency(String(x.original_currency)) : null }];
   });
-  return { card_last4: /^\d{4}$/.test(String(raw.card_last4 ?? "")) ? String(raw.card_last4) : null,
+  return { card_last4: cardLast4(raw.card_last4),
     holder: str(raw.holder), period_start: date(raw.period_start), period_end: date(raw.period_end), statement_date: date(raw.statement_date),
     total: money(raw.total), currency: str(raw.currency, 3) ? normalizeCurrency(String(raw.currency)) : null, transactions };
 }

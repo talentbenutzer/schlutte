@@ -12,6 +12,7 @@ export type InboxClaim = {
   sentAt: string;
   totalGross: number;
   receiptCount: number;
+  receipts: { id: string; merchant: string; receiptDate: string | null; amount: number | null; currency: string }[];
   unread: boolean;
 };
 
@@ -41,6 +42,27 @@ export async function listSubmittedClaims(): Promise<InboxClaim[]> {
     if ((data ?? []).length < 500) break;
   }
   if (!claims.length) return [];
+  const receiptsByClaim = new Map<string, InboxClaim["receipts"]>();
+  for (let offset = 0; offset < claims.length; offset += 500) {
+    const ids = claims.slice(offset, offset + 500).map((claim) => claim.id);
+    const { data, error } = await db.from("receipts")
+      .select("id, claim_id, merchant, receipt_date, currency, gross_amount, gross_amount_eur")
+      .in("claim_id", ids).order("receipt_date", { ascending: true }).order("id");
+    if (error) throw toAuslagenError(error, "Antragsbelege konnten nicht geladen werden");
+    for (const receipt of data ?? []) {
+      if (!receipt.claim_id) continue;
+      const list = receiptsByClaim.get(receipt.claim_id) ?? [];
+      const amount = receipt.currency === "EUR" ? receipt.gross_amount : receipt.gross_amount_eur;
+      list.push({
+        id: receipt.id,
+        merchant: receipt.merchant || "Beleg",
+        receiptDate: receipt.receipt_date,
+        amount: amount === null ? null : Number(amount),
+        currency: "EUR",
+      });
+      receiptsByClaim.set(receipt.claim_id, list);
+    }
+  }
   const readIds = new Set<string>();
   for (let offset = 0; ; offset += 500) {
     const { data, error } = await db.from("expense_claim_reads")
@@ -57,6 +79,7 @@ export async function listSubmittedClaims(): Promise<InboxClaim[]> {
     sentAt: claim.sent_at ?? claim.claim_date,
     totalGross: Number(claim.total_gross),
     receiptCount: claim.receipt_count,
+    receipts: receiptsByClaim.get(claim.id) ?? [],
     unread: !readIds.has(claim.id),
   }));
 }

@@ -294,6 +294,28 @@
   color: var(--fg);
 }
 
+.aus-claim-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); }
+.aus-claim-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
+  padding: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.aus-claim-receipts { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
+.aus-claim-receipts li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.aus-claim-receipts li > span:first-child { min-width: 0; display: flex; flex-direction: column; }
+.aus-claim-receipts strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.aus-claim-receipts small { color: var(--fg-muted); }
+
+.aus-payment-groups { display: flex; flex-direction: column; border-top: 1px solid var(--border); }
+.aus-payment-group { padding: var(--sp-4) 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: var(--sp-2); }
+.aus-item-compact { min-height: 46px; padding-top: 6px; padding-bottom: 6px; }
+.aus-item-compact .aus-item-title { font-size: 14px; }
+.aus-item-compact .aus-item-meta { font-size: 12px; }
+
 .aus-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
 .aus-item {
   display: flex;
@@ -676,6 +698,7 @@ progress.aus-progress { display: block; width: 100%; accent-color: var(--aus-suc
 /* ---------- Ab Tablet: Navigation im Kopf, keine Tab-Leiste ---------- */
 @media (min-width: 560px) {
   .aus-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .aus-claim-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .aus-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .aus-card { padding: var(--sp-5); }
 }
